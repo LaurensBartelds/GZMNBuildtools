@@ -1,0 +1,11 @@
+# Default concise message templates for GZMNBuildtools
+# Keys are illustrative; MessageManager currently falls back to these defaults.
+messages:
+  verbose: false
+  prefix: "[GZMN] %s"
+  success.replace: "Replaced %d blocks."
+  info.applying: "%s…"
+  error.selection: "Selection required. Use WorldEdit to select an area."
+  error.unknown_material: "Unknown material: %s"
+  tip.fixconnect: "Tip: run //fixconnect to fix wall/fence/bar connections."
+  verbose.variant_line: "%s → %s: %d blocks"

@@ -12,12 +12,14 @@ import com.sk89q.worldedit.world.block.BlockType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.util.BlockTypeFamily;
+import nl.gzmn.gZMNBuildtools.util.MessageManager;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
 /**
- * Command to replace entire block type families (e.g., all cobblestone variants to copper variants)
+ * Command to replace entire block type families (e.g., all cobblestone variants
+ * to copper variants)
  */
 public class TypeReplaceCommand {
 
@@ -26,7 +28,6 @@ public class TypeReplaceCommand {
         Collections.sort(suggestions);
         return suggestions;
     }
-
 
     public void execute(Player player, String fromMaterialArg, String toMaterialArg) {
         String fromMaterial = fromMaterialArg.toLowerCase();
@@ -37,30 +38,38 @@ public class TypeReplaceCommand {
         try {
             Region region = WorldEdit.getInstance().getSessionManager().get(actor).getSelection(actor.getWorld());
             if (region == null) {
-                player.sendMessage(Component.text("Please make a WorldEdit selection first.", NamedTextColor.RED));
+                MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
 
             // Check if source is a material group (e.g., "all_copper")
             if (BlockTypeFamily.isMaterialGroup(fromMaterial)) {
                 List<String> sourceMaterials = BlockTypeFamily.getMaterialGroup(fromMaterial);
-                player.sendMessage(Component.text("Replacing " + fromMaterial + " group (" + sourceMaterials.size() + " materials) with " + toMaterial + "...", NamedTextColor.YELLOW));
+                MessageManager.info(player, "Replacing %s → %s (%d materials)…", fromMaterial, toMaterial,
+                        sourceMaterials.size());
 
                 int totalReplaced = 0;
+                boolean anyVerticalConnectors = false;
                 for (String sourceMat : sourceMaterials) {
                     BlockTypeFamily sourceFamily = new BlockTypeFamily(sourceMat);
                     BlockTypeFamily targetFamily = new BlockTypeFamily(toMaterial);
 
                     if (!sourceFamily.getVariants().isEmpty() && !targetFamily.getVariants().isEmpty()) {
-                        int replaced = performTypeReplace(actor, region, sourceFamily, targetFamily);
-                        if (replaced > 0) {
-                            player.sendMessage(Component.text("  " + sourceMat + " → " + toMaterial + ": " + replaced + " blocks", NamedTextColor.GRAY));
+                        ReplaceResult result = performTypeReplace(actor, region, sourceFamily, targetFamily);
+                        if (result.count > 0) {
+                            MessageManager.verbose(player, "%s → %s: %d blocks", sourceMat, toMaterial, result.count);
                         }
-                        totalReplaced += replaced;
+                        totalReplaced += result.count;
+                        if (result.hasVerticalConnectors) {
+                            anyVerticalConnectors = true;
+                        }
                     }
                 }
 
-                player.sendMessage(Component.text("Successfully replaced " + totalReplaced + " blocks total!", NamedTextColor.GREEN));
+                MessageManager.success(player, "Replaced %d blocks.", totalReplaced);
+                if (anyVerticalConnectors) {
+                    MessageManager.warn(player, "Tip: run //fixconnect to fix wall/fence/bar connections.");
+                }
                 return;
             }
 
@@ -70,37 +79,54 @@ public class TypeReplaceCommand {
 
             // Check if families have any variants
             if (sourceFamily.getVariants().isEmpty()) {
-                player.sendMessage(Component.text("Unknown material: " + fromMaterial, NamedTextColor.RED));
+                MessageManager.error(player, "Unknown material: %s", fromMaterial);
                 return;
             }
             if (targetFamily.getVariants().isEmpty()) {
-                player.sendMessage(Component.text("Unknown material: " + toMaterial, NamedTextColor.RED));
+                MessageManager.error(player, "Unknown material: %s", toMaterial);
                 return;
             }
 
-            player.sendMessage(Component.text("Replacing " + fromMaterial + " family with " + toMaterial + " family...", NamedTextColor.YELLOW));
-            player.sendMessage(Component.text("Source variants: " + sourceFamily.getVariants().keySet(), NamedTextColor.GRAY));
-            player.sendMessage(Component.text("Target variants: " + targetFamily.getVariants().keySet(), NamedTextColor.GRAY));
+            MessageManager.info(player, "Replacing %s → %s…", fromMaterial, toMaterial);
+            MessageManager.verbose(player, "Source variants: %s", sourceFamily.getVariants().keySet());
+            MessageManager.verbose(player, "Target variants: %s", targetFamily.getVariants().keySet());
 
             // Perform the replacement
-            int replaced = performTypeReplace(actor, region, sourceFamily, targetFamily);
+            ReplaceResult result = performTypeReplace(actor, region, sourceFamily, targetFamily);
 
-            player.sendMessage(Component.text("Successfully replaced " + replaced + " blocks!", NamedTextColor.GREEN));
+            MessageManager.success(player, "Replaced %d blocks.", result.count);
+            if (result.hasVerticalConnectors) {
+                MessageManager.warn(player, "Tip: run //fixconnect to fix wall/fence/bar connections.");
+            }
 
         } catch (IncompleteRegionException e) {
-            player.sendMessage(Component.text("Please make a WorldEdit selection first.", NamedTextColor.RED));
+            MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
         } catch (Exception e) {
-            player.sendMessage(Component.text("An error occurred: " + e.getMessage(), NamedTextColor.RED));
+            MessageManager.error(player, "An error occurred: %s", e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Result of a type replacement operation
+     */
+    public static class ReplaceResult {
+        public final int count;
+        public final boolean hasVerticalConnectors;
+
+        public ReplaceResult(int count, boolean hasVerticalConnectors) {
+            this.count = count;
+            this.hasVerticalConnectors = hasVerticalConnectors;
         }
     }
 
     /**
      * Perform the type replacement operation
      */
-    private int performTypeReplace(com.sk89q.worldedit.entity.Player actor, Region region,
-                                   BlockTypeFamily sourceFamily, BlockTypeFamily targetFamily) {
+    private ReplaceResult performTypeReplace(com.sk89q.worldedit.entity.Player actor, Region region,
+            BlockTypeFamily sourceFamily, BlockTypeFamily targetFamily) {
         int count = 0;
+        boolean hasVerticalConnectors = false;
 
         // Get the player's LocalSession for undo support
         LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
@@ -117,21 +143,37 @@ public class TypeReplaceCommand {
                 // Check if this block belongs to the source family
                 if (sourceBlocks.contains(currentType)) {
                     // Map to the equivalent target variant
+                    String variantType = BlockTypeFamily.getVariantType(currentType);
                     BlockType targetType = BlockTypeFamily.mapVariant(currentType, targetFamily);
 
-                    if (targetType != null) {
+                    if (targetType != null && !targetType.id().equals("minecraft:air")) {
                         // Preserve block states where possible (rotation, waterlogging, etc.)
                         BlockState newState = targetType.getDefaultState();
 
-                        // Try to preserve properties that exist in both blocks
-                        try {
-                            newState = preserveBlockProperties(currentBlock, newState);
-                        } catch (Exception e) {
-                            // If property preservation fails, just use default state
+                        // Skip property preservation for vertical connector conversions
+                        // (bars/wall/fence)
+                        // These have incompatible property types that can create invalid block states
+                        boolean isVerticalConnectorConversion = (variantType.equals("bars")
+                                || variantType.equals("wall") || variantType.equals("fence")) &&
+                                (targetType.id().contains("_wall") || targetType.id().contains("_bars")
+                                        || targetType.id().contains("_fence"));
+
+                        if (!isVerticalConnectorConversion) {
+                            // Try to preserve properties that exist in both blocks
+                            try {
+                                newState = preserveBlockProperties(currentBlock, newState);
+                            } catch (Exception e) {
+                                newState = targetType.getDefaultState();
+                            }
+                        } else {
+                            hasVerticalConnectors = true;
                         }
 
-                        editSession.setBlock(position, newState);
-                        count++;
+                        // Safety check: don't set blocks to air
+                        if (!newState.getBlockType().id().equals("minecraft:air")) {
+                            editSession.setBlock(position, newState);
+                            count++;
+                        }
                     }
                 }
             }
@@ -142,7 +184,7 @@ public class TypeReplaceCommand {
             e.printStackTrace();
         }
 
-        return count;
+        return new ReplaceResult(count, hasVerticalConnectors);
     }
 
     /**

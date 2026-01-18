@@ -12,14 +12,15 @@ public class BlockTypeFamily {
 
     // Variant types we support
     private static final String[] VARIANT_SUFFIXES = {
-        "_stairs", "_slab", "_wall", "_fence", "_fence_gate", "_bars", "_grate"
+            "_stairs", "_slab", "_wall", "_fence", "_fence_gate", "_bars", "_grate"
     };
 
     // Map of base material names to their block patterns
     // Some materials have irregular naming (e.g., "bricks" vs "brick_stairs")
     private static final Map<String, MaterialDefinition> MATERIAL_DEFINITIONS = new HashMap<>();
 
-    // Material groups for meta-selections (e.g., "all_copper" -> all copper variants)
+    // Material groups for meta-selections (e.g., "all_copper" -> all copper
+    // variants)
     private static final Map<String, List<String>> MATERIAL_GROUPS = new HashMap<>();
 
     // Reverse lookup to find variant type from a BlockType ID
@@ -67,8 +68,10 @@ public class BlockTypeFamily {
         register("nether_brick").base("nether_bricks", "nether_brick").stairs().slab().wall().fence().build();
         register("red_nether_brick").base("red_nether_bricks", "red_nether_brick").stairs().slab().wall().build();
         register("blackstone").base("blackstone", "blackstone").stairs().slab().wall().build();
-        register("polished_blackstone").base("polished_blackstone", "polished_blackstone").stairs().slab().wall().build();
-        register("polished_blackstone_brick").base("polished_blackstone_bricks", "polished_blackstone_brick").stairs().slab().wall().build();
+        register("polished_blackstone").base("polished_blackstone", "polished_blackstone").stairs().slab().wall()
+                .build();
+        register("polished_blackstone_brick").base("polished_blackstone_bricks", "polished_blackstone_brick").stairs()
+                .slab().wall().build();
 
         // Quartz variants
         register("quartz").base("quartz_block", "quartz").stairs().slab().build();
@@ -79,30 +82,47 @@ public class BlockTypeFamily {
         register("purpur").base("purpur_block", "purpur").stairs().slab().build();
 
         // Wood variants (planks)
-        for (String wood : new String[]{"oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "bamboo", "crimson", "warped"}) {
+        for (String wood : new String[] { "oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove",
+                "cherry", "bamboo", "crimson", "warped" }) {
             String planksName = wood.equals("bamboo") ? "bamboo_planks" : wood + "_planks";
             register(wood).base(planksName, wood).stairs().slab().fence().fenceGate().build();
         }
 
-        // Copper variants (with bars support)
-        register("copper").base("copper_block", "cut_copper").stairs().slab().bars("copper_bars").build();
-        register("cut_copper").base("cut_copper", "cut_copper").stairs().slab().bars("copper_bars").build();
-        register("exposed_copper").base("exposed_copper", "exposed_cut_copper").stairs().slab().bars("exposed_copper_bars").build();
-        register("exposed_cut_copper").base("exposed_cut_copper", "exposed_cut_copper").stairs().slab().bars("exposed_copper_bars").build();
-        register("weathered_copper").base("weathered_copper", "weathered_cut_copper").stairs().slab().bars("weathered_copper_bars").build();
-        register("weathered_cut_copper").base("weathered_cut_copper", "weathered_cut_copper").stairs().slab().bars("weathered_copper_bars").build();
-        register("oxidized_copper").base("oxidized_copper", "oxidized_cut_copper").stairs().slab().bars("oxidized_copper_bars").build();
-        register("oxidized_cut_copper").base("oxidized_cut_copper", "oxidized_cut_copper").stairs().slab().bars("oxidized_copper_bars").build();
+        // Copper variants (with bars + grates support)
+        register("copper").base("copper_block", "cut_copper").stairs().slab().bars("copper_bars").grate("copper_grate")
+                .build();
+        register("cut_copper").base("cut_copper", "cut_copper").stairs().slab().bars("copper_bars")
+                .grate("copper_grate").build();
+        register("exposed_copper").base("exposed_copper", "exposed_cut_copper").stairs().slab()
+                .bars("exposed_copper_bars").grate("exposed_copper_grate").build();
+        register("exposed_cut_copper").base("exposed_cut_copper", "exposed_cut_copper").stairs().slab()
+                .bars("exposed_copper_bars").grate("exposed_copper_grate").build();
+        register("weathered_copper").base("weathered_copper", "weathered_cut_copper").stairs().slab()
+                .bars("weathered_copper_bars").grate("weathered_copper_grate").build();
+        register("weathered_cut_copper").base("weathered_cut_copper", "weathered_cut_copper").stairs().slab()
+                .bars("weathered_copper_bars").grate("weathered_copper_grate").build();
+        register("oxidized_copper").base("oxidized_copper", "oxidized_cut_copper").stairs().slab()
+                .bars("oxidized_copper_bars").grate("oxidized_copper_grate").build();
+        register("oxidized_cut_copper").base("oxidized_cut_copper", "oxidized_cut_copper").stairs().slab()
+                .bars("oxidized_copper_bars").grate("oxidized_copper_grate").build();
 
-        // Waxed copper variants (with bars support)
-        register("waxed_copper").base("waxed_copper_block", "waxed_cut_copper").stairs().slab().bars("waxed_copper_bars").build();
-        register("waxed_cut_copper").base("waxed_cut_copper", "waxed_cut_copper").stairs().slab().bars("waxed_copper_bars").build();
-        register("waxed_exposed_copper").base("waxed_exposed_copper", "waxed_exposed_cut_copper").stairs().slab().bars("waxed_exposed_copper_bars").build();
-        register("waxed_exposed_cut_copper").base("waxed_exposed_cut_copper", "waxed_exposed_cut_copper").stairs().slab().bars("waxed_exposed_copper_bars").build();
-        register("waxed_weathered_copper").base("waxed_weathered_copper", "waxed_weathered_cut_copper").stairs().slab().bars("waxed_weathered_copper_bars").build();
-        register("waxed_weathered_cut_copper").base("waxed_weathered_cut_copper", "waxed_weathered_cut_copper").stairs().slab().bars("waxed_weathered_copper_bars").build();
-        register("waxed_oxidized_copper").base("waxed_oxidized_copper", "waxed_oxidized_cut_copper").stairs().slab().bars("waxed_oxidized_copper_bars").build();
-        register("waxed_oxidized_cut_copper").base("waxed_oxidized_cut_copper", "waxed_oxidized_cut_copper").stairs().slab().bars("waxed_oxidized_copper_bars").build();
+        // Waxed copper variants (with bars + grates support)
+        register("waxed_copper").base("waxed_copper_block", "waxed_cut_copper").stairs().slab()
+                .bars("waxed_copper_bars").grate("waxed_copper_grate").build();
+        register("waxed_cut_copper").base("waxed_cut_copper", "waxed_cut_copper").stairs().slab()
+                .bars("waxed_copper_bars").grate("waxed_copper_grate").build();
+        register("waxed_exposed_copper").base("waxed_exposed_copper", "waxed_exposed_cut_copper").stairs().slab()
+                .bars("waxed_exposed_copper_bars").grate("waxed_exposed_copper_grate").build();
+        register("waxed_exposed_cut_copper").base("waxed_exposed_cut_copper", "waxed_exposed_cut_copper").stairs()
+                .slab().bars("waxed_exposed_copper_bars").grate("waxed_exposed_copper_grate").build();
+        register("waxed_weathered_copper").base("waxed_weathered_copper", "waxed_weathered_cut_copper").stairs().slab()
+                .bars("waxed_weathered_copper_bars").grate("waxed_weathered_copper_grate").build();
+        register("waxed_weathered_cut_copper").base("waxed_weathered_cut_copper", "waxed_weathered_cut_copper").stairs()
+                .slab().bars("waxed_weathered_copper_bars").grate("waxed_weathered_copper_grate").build();
+        register("waxed_oxidized_copper").base("waxed_oxidized_copper", "waxed_oxidized_cut_copper").stairs().slab()
+                .bars("waxed_oxidized_copper_bars").grate("waxed_oxidized_copper_grate").build();
+        register("waxed_oxidized_cut_copper").base("waxed_oxidized_cut_copper", "waxed_oxidized_cut_copper").stairs()
+                .slab().bars("waxed_oxidized_copper_bars").grate("waxed_oxidized_copper_grate").build();
 
         // Iron bars (special material with bars variant)
         register("iron").base("iron_block", "iron").bars().build();
@@ -143,18 +163,51 @@ public class BlockTypeFamily {
             return this;
         }
 
-        public MaterialFamilyBuilder stairs() { this.hasStairs = true; return this; }
-        public MaterialFamilyBuilder slab() { this.hasSlab = true; return this; }
-        public MaterialFamilyBuilder wall() { this.hasWall = true; return this; }
-        public MaterialFamilyBuilder fence() { this.hasFence = true; return this; }
-        public MaterialFamilyBuilder fenceGate() { this.hasFenceGate = true; return this; }
-        public MaterialFamilyBuilder bars() { this.hasBars = true; return this; }
-        public MaterialFamilyBuilder bars(String name) { this.hasBars = true; this.barsName = name; return this; }
-        public MaterialFamilyBuilder grate(String name) { this.hasGrate = true; this.grateName = name; return this; }
+        public MaterialFamilyBuilder stairs() {
+            this.hasStairs = true;
+            return this;
+        }
+
+        public MaterialFamilyBuilder slab() {
+            this.hasSlab = true;
+            return this;
+        }
+
+        public MaterialFamilyBuilder wall() {
+            this.hasWall = true;
+            return this;
+        }
+
+        public MaterialFamilyBuilder fence() {
+            this.hasFence = true;
+            return this;
+        }
+
+        public MaterialFamilyBuilder fenceGate() {
+            this.hasFenceGate = true;
+            return this;
+        }
+
+        public MaterialFamilyBuilder bars() {
+            this.hasBars = true;
+            return this;
+        }
+
+        public MaterialFamilyBuilder bars(String name) {
+            this.hasBars = true;
+            this.barsName = name;
+            return this;
+        }
+
+        public MaterialFamilyBuilder grate(String name) {
+            this.hasGrate = true;
+            this.grateName = name;
+            return this;
+        }
 
         public void build() {
             MATERIAL_DEFINITIONS.put(key.toLowerCase(), new MaterialDefinition(blockName, variantPrefix,
-                hasStairs, hasSlab, hasWall, hasFence, hasFenceGate, hasBars, hasGrate, grateName, barsName));
+                    hasStairs, hasSlab, hasWall, hasFence, hasFenceGate, hasBars, hasGrate, grateName, barsName));
         }
     }
 
@@ -176,11 +229,16 @@ public class BlockTypeFamily {
         if (def != null) {
             // Use predefined material definition
             addVariantIfExists("block", def.blockName);
-            if (def.hasStairs) addVariantIfExists("stairs", def.variantPrefix + "_stairs");
-            if (def.hasSlab) addVariantIfExists("slab", def.variantPrefix + "_slab");
-            if (def.hasWall) addVariantIfExists("wall", def.variantPrefix + "_wall");
-            if (def.hasFence) addVariantIfExists("fence", def.variantPrefix + "_fence");
-            if (def.hasFenceGate) addVariantIfExists("fence_gate", def.variantPrefix + "_fence_gate");
+            if (def.hasStairs)
+                addVariantIfExists("stairs", def.variantPrefix + "_stairs");
+            if (def.hasSlab)
+                addVariantIfExists("slab", def.variantPrefix + "_slab");
+            if (def.hasWall)
+                addVariantIfExists("wall", def.variantPrefix + "_wall");
+            if (def.hasFence)
+                addVariantIfExists("fence", def.variantPrefix + "_fence");
+            if (def.hasFenceGate)
+                addVariantIfExists("fence_gate", def.variantPrefix + "_fence_gate");
             if (def.hasBars) {
                 if (def.barsName != null) {
                     addVariantIfExists("bars", def.barsName);
@@ -188,7 +246,8 @@ public class BlockTypeFamily {
                     addVariantIfExists("bars", def.variantPrefix + "_bars");
                 }
             }
-            if (def.hasGrate && def.grateName != null) addVariantIfExists("grate", def.grateName);
+            if (def.hasGrate && def.grateName != null)
+                addVariantIfExists("grate", def.grateName);
         } else {
             // Try generic discovery for unknown materials
             discoverGenericVariants();
@@ -213,7 +272,8 @@ public class BlockTypeFamily {
     }
 
     private void addVariantIfExists(String variantType, String blockId) {
-        if (variants.containsKey(variantType)) return; // Don't overwrite
+        if (variants.containsKey(variantType))
+            return; // Don't overwrite
 
         BlockType block = BlockTypes.get("minecraft:" + blockId);
         if (block != null) {
@@ -227,7 +287,8 @@ public class BlockTypeFamily {
      * Get the variant type of a block (e.g., "stairs", "slab", "block")
      */
     public static String getVariantType(BlockType blockType) {
-        // First try to look up if this block is explicitly registered as a specific variant
+        // First try to look up if this block is explicitly registered as a specific
+        // variant
         // This handles cases like "lightning_rod" being used as "bars"
         if (REVERSE_VARIANT_LOOKUP.containsKey(blockType.id())) {
             return REVERSE_VARIANT_LOOKUP.get(blockType.id());
@@ -235,13 +296,20 @@ public class BlockTypeFamily {
 
         String id = blockType.id().toLowerCase();
 
-        if (id.endsWith("_stairs")) return "stairs";
-        if (id.endsWith("_slab")) return "slab";
-        if (id.endsWith("_wall")) return "wall";
-        if (id.endsWith("_fence_gate")) return "fence_gate";
-        if (id.endsWith("_fence")) return "fence";
-        if (id.endsWith("_bars")) return "bars";
-        if (id.endsWith("_grate")) return "grate";
+        if (id.endsWith("_stairs"))
+            return "stairs";
+        if (id.endsWith("_slab"))
+            return "slab";
+        if (id.endsWith("_wall"))
+            return "wall";
+        if (id.endsWith("_fence_gate"))
+            return "fence_gate";
+        if (id.endsWith("_fence"))
+            return "fence";
+        if (id.endsWith("_bars"))
+            return "bars";
+        if (id.endsWith("_grate"))
+            return "grate";
 
         return "block";
     }
@@ -275,7 +343,8 @@ public class BlockTypeFamily {
     }
 
     /**
-     * Check if a variant type belongs to the unified vertical connector group (wall, fence, bars)
+     * Check if a variant type belongs to the unified vertical connector group
+     * (wall, fence, bars)
      */
     private static boolean isVerticalConnectorVariant(String variantType) {
         return variantType.equals("wall") || variantType.equals("fence") || variantType.equals("bars");
@@ -289,24 +358,29 @@ public class BlockTypeFamily {
     private static BlockType findVerticalConnectorVariant(BlockTypeFamily targetFamily) {
         // Try wall first
         BlockType variant = targetFamily.getVariant("wall");
-        if (variant != null) return variant;
+        if (variant != null)
+            return variant;
 
         // Try fence
         variant = targetFamily.getVariant("fence");
-        if (variant != null) return variant;
+        if (variant != null)
+            return variant;
 
         // Try bars
         variant = targetFamily.getVariant("bars");
-        if (variant != null) return variant;
+        if (variant != null)
+            return variant;
 
         // Fallback: try direct BlockTypes lookup for wall using base material name
         String baseMaterial = targetFamily.baseMaterial;
         variant = BlockTypes.get("minecraft:" + baseMaterial + "_wall");
-        if (variant != null) return variant;
+        if (variant != null)
+            return variant;
 
         // Try fence
         variant = BlockTypes.get("minecraft:" + baseMaterial + "_fence");
-        if (variant != null) return variant;
+        if (variant != null)
+            return variant;
 
         // Try bars
         variant = BlockTypes.get("minecraft:" + baseMaterial + "_bars");
@@ -398,8 +472,8 @@ public class BlockTypeFamily {
         final String barsName; // Custom bars name
 
         MaterialDefinition(String blockName, String variantPrefix, boolean hasStairs, boolean hasSlab,
-                           boolean hasWall, boolean hasFence, boolean hasFenceGate,
-                           boolean hasBars, boolean hasGrate, String grateName, String barsName) {
+                boolean hasWall, boolean hasFence, boolean hasFenceGate,
+                boolean hasBars, boolean hasGrate, String grateName, String barsName) {
             this.blockName = blockName;
             this.variantPrefix = variantPrefix;
             this.hasStairs = hasStairs;

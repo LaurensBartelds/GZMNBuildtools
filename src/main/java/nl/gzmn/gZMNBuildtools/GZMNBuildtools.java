@@ -6,6 +6,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import nl.gzmn.gZMNBuildtools.commands.GradientCommand;
 import nl.gzmn.gZMNBuildtools.commands.TypeReplaceCommand;
 import nl.gzmn.gZMNBuildtools.ui.GradientUIManager;
+import nl.gzmn.gZMNBuildtools.util.MessageManager;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,9 +19,10 @@ public final class GZMNBuildtools extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        MessageManager.init(this);
         // Check for WorldEdit/FAWE
         if (getServer().getPluginManager().getPlugin("FastAsyncWorldEdit") == null &&
-            getServer().getPluginManager().getPlugin("WorldEdit") == null) {
+                getServer().getPluginManager().getPlugin("WorldEdit") == null) {
             getLogger().severe("WorldEdit or FastAsyncWorldEdit is required for this plugin!");
             getServer().getPluginManager().disablePlugin(this);
             return;
@@ -31,7 +33,8 @@ public final class GZMNBuildtools extends JavaPlugin {
 
         getLogger().info("WorldEdit/FAWE detected, plugin enabled!");
         getLogger().info("Available commands:");
-        getLogger().info("  /typereplace <from> <to> - Replace block families (stairs, slabs, walls, fences, bars/grates)");
+        getLogger().info(
+                "  /typereplace <from> <to> - Replace block families (stairs, slabs, walls, fences, bars/grates)");
         getLogger().info("  /gradient                - Open gradient UI or use command syntax");
         getLogger().info("Material groups: all_copper, all_waxed_copper, copper_all");
     }
@@ -48,86 +51,88 @@ public final class GZMNBuildtools extends JavaPlugin {
 
             // Register /typereplace command
             commands.register(
-                Commands.literal("typereplace")
-                    .requires(source -> source.getSender() instanceof Player &&
-                              source.getSender().hasPermission("gzmnbuildtools.typereplace"))
-                    .then(Commands.argument("from_material", StringArgumentType.word())
-                        .suggests((ctx, builder) -> {
-                            typeReplaceCommand.getSuggestions().stream()
-                                .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
-                                .forEach(builder::suggest);
-                            return builder.buildFuture();
-                        })
-                        .then(Commands.argument("to_material", StringArgumentType.word())
-                            .suggests((ctx, builder) -> {
-                                typeReplaceCommand.getSuggestions().stream()
-                                    .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
-                                    .forEach(builder::suggest);
-                                return builder.buildFuture();
-                            })
-                            .executes(ctx -> {
-                                String from = StringArgumentType.getString(ctx, "from_material");
-                                String to = StringArgumentType.getString(ctx, "to_material");
-                                typeReplaceCommand.execute((Player) ctx.getSource().getSender(), from, to);
-                                return 1;
-                            })
-                        )
-                    )
-                    .build(),
-                "Replace entire block type families (stairs, slabs, walls, etc.) preserving variants.",
-                List.of("tr", "typerep")
-            );
+                    Commands.literal("typereplace")
+                            .requires(source -> source.getSender() instanceof Player &&
+                                    source.getSender().hasPermission("gzmnbuildtools.typereplace"))
+                            .then(Commands.argument("from_material", StringArgumentType.word())
+                                    .suggests((ctx, builder) -> {
+                                        typeReplaceCommand.getSuggestions().stream()
+                                                .filter(s -> s.toLowerCase()
+                                                        .startsWith(builder.getRemainingLowerCase()))
+                                                .forEach(builder::suggest);
+                                        return builder.buildFuture();
+                                    })
+                                    .then(Commands.argument("to_material", StringArgumentType.word())
+                                            .suggests((ctx, builder) -> {
+                                                typeReplaceCommand.getSuggestions().stream()
+                                                        .filter(s -> s.toLowerCase()
+                                                                .startsWith(builder.getRemainingLowerCase()))
+                                                        .forEach(builder::suggest);
+                                                return builder.buildFuture();
+                                            })
+                                            .executes(ctx -> {
+                                                String from = StringArgumentType.getString(ctx, "from_material");
+                                                String to = StringArgumentType.getString(ctx, "to_material");
+                                                typeReplaceCommand.execute((Player) ctx.getSource().getSender(), from,
+                                                        to);
+                                                return 1;
+                                            })))
+                            .build(),
+                    "Replace entire block type families (stairs, slabs, walls, etc.) preserving variants.",
+                    List.of("tr", "typerep"));
 
             // Register /gradient command
             commands.register(
-                Commands.literal("gradient")
-                    .requires(source -> source.getSender() instanceof Player &&
-                              source.getSender().hasPermission("gzmnbuildtools.gradient"))
-                    .executes(ctx -> {
-                        gradientCommand.openUI((Player) ctx.getSource().getSender());
-                        return 1;
-                    })
-                    .then(Commands.argument("blocks", StringArgumentType.word())
-                        .suggests((ctx, builder) -> {
-                            gradientCommand.getBlockSuggestions().stream()
-                                .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
-                                .forEach(builder::suggest);
-                            return builder.buildFuture();
-                        })
-                        .then(Commands.argument("direction", StringArgumentType.word())
-                            .suggests((ctx, builder) -> {
-                                gradientCommand.getDirectionSuggestions().stream()
-                                    .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
-                                    .forEach(builder::suggest);
-                                return builder.buildFuture();
-                            })
-                            .then(Commands.argument("mode", StringArgumentType.word())
-                                .suggests((ctx, builder) -> {
-                                    gradientCommand.getModeSuggestions().stream()
-                                        .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
-                                        .forEach(builder::suggest);
-                                    return builder.buildFuture();
-                                })
-                                .executes(ctx -> {
-                                    String blocks = StringArgumentType.getString(ctx, "blocks");
-                                    String direction = StringArgumentType.getString(ctx, "direction");
-                                    String mode = StringArgumentType.getString(ctx, "mode");
-                                    gradientCommand.execute((Player) ctx.getSource().getSender(), blocks, direction, mode);
-                                    return 1;
-                                })
-                            )
+                    Commands.literal("gradient")
+                            .requires(source -> source.getSender() instanceof Player &&
+                                    source.getSender().hasPermission("gzmnbuildtools.gradient"))
                             .executes(ctx -> {
-                                String blocks = StringArgumentType.getString(ctx, "blocks");
-                                String direction = StringArgumentType.getString(ctx, "direction");
-                                gradientCommand.execute((Player) ctx.getSource().getSender(), blocks, direction, "LINEAR");
+                                gradientCommand.openUI((Player) ctx.getSource().getSender());
                                 return 1;
                             })
-                        )
-                    )
-                    .build(),
-                "Apply or create gradients with a visual UI.",
-                List.of("grad", "grd")
-            );
+                            .then(Commands.argument("blocks", StringArgumentType.word())
+                                    .suggests((ctx, builder) -> {
+                                        gradientCommand.getBlockSuggestions().stream()
+                                                .filter(s -> s.toLowerCase()
+                                                        .startsWith(builder.getRemainingLowerCase()))
+                                                .forEach(builder::suggest);
+                                        return builder.buildFuture();
+                                    })
+                                    .then(Commands.argument("direction", StringArgumentType.word())
+                                            .suggests((ctx, builder) -> {
+                                                gradientCommand.getDirectionSuggestions().stream()
+                                                        .filter(s -> s.toLowerCase()
+                                                                .startsWith(builder.getRemainingLowerCase()))
+                                                        .forEach(builder::suggest);
+                                                return builder.buildFuture();
+                                            })
+                                            .then(Commands.argument("mode", StringArgumentType.word())
+                                                    .suggests((ctx, builder) -> {
+                                                        gradientCommand.getModeSuggestions().stream()
+                                                                .filter(s -> s.toLowerCase()
+                                                                        .startsWith(builder.getRemainingLowerCase()))
+                                                                .forEach(builder::suggest);
+                                                        return builder.buildFuture();
+                                                    })
+                                                    .executes(ctx -> {
+                                                        String blocks = StringArgumentType.getString(ctx, "blocks");
+                                                        String direction = StringArgumentType.getString(ctx,
+                                                                "direction");
+                                                        String mode = StringArgumentType.getString(ctx, "mode");
+                                                        gradientCommand.execute((Player) ctx.getSource().getSender(),
+                                                                blocks, direction, mode);
+                                                        return 1;
+                                                    }))
+                                            .executes(ctx -> {
+                                                String blocks = StringArgumentType.getString(ctx, "blocks");
+                                                String direction = StringArgumentType.getString(ctx, "direction");
+                                                gradientCommand.execute((Player) ctx.getSource().getSender(), blocks,
+                                                        direction, "LINEAR");
+                                                return 1;
+                                            })))
+                            .build(),
+                    "Apply or create gradients with a visual UI.",
+                    List.of("grad", "grd"));
         });
     }
 
