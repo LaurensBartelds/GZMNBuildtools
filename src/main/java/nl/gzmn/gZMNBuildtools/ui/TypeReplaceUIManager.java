@@ -6,6 +6,7 @@ import com.sk89q.worldedit.world.block.BlockType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import nl.gzmn.gZMNBuildtools.commands.TypeReplaceCommand;
 import nl.gzmn.gZMNBuildtools.util.BlockTypeFamily;
 import nl.gzmn.gZMNBuildtools.util.MessageManager;
@@ -147,12 +148,12 @@ public class TypeReplaceUIManager implements Listener {
 
     private Inventory createMainInventory(Player player, TypeReplaceBuilder builder) {
         Inventory inv = Bukkit.createInventory(null, 54,
-                MessageManager.asLegacyString(Component.text("Type Replace").color(NamedTextColor.DARK_AQUA)
-                        .decorate(TextDecoration.BOLD)));
+                Component.text("Type Replace").color(NamedTextColor.DARK_AQUA)
+                        .decorate(TextDecoration.BOLD));
 
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
-        fillerMeta.setDisplayName(" ");
+        fillerMeta.displayName(Component.text(" "));
         filler.setItemMeta(fillerMeta);
         for (int i = 0; i < 54; i++) {
             inv.setItem(i, filler);
@@ -170,8 +171,7 @@ public class TypeReplaceUIManager implements Listener {
         } else {
             ItemStack empty = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
             ItemMeta meta = empty.getItemMeta();
-            meta.setDisplayName(MessageManager.asLegacyString(
-                    Component.text("No source selected").color(NamedTextColor.GRAY)));
+            meta.displayName(Component.text("No source selected").color(NamedTextColor.GRAY));
             empty.setItemMeta(meta);
             inv.setItem(10, empty);
             inv.setItem(11, empty.clone());
@@ -180,8 +180,7 @@ public class TypeReplaceUIManager implements Listener {
 
         ItemStack arrow = new ItemStack(Material.SPECTRAL_ARROW);
         ItemMeta arrowMeta = arrow.getItemMeta();
-        arrowMeta.setDisplayName(MessageManager.asLegacyString(
-                Component.text("→").color(NamedTextColor.YELLOW).decorate(TextDecoration.BOLD)));
+        arrowMeta.displayName(Component.text("→").color(NamedTextColor.YELLOW).decorate(TextDecoration.BOLD));
         arrow.setItemMeta(arrowMeta);
         inv.setItem(13, arrow);
 
@@ -193,8 +192,7 @@ public class TypeReplaceUIManager implements Listener {
         } else {
             ItemStack empty = new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE);
             ItemMeta meta = empty.getItemMeta();
-            meta.setDisplayName(MessageManager.asLegacyString(
-                    Component.text("No target selected").color(NamedTextColor.GRAY)));
+            meta.displayName(Component.text("No target selected").color(NamedTextColor.GRAY));
             empty.setItemMeta(meta);
             inv.setItem(14, empty);
             inv.setItem(15, empty.clone());
@@ -203,24 +201,22 @@ public class TypeReplaceUIManager implements Listener {
 
         ItemStack selectSource = new ItemStack(builder.sourceMaterial != null ? Material.LIME_DYE : Material.YELLOW_DYE);
         ItemMeta sourceMeta = selectSource.getItemMeta();
-        sourceMeta.setDisplayName(MessageManager.asLegacyString(
-                Component.text(builder.sourceMaterial != null ? "Change Source" : "Select Source")
-                        .color(NamedTextColor.GREEN)));
-        sourceMeta.setLore(Arrays.asList(
-                MessageManager.asLegacyString(Component.text("Click to select the material").color(NamedTextColor.GRAY)),
-                MessageManager.asLegacyString(Component.text("you want to replace FROM").color(NamedTextColor.GRAY))
+        sourceMeta.displayName(Component.text(builder.sourceMaterial != null ? "Change Source" : "Select Source")
+                        .color(NamedTextColor.GREEN));
+        sourceMeta.lore(Arrays.asList(
+                Component.text("Click to select the material").color(NamedTextColor.GRAY),
+                Component.text("you want to replace FROM").color(NamedTextColor.GRAY)
         ));
         selectSource.setItemMeta(sourceMeta);
         inv.setItem(37, selectSource);
 
         ItemStack selectTarget = new ItemStack(builder.targetMaterial != null ? Material.LIME_DYE : Material.YELLOW_DYE);
         ItemMeta targetMeta = selectTarget.getItemMeta();
-        targetMeta.setDisplayName(MessageManager.asLegacyString(
-                Component.text(builder.targetMaterial != null ? "Change Target" : "Select Target")
-                        .color(NamedTextColor.GREEN)));
-        targetMeta.setLore(Arrays.asList(
-                MessageManager.asLegacyString(Component.text("Click to select the material").color(NamedTextColor.GRAY)),
-                MessageManager.asLegacyString(Component.text("you want to replace TO").color(NamedTextColor.GRAY))
+        targetMeta.displayName(Component.text(builder.targetMaterial != null ? "Change Target" : "Select Target")
+                        .color(NamedTextColor.GREEN));
+        targetMeta.lore(Arrays.asList(
+                Component.text("Click to select the material").color(NamedTextColor.GRAY),
+                Component.text("you want to replace TO").color(NamedTextColor.GRAY)
         ));
         selectTarget.setItemMeta(targetMeta);
         inv.setItem(43, selectTarget);
@@ -228,20 +224,19 @@ public class TypeReplaceUIManager implements Listener {
         boolean canExecute = builder.sourceMaterial != null && builder.targetMaterial != null;
         ItemStack execute = new ItemStack(canExecute ? Material.EMERALD : Material.COAL);
         ItemMeta executeMeta = execute.getItemMeta();
-        executeMeta.setDisplayName(MessageManager.asLegacyString(
-                Component.text("Execute Replacement")
+        executeMeta.displayName(Component.text("Execute Replacement")
                         .color(canExecute ? NamedTextColor.GREEN : NamedTextColor.GRAY)
-                        .decorate(TextDecoration.BOLD)));
+                        .decorate(TextDecoration.BOLD));
         if (canExecute) {
-            executeMeta.setLore(Arrays.asList(
-                    MessageManager.asLegacyString(Component.text("Click to replace all").color(NamedTextColor.GRAY)),
-                    MessageManager.asLegacyString(Component.text(builder.sourceMaterial + " → " + builder.targetMaterial)
-                            .color(NamedTextColor.YELLOW))
+            executeMeta.lore(Arrays.asList(
+                    Component.text("Click to replace all").color(NamedTextColor.GRAY),
+                    Component.text(builder.sourceMaterial + " → " + builder.targetMaterial)
+                            .color(NamedTextColor.YELLOW)
             ));
         } else {
-            executeMeta.setLore(Arrays.asList(
-                    MessageManager.asLegacyString(Component.text("Select both source and target").color(NamedTextColor.RED)),
-                    MessageManager.asLegacyString(Component.text("materials first").color(NamedTextColor.RED))
+            executeMeta.lore(Arrays.asList(
+                    Component.text("Select both source and target").color(NamedTextColor.RED),
+                    Component.text("materials first").color(NamedTextColor.RED)
             ));
         }
         execute.setItemMeta(executeMeta);
@@ -249,7 +244,7 @@ public class TypeReplaceUIManager implements Listener {
 
         ItemStack close = new ItemStack(Material.BARRIER);
         ItemMeta closeMeta = close.getItemMeta();
-        closeMeta.setDisplayName(MessageManager.asLegacyString(Component.text("Close").color(NamedTextColor.RED)));
+        closeMeta.displayName(Component.text("Close").color(NamedTextColor.RED));
         close.setItemMeta(closeMeta);
         inv.setItem(53, close);
 
@@ -261,12 +256,12 @@ public class TypeReplaceUIManager implements Listener {
 
         String title = selecting.equals("source") ? "Select Source Category" : "Select Target Category";
         Inventory inv = Bukkit.createInventory(null, 54,
-                MessageManager.asLegacyString(Component.text(title).color(NamedTextColor.BLUE)
-                        .decorate(TextDecoration.BOLD)));
+                Component.text(title).color(NamedTextColor.BLUE)
+                        .decorate(TextDecoration.BOLD));
 
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
-        fillerMeta.setDisplayName(" ");
+        fillerMeta.displayName(Component.text(" "));
         filler.setItemMeta(fillerMeta);
         for (int i = 0; i < 54; i++) {
             inv.setItem(i, filler);
@@ -274,7 +269,7 @@ public class TypeReplaceUIManager implements Listener {
 
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
-        backMeta.setDisplayName(MessageManager.asLegacyString(Component.text("← Back").color(NamedTextColor.GRAY)));
+        backMeta.displayName(Component.text("← Back").color(NamedTextColor.GRAY));
         back.setItemMeta(backMeta);
         inv.setItem(0, back);
 
@@ -283,11 +278,10 @@ public class TypeReplaceUIManager implements Listener {
             MaterialCategory category = categories[i];
             ItemStack item = new ItemStack(category.icon);
             ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(MessageManager.asLegacyString(
-                    Component.text(category.displayName).color(NamedTextColor.YELLOW)));
-            meta.setLore(Arrays.asList(
-                    MessageManager.asLegacyString(Component.text(CATEGORY_MATERIALS.get(category).size() + " materials")
-                            .color(NamedTextColor.GRAY))
+            meta.displayName(Component.text(category.displayName).color(NamedTextColor.YELLOW));
+            meta.lore(Arrays.asList(
+                    Component.text(CATEGORY_MATERIALS.get(category).size() + " materials")
+                            .color(NamedTextColor.GRAY)
             ));
             item.setItemMeta(meta);
             inv.setItem(9 + i, item);
@@ -303,12 +297,12 @@ public class TypeReplaceUIManager implements Listener {
         String title = selecting != null && selecting.equals("source") ? "Select Source Material" : "Select Target Material";
 
         Inventory inv = Bukkit.createInventory(null, 54,
-                MessageManager.asLegacyString(Component.text(title).color(NamedTextColor.DARK_GREEN)
-                        .decorate(TextDecoration.BOLD)));
+                Component.text(title).color(NamedTextColor.DARK_GREEN)
+                        .decorate(TextDecoration.BOLD));
 
         ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta fillerMeta = filler.getItemMeta();
-        fillerMeta.setDisplayName(" ");
+        fillerMeta.displayName(Component.text(" "));
         filler.setItemMeta(fillerMeta);
         for (int i = 0; i < 54; i++) {
             inv.setItem(i, filler);
@@ -316,14 +310,13 @@ public class TypeReplaceUIManager implements Listener {
 
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
-        backMeta.setDisplayName(MessageManager.asLegacyString(Component.text("← Back to Categories").color(NamedTextColor.GRAY)));
+        backMeta.displayName(Component.text("← Back to Categories").color(NamedTextColor.GRAY));
         back.setItemMeta(backMeta);
         inv.setItem(0, back);
 
         ItemStack categoryItem = new ItemStack(category.icon);
         ItemMeta categoryMeta = categoryItem.getItemMeta();
-        categoryMeta.setDisplayName(MessageManager.asLegacyString(
-                                Component.text(category.displayName).color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD)));
+        categoryMeta.displayName(Component.text(category.displayName).color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
         categoryItem.setItemMeta(categoryMeta);
         inv.setItem(4, categoryItem);
 
@@ -343,7 +336,7 @@ public class TypeReplaceUIManager implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        String title = event.getView().getTitle();
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
 
         if (title.contains("Type Replace") && !title.contains("Category") && !title.contains("Material")) {
             handleMainPageClick(event, player);
@@ -428,7 +421,7 @@ public class TypeReplaceUIManager implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        String title = event.getView().getTitle();
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         if (title.contains("Type Replace") && !title.contains("Category") && !title.contains("Material")) {
             Player player = (Player) event.getPlayer();
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -489,14 +482,13 @@ public class TypeReplaceUIManager implements Listener {
     private ItemStack createInfoItem() {
         ItemStack item = new ItemStack(Material.BOOK);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(MessageManager.asLegacyString(
-                Component.text("Type Replace Tool").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD)));
-        meta.setLore(Arrays.asList(
-                MessageManager.asLegacyString(Component.text("Replace all variants of one").color(NamedTextColor.GRAY)),
-                MessageManager.asLegacyString(Component.text("material with another.").color(NamedTextColor.GRAY)),
-                "",
-                MessageManager.asLegacyString(Component.text("Converts: stairs, slabs,").color(NamedTextColor.YELLOW)),
-                MessageManager.asLegacyString(Component.text("walls, fences, bars, etc.").color(NamedTextColor.YELLOW))
+        meta.displayName(Component.text("Type Replace Tool").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
+        meta.lore(Arrays.asList(
+                Component.text("Replace all variants of one").color(NamedTextColor.GRAY),
+                Component.text("material with another.").color(NamedTextColor.GRAY),
+                Component.text(""),
+                Component.text("Converts: stairs, slabs,").color(NamedTextColor.YELLOW),
+                Component.text("walls, fences, bars, etc.").color(NamedTextColor.YELLOW)
         ));
         item.setItemMeta(meta);
         return item;
@@ -506,13 +498,12 @@ public class TypeReplaceUIManager implements Listener {
         boolean hasSelection = hasWorldEditSelection(player);
         ItemStack item = new ItemStack(hasSelection ? Material.LIME_CONCRETE : Material.RED_CONCRETE);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(MessageManager.asLegacyString(
-                Component.text(hasSelection ? "Selection Ready" : "No Selection!")
-                        .color(hasSelection ? NamedTextColor.GREEN : NamedTextColor.RED)));
+        meta.displayName(Component.text(hasSelection ? "Selection Ready" : "No Selection!")
+                        .color(hasSelection ? NamedTextColor.GREEN : NamedTextColor.RED));
         if (!hasSelection) {
-            meta.setLore(Arrays.asList(
-                    MessageManager.asLegacyString(Component.text("Use WorldEdit to select").color(NamedTextColor.GRAY)),
-                    MessageManager.asLegacyString(Component.text("an area first (//wand)").color(NamedTextColor.GRAY))
+            meta.lore(Arrays.asList(
+                    Component.text("Use WorldEdit to select").color(NamedTextColor.GRAY),
+                    Component.text("an area first (//wand)").color(NamedTextColor.GRAY)
             ));
         }
         item.setItemMeta(meta);
@@ -523,9 +514,8 @@ public class TypeReplaceUIManager implements Listener {
         Material icon = getMaterialIcon(materialName);
         ItemStack item = new ItemStack(icon);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(MessageManager.asLegacyString(
-                Component.text(label + ": " + formatMaterialName(materialName))
-                        .color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD)));
+        meta.displayName(Component.text(label + ": " + formatMaterialName(materialName))
+                        .color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD));
         item.setItemMeta(meta);
         return item;
     }
@@ -534,8 +524,7 @@ public class TypeReplaceUIManager implements Listener {
         Material icon = getMaterialIcon(materialName);
         ItemStack item = new ItemStack(icon);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(MessageManager.asLegacyString(
-                Component.text(formatMaterialName(materialName)).color(NamedTextColor.YELLOW)));
+        meta.displayName(Component.text(formatMaterialName(materialName)).color(NamedTextColor.YELLOW));
         item.setItemMeta(meta);
         return item;
     }

@@ -138,7 +138,7 @@ public class TypeReplaceCommand {
                         }
 
                         if (!newState.getBlockType().id().equals("minecraft:air")) {
-                            editSession.setBlock(position, newState);
+                            boolean placed = editSession.setBlock(position, newState);
                             count++;
                         }
                     }

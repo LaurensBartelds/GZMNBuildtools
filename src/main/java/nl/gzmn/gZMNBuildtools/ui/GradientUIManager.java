@@ -9,6 +9,7 @@ import com.sk89q.worldedit.world.block.BlockTypes;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import nl.gzmn.gZMNBuildtools.commands.GradientCommand;
 import nl.gzmn.gZMNBuildtools.gradient.GradientDefinition;
 import nl.gzmn.gZMNBuildtools.util.MessageManager;
@@ -55,8 +56,8 @@ public class GradientUIManager implements Listener {
 
     private Inventory createGradientInventory(GradientBuilder builder) {
         Inventory inv = Bukkit.createInventory(null, 54,
-                MessageManager.asLegacyString(Component.text("Gradient Builder").color(NamedTextColor.DARK_PURPLE)
-                        .decorate(TextDecoration.BOLD)));
+                Component.text("Gradient Builder").color(NamedTextColor.DARK_PURPLE)
+                        .decorate(TextDecoration.BOLD));
 
         for (int i = 0; i < 9; i++) {
             if (i < builder.stops.size()) {
@@ -65,23 +66,21 @@ public class GradientUIManager implements Listener {
                 if (material != null) {
                     ItemStack item = new ItemStack(material);
                     ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName(MessageManager.asLegacyString(
-                            Component.text("Stop " + (i + 1) + ": " + blockType.id()).color(NamedTextColor.YELLOW)));
-                    meta.setLore(Arrays.asList(
-                            MessageManager
-                                    .asLegacyString(Component.text("Left-click to change").color(NamedTextColor.GRAY)),
-                            MessageManager.asLegacyString(
-                                    Component.text("Right-click to remove").color(NamedTextColor.GRAY))));
+                    meta.displayName(Component.text("Stop " + (i + 1) + ": " + blockType.id()).color(NamedTextColor.YELLOW));
+                    meta.lore(Arrays.asList(
+                            Component.text("Left-click to change").color(NamedTextColor.GRAY),
+                            Component.text("Right-click to remove").color(NamedTextColor.GRAY)
+                    ));
                     item.setItemMeta(meta);
                     inv.setItem(i, item);
                 }
             } else {
                 ItemStack addStop = new ItemStack(Material.LIME_DYE);
                 ItemMeta meta = addStop.getItemMeta();
-                meta.setDisplayName(
-                        MessageManager.asLegacyString(Component.text("Add Gradient Stop").color(NamedTextColor.GREEN)));
-                meta.setLore(Arrays.asList(MessageManager
-                        .asLegacyString(Component.text("Click to add a block").color(NamedTextColor.GRAY))));
+                meta.displayName(Component.text("Add Gradient Stop").color(NamedTextColor.GREEN));
+                meta.lore(Arrays.asList(
+                        Component.text("Click to add a block").color(NamedTextColor.GRAY)
+                ));
                 addStop.setItemMeta(meta);
                 inv.setItem(i, addStop);
                 break;
@@ -102,18 +101,17 @@ public class GradientUIManager implements Listener {
 
         ItemStack apply = new ItemStack(Material.EMERALD);
         ItemMeta applyMeta = apply.getItemMeta();
-        applyMeta.setDisplayName(MessageManager.asLegacyString(
-                Component.text("Apply Gradient").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD)));
-        applyMeta.setLore(Arrays.asList(
-                MessageManager.asLegacyString(Component.text("Apply this gradient to your").color(NamedTextColor.GRAY)),
-                MessageManager
-                        .asLegacyString(Component.text("current WorldEdit selection").color(NamedTextColor.GRAY))));
+        applyMeta.displayName(Component.text("Apply Gradient").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
+        applyMeta.lore(Arrays.asList(
+                Component.text("Apply this gradient to your").color(NamedTextColor.GRAY),
+                Component.text("current WorldEdit selection").color(NamedTextColor.GRAY)
+        ));
         apply.setItemMeta(applyMeta);
         inv.setItem(49, apply);
 
         ItemStack cancel = new ItemStack(Material.BARRIER);
         ItemMeta cancelMeta = cancel.getItemMeta();
-        cancelMeta.setDisplayName(MessageManager.asLegacyString(Component.text("Close").color(NamedTextColor.RED)));
+        cancelMeta.displayName(Component.text("Close").color(NamedTextColor.RED));
         cancel.setItemMeta(cancelMeta);
         inv.setItem(53, cancel);
 
@@ -130,11 +128,10 @@ public class GradientUIManager implements Listener {
         Component nameComp = Component.text(name).color(color);
         if (isSelected)
             nameComp = nameComp.decorate(TextDecoration.BOLD);
-        meta.setDisplayName(MessageManager.asLegacyString(nameComp));
+        meta.displayName(nameComp);
 
         if (isSelected) {
-            meta.setLore(Arrays
-                    .asList(MessageManager.asLegacyString(Component.text("✓ Selected").color(NamedTextColor.GREEN))));
+            meta.lore(Arrays.asList(Component.text("✓ Selected").color(NamedTextColor.GREEN)));
         }
 
         item.setItemMeta(meta);
@@ -151,11 +148,10 @@ public class GradientUIManager implements Listener {
         Component nameComp = Component.text(name).color(color);
         if (isSelected)
             nameComp = nameComp.decorate(TextDecoration.BOLD);
-        meta.setDisplayName(MessageManager.asLegacyString(nameComp));
+        meta.displayName(nameComp);
 
         if (isSelected) {
-            meta.setLore(Arrays
-                    .asList(MessageManager.asLegacyString(Component.text("✓ Selected").color(NamedTextColor.GREEN))));
+            meta.lore(Arrays.asList(Component.text("✓ Selected").color(NamedTextColor.GREEN)));
         }
 
         item.setItemMeta(meta);
@@ -166,8 +162,7 @@ public class GradientUIManager implements Listener {
         if (builder.stops.size() < 2) {
             ItemStack placeholder = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
             ItemMeta meta = placeholder.getItemMeta();
-            meta.setDisplayName(
-                    MessageManager.asLegacyString(Component.text("Add at least 2 blocks").color(NamedTextColor.GRAY)));
+            meta.displayName(Component.text("Add at least 2 blocks").color(NamedTextColor.GRAY));
             placeholder.setItemMeta(meta);
             for (int i = 36; i <= 44; i++) {
                 inv.setItem(i, placeholder);
@@ -186,8 +181,7 @@ public class GradientUIManager implements Listener {
                 if (material != null) {
                     ItemStack item = new ItemStack(material);
                     ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName(MessageManager
-                            .asLegacyString(Component.text((int) (position * 100) + "%").color(NamedTextColor.AQUA)));
+                    meta.displayName(Component.text((int) (position * 100) + "%").color(NamedTextColor.AQUA));
                     item.setItemMeta(meta);
                     inv.setItem(36 + i, item);
                 }
@@ -201,7 +195,7 @@ public class GradientUIManager implements Listener {
         if (!(event.getWhoClicked() instanceof Player player))
             return;
 
-        String title = event.getView().getTitle();
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         if (!title.contains("Gradient Builder")) {
             return;
         }
@@ -252,8 +246,7 @@ public class GradientUIManager implements Listener {
 
     private void openBlockSelector(Player player, int stopIndex) {
         Inventory inv = Bukkit.createInventory(null, 54,
-                MessageManager.asLegacyString(
-                        Component.text("Select Block").color(NamedTextColor.BLUE).decorate(TextDecoration.BOLD)));
+                Component.text("Select Block").color(NamedTextColor.BLUE).decorate(TextDecoration.BOLD));
 
         List<Material> commonBlocks = Arrays.asList(
                 Material.STONE, Material.COBBLESTONE, Material.ANDESITE, Material.DIORITE, Material.GRANITE,
@@ -273,15 +266,14 @@ public class GradientUIManager implements Listener {
         for (int i = 0; i < Math.min(commonBlocks.size(), 45); i++) {
             ItemStack item = new ItemStack(commonBlocks.get(i));
             ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(MessageManager.asLegacyString(Component
-                    .text(commonBlocks.get(i).name().toLowerCase().replace("_", " ")).color(NamedTextColor.YELLOW)));
+            meta.displayName(Component.text(commonBlocks.get(i).name().toLowerCase().replace("_", " ")).color(NamedTextColor.YELLOW));
             item.setItemMeta(meta);
             inv.setItem(i, item);
         }
 
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
-        backMeta.setDisplayName(MessageManager.asLegacyString(Component.text("← Back").color(NamedTextColor.GRAY)));
+        backMeta.displayName(Component.text("← Back").color(NamedTextColor.GRAY));
         back.setItemMeta(backMeta);
         inv.setItem(53, back);
 
@@ -298,7 +290,7 @@ public class GradientUIManager implements Listener {
         if (!(event.getWhoClicked() instanceof Player player))
             return;
 
-        String title = event.getView().getTitle();
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         if (!title.contains("Select Block")) {
             return;
         }
@@ -344,7 +336,7 @@ public class GradientUIManager implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        String title = event.getView().getTitle();
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
         if (title.contains("Gradient Builder")) {
             Player player = (Player) event.getPlayer();
             Bukkit.getScheduler().runTaskLater(plugin, () -> {

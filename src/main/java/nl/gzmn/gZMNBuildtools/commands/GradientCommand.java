@@ -167,7 +167,7 @@ public class GradientCommand {
                 BlockType blockType = gradient.getBlockAt(normalizedPosition);
 
                 if (blockType != null) {
-                    editSession.setBlock(position, blockType.getDefaultState());
+                    boolean placed = editSession.setBlock(position, blockType.getDefaultState());
                     count++;
                 }
             }
