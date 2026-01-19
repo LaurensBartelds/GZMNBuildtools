@@ -17,8 +17,6 @@ class MessageManagerTest {
         String plain = PlainTextComponentSerializer.plainText().serialize(prefixed);
         assertEquals("[GZMN] Replaced 5 blocks.", plain);
 
-        // find the child component that contains the literal "GZMN" and assert its
-        // color
         boolean found = false;
         for (var child : prefixed.children()) {
             String txt = PlainTextComponentSerializer.plainText().serialize(child);

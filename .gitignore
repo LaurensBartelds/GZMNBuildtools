@@ -111,3 +111,10 @@ buildNumber.properties
 
 # Common working directory
 run/
+
+#CLAUDE file
+CLAUDE.md
+
+# IDEs and editors
+.vscode/
+*.code-workspace

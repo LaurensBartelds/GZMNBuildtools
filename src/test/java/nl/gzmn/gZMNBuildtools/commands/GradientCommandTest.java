@@ -38,7 +38,6 @@ class GradientCommandTest {
         cmd.execute(player, "stone,cobble", "BAD_DIR", "LINEAR");
 
         ArgumentCaptor<Component> cap = ArgumentCaptor.forClass(Component.class);
-        // expect at least 3 messages: error + directions + modes
         verify(player, atLeast(3)).sendMessage(cap.capture());
 
         var all = cap.getAllValues();
@@ -46,7 +45,6 @@ class GradientCommandTest {
         assertTrue(first.startsWith("[GZMN]"));
         assertTrue(first.contains("Error:"));
 
-        // find the help lines
         boolean foundDir = all.stream()
                 .anyMatch(c -> PlainTextComponentSerializer.plainText().serialize(c).contains("Valid directions"));
         boolean foundMode = all.stream()

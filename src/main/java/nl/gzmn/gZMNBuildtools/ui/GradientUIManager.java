@@ -29,9 +29,6 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 
-/**
- * Manages the gradient UI for visual gradient creation
- */
 public class GradientUIManager implements Listener {
 
     private final Plugin plugin;
@@ -44,16 +41,10 @@ public class GradientUIManager implements Listener {
         this.activeBuilders = new HashMap<>();
     }
 
-    /**
-     * Register event listeners. Must be called after plugin is enabled.
-     */
     public void registerEvents() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
-    /**
-     * Open the gradient UI for a player
-     */
     public void openGradientUI(Player player) {
         GradientBuilder builder = activeBuilders.computeIfAbsent(player.getUniqueId(),
                 k -> new GradientBuilder());
@@ -62,15 +53,11 @@ public class GradientUIManager implements Listener {
         player.openInventory(inventory);
     }
 
-    /**
-     * Create the gradient configuration inventory
-     */
     private Inventory createGradientInventory(GradientBuilder builder) {
         Inventory inv = Bukkit.createInventory(null, 54,
                 MessageManager.asLegacyString(Component.text("Gradient Builder").color(NamedTextColor.DARK_PURPLE)
                         .decorate(TextDecoration.BOLD)));
 
-        // Gradient stops (slots 0-8)
         for (int i = 0; i < 9; i++) {
             if (i < builder.stops.size()) {
                 BlockType blockType = builder.stops.get(i);
@@ -101,22 +88,18 @@ public class GradientUIManager implements Listener {
             }
         }
 
-        // Direction selector (slots 18-22)
         addDirectionButton(inv, 18, GradientDirection.VERTICAL_UP, "↑ Vertical Up", Material.ARROW, builder);
         addDirectionButton(inv, 19, GradientDirection.VERTICAL_DOWN, "↓ Vertical Down", Material.ARROW, builder);
         addDirectionButton(inv, 20, GradientDirection.HORIZONTAL_X, "→ Horizontal X", Material.ARROW, builder);
         addDirectionButton(inv, 21, GradientDirection.HORIZONTAL_Z, "→ Horizontal Z", Material.ARROW, builder);
         addDirectionButton(inv, 22, GradientDirection.RADIAL, "◉ Radial", Material.TARGET, builder);
 
-        // Interpolation mode (slots 27-29)
         addModeButton(inv, 27, InterpolationMode.LINEAR, "Linear", Material.IRON_INGOT, builder);
         addModeButton(inv, 28, InterpolationMode.SMOOTH, "Smooth", Material.GOLD_INGOT, builder);
         addModeButton(inv, 29, InterpolationMode.DISCRETE, "Discrete", Material.DIAMOND, builder);
 
-        // Preview area (slots 36-44)
         renderPreview(inv, builder);
 
-        // Apply button (slot 49)
         ItemStack apply = new ItemStack(Material.EMERALD);
         ItemMeta applyMeta = apply.getItemMeta();
         applyMeta.setDisplayName(MessageManager.asLegacyString(
@@ -128,7 +111,6 @@ public class GradientUIManager implements Listener {
         apply.setItemMeta(applyMeta);
         inv.setItem(49, apply);
 
-        // Cancel button (slot 53)
         ItemStack cancel = new ItemStack(Material.BARRIER);
         ItemMeta cancelMeta = cancel.getItemMeta();
         cancelMeta.setDisplayName(MessageManager.asLegacyString(Component.text("Close").color(NamedTextColor.RED)));
@@ -182,7 +164,6 @@ public class GradientUIManager implements Listener {
 
     private void renderPreview(Inventory inv, GradientBuilder builder) {
         if (builder.stops.size() < 2) {
-            // Show placeholder
             ItemStack placeholder = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
             ItemMeta meta = placeholder.getItemMeta();
             meta.setDisplayName(
@@ -197,7 +178,6 @@ public class GradientUIManager implements Listener {
         try {
             GradientDefinition gradient = builder.build();
 
-            // Preview 9 steps of the gradient
             for (int i = 0; i < 9; i++) {
                 double position = i / 8.0;
                 BlockType blockType = gradient.getBlockAt(position);
@@ -213,7 +193,6 @@ public class GradientUIManager implements Listener {
                 }
             }
         } catch (Exception e) {
-            // Error in gradient, show error indicator
         }
     }
 
@@ -238,19 +217,15 @@ public class GradientUIManager implements Listener {
 
         int slot = event.getSlot();
 
-        // Handle gradient stop clicks (0-8)
         if (slot >= 0 && slot < 9) {
             if (event.getCurrentItem().getType() == Material.LIME_DYE) {
-                // Add new stop - open block selector
                 player.closeInventory();
                 openBlockSelector(player, builder.stops.size());
             } else if (event.isRightClick() && slot < builder.stops.size()) {
-                // Remove stop
                 builder.stops.remove(slot);
                 player.openInventory(createGradientInventory(builder));
             }
         }
-        // Handle direction clicks (18-22)
         else if (slot >= 18 && slot <= 22) {
             GradientDirection[] directions = GradientDirection.values();
             int dirIndex = slot - 18;
@@ -259,7 +234,6 @@ public class GradientUIManager implements Listener {
                 player.openInventory(createGradientInventory(builder));
             }
         }
-        // Handle mode clicks (27-29)
         else if (slot >= 27 && slot <= 29) {
             InterpolationMode[] modes = InterpolationMode.values();
             int modeIndex = slot - 27;
@@ -268,11 +242,9 @@ public class GradientUIManager implements Listener {
                 player.openInventory(createGradientInventory(builder));
             }
         }
-        // Handle apply button (49)
         else if (slot == 49) {
             applyGradient(player, builder);
         }
-        // Handle cancel button (53)
         else if (slot == 53) {
             player.closeInventory();
         }
@@ -283,7 +255,6 @@ public class GradientUIManager implements Listener {
                 MessageManager.asLegacyString(
                         Component.text("Select Block").color(NamedTextColor.BLUE).decorate(TextDecoration.BOLD)));
 
-        // Common building blocks
         List<Material> commonBlocks = Arrays.asList(
                 Material.STONE, Material.COBBLESTONE, Material.ANDESITE, Material.DIORITE, Material.GRANITE,
                 Material.SANDSTONE, Material.RED_SANDSTONE, Material.SMOOTH_STONE,
@@ -308,7 +279,6 @@ public class GradientUIManager implements Listener {
             inv.setItem(i, item);
         }
 
-        // Back button
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
         backMeta.setDisplayName(MessageManager.asLegacyString(Component.text("← Back").color(NamedTextColor.GRAY)));
@@ -317,7 +287,6 @@ public class GradientUIManager implements Listener {
 
         player.openInventory(inv);
 
-        // Store the stop index we're editing
         player.getPersistentDataContainer().set(
                 new org.bukkit.NamespacedKey(plugin, "editing_stop"),
                 org.bukkit.persistence.PersistentDataType.INTEGER,
@@ -345,13 +314,11 @@ public class GradientUIManager implements Listener {
 
         int slot = event.getSlot();
 
-        // Back button
         if (slot == 53) {
             player.openInventory(createGradientInventory(builder));
             return;
         }
 
-        // Block selection
         if (slot < 45) {
             Material selectedMaterial = event.getCurrentItem().getType();
             BlockType blockType = BlockTypes.get("minecraft:" + selectedMaterial.name().toLowerCase());
@@ -379,14 +346,12 @@ public class GradientUIManager implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         String title = event.getView().getTitle();
         if (title.contains("Gradient Builder")) {
-            // Keep the builder for 5 minutes in case they reopen
             Player player = (Player) event.getPlayer();
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                // Only remove if they haven't reopened
                 if (player.getOpenInventory().getTopInventory().getHolder() == null) {
                     activeBuilders.remove(player.getUniqueId());
                 }
-            }, 6000L); // 5 minutes
+            }, 6000L);
         }
     }
 
@@ -422,9 +387,6 @@ public class GradientUIManager implements Listener {
         }
     }
 
-    /**
-     * Internal class to build a gradient configuration
-     */
     private static class GradientBuilder {
         List<BlockType> stops = new ArrayList<>();
         GradientDirection direction = GradientDirection.VERTICAL_UP;

@@ -19,9 +19,6 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-/**
- * Command to apply gradients to WorldEdit selections
- */
 public class GradientCommand {
 
     private final GradientUIManager uiManager;
@@ -55,9 +52,6 @@ public class GradientCommand {
         return MODE_SUGGESTIONS;
     }
 
-    /**
-     * Open the gradient UI for a player
-     */
     public void openUI(Player player) {
         if (uiManager != null) {
             uiManager.openGradientUI(player);
@@ -66,16 +60,11 @@ public class GradientCommand {
         }
     }
 
-    /**
-     * Execute the gradient command with arguments
-     */
     public void execute(Player player, String blocksString, String directionString, String modeString) {
         try {
-            // Parse direction
             GradientDirection direction = GradientDirection.valueOf(directionString.toUpperCase());
             InterpolationMode mode = InterpolationMode.valueOf(modeString.toUpperCase());
 
-            // Get WorldEdit selection (overridable for tests)
             Region region = getSelectionFromPlayer(player);
 
             if (region == null) {
@@ -83,15 +72,12 @@ public class GradientCommand {
                 return;
             }
 
-            // Parse gradient (moved after selection check to avoid heavy static
-            // initialization when selection is missing)
             GradientDefinition gradient = GradientDefinition.parse(blocksString, direction, mode);
 
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
 
             MessageManager.info(player, "Applying %s", "gradient");
 
-            // Apply gradient
             int affected = applyGradient(actor, region, gradient);
 
             MessageManager.success(player, "Gradient applied to %d blocks.", affected);
@@ -110,20 +96,15 @@ public class GradientCommand {
         }
     }
 
-    /**
-     * Apply a gradient to a region
-     */
     public int applyGradient(com.sk89q.worldedit.entity.Player actor, Region region, GradientDefinition gradient) {
         int count = 0;
 
-        // Get the player's LocalSession for undo support
         LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
 
         try (EditSession editSession = localSession.createEditSession(actor)) {
             BlockVector3 min = region.getMinimumPoint();
             BlockVector3 max = region.getMaximumPoint();
 
-            // Calculate gradient bounds based on direction
             double minValue, maxValue;
             switch (gradient.getDirection()) {
                 case VERTICAL_UP:
@@ -140,7 +121,6 @@ public class GradientCommand {
                     maxValue = max.z();
                     break;
                 case RADIAL:
-                    // For radial, we'll use distance from center
                     BlockVector3 center = region.getCenter().toBlockPoint();
                     minValue = 0;
                     maxValue = Math.max(
@@ -154,9 +134,8 @@ public class GradientCommand {
 
             double range = maxValue - minValue;
             if (range == 0)
-                range = 1; // Avoid division by zero
+                range = 1;
 
-            // Apply gradient to each block
             for (BlockVector3 position : region) {
                 double value;
 
@@ -183,10 +162,8 @@ public class GradientCommand {
                         value = minValue;
                 }
 
-                // Normalize to 0-1 range
                 double normalizedPosition = (value - minValue) / range;
 
-                // Get block at this position
                 BlockType blockType = gradient.getBlockAt(normalizedPosition);
 
                 if (blockType != null) {
@@ -195,7 +172,6 @@ public class GradientCommand {
                 }
             }
 
-            // Record the edit session to history for undo support
             localSession.remember(editSession);
         } catch (Exception e) {
             e.printStackTrace();
@@ -204,10 +180,6 @@ public class GradientCommand {
         return count;
     }
 
-    /**
-     * Separated for testability — override in tests to avoid mocking WorldEdit
-     * internals.
-     */
     protected Region getSelectionFromPlayer(org.bukkit.entity.Player player) {
         try {
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);

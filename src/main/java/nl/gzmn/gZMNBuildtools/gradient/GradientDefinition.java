@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Represents a gradient definition with interpolation between block types
- */
 public class GradientDefinition {
 
     private final List<GradientStop> stops;
@@ -17,25 +14,22 @@ public class GradientDefinition {
     private final InterpolationMode interpolationMode;
 
     public enum GradientDirection {
-        VERTICAL_UP,    // Y+ direction
-        VERTICAL_DOWN,  // Y- direction
-        HORIZONTAL_X,   // X+ direction
-        HORIZONTAL_Z,   // Z+ direction
-        RADIAL          // From center outward
+        VERTICAL_UP,
+        VERTICAL_DOWN,
+        HORIZONTAL_X,
+        HORIZONTAL_Z,
+        RADIAL
     }
 
     public enum InterpolationMode {
-        LINEAR,         // Simple linear interpolation
-        SMOOTH,         // Smooth step interpolation
-        DISCRETE        // No interpolation, hard steps
+        LINEAR,
+        SMOOTH,
+        DISCRETE
     }
 
-    /**
-     * Represents a color/block stop in the gradient
-     */
     public static class GradientStop {
         private final BlockType blockType;
-        private final double position; // 0.0 to 1.0
+        private final double position;
 
         public GradientStop(BlockType blockType, double position) {
             this.blockType = blockType;
@@ -61,9 +55,6 @@ public class GradientDefinition {
         this.interpolationMode = interpolationMode;
     }
 
-    /**
-     * Create a simple two-block gradient
-     */
     public static GradientDefinition simple(BlockType start, BlockType end, GradientDirection direction) {
         return new GradientDefinition(
             Arrays.asList(
@@ -75,13 +66,9 @@ public class GradientDefinition {
         );
     }
 
-    /**
-     * Get the block type at a specific position (0.0 to 1.0)
-     */
     public BlockType getBlockAt(double position) {
         position = Math.max(0.0, Math.min(1.0, position));
 
-        // Find the two stops we're between
         GradientStop before = stops.get(0);
         GradientStop after = stops.get(stops.size() - 1);
 
@@ -93,7 +80,6 @@ public class GradientDefinition {
             }
         }
 
-        // If at exact position, return that block
         if (position == before.position) {
             return before.blockType;
         }
@@ -101,33 +87,24 @@ public class GradientDefinition {
             return after.blockType;
         }
 
-        // Calculate interpolation
         double range = after.position - before.position;
         double localPosition = (position - before.position) / range;
 
         return interpolateBlock(before.blockType, after.blockType, localPosition);
     }
 
-    /**
-     * Interpolate between two block types
-     */
     private BlockType interpolateBlock(BlockType start, BlockType end, double t) {
         switch (interpolationMode) {
             case SMOOTH:
-                // Smooth step function
                 t = t * t * (3 - 2 * t);
                 break;
             case DISCRETE:
-                // Hard step at midpoint
                 return t < 0.5 ? start : end;
             case LINEAR:
             default:
-                // Use t as-is
                 break;
         }
 
-        // For now, we do a simple threshold-based selection
-        // In a more advanced version, you could blend similar blocks
         return t < 0.5 ? start : end;
     }
 
@@ -143,9 +120,6 @@ public class GradientDefinition {
         return interpolationMode;
     }
 
-    /**
-     * Parse a gradient from a string format like "stone,cobblestone,andesite"
-     */
     public static GradientDefinition parse(String gradientString, GradientDirection direction, InterpolationMode mode) {
         String[] blockNames = gradientString.split(",");
         List<GradientStop> stops = new ArrayList<>();
