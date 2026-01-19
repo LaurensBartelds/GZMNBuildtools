@@ -33,14 +33,14 @@ public class TypeReplaceCommand {
         String fromMaterial = fromMaterialArg.toLowerCase();
         String toMaterial = toMaterialArg.toLowerCase();
 
-        com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
-
         try {
-            Region region = WorldEdit.getInstance().getSessionManager().get(actor).getSelection(actor.getWorld());
+            Region region = getSelectionFromPlayer(player);
             if (region == null) {
                 MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
+
+            com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
 
             // Check if source is a material group (e.g., "all_copper")
             if (BlockTypeFamily.isMaterialGroup(fromMaterial)) {
@@ -117,6 +117,19 @@ public class TypeReplaceCommand {
         public ReplaceResult(int count, boolean hasVerticalConnectors) {
             this.count = count;
             this.hasVerticalConnectors = hasVerticalConnectors;
+        }
+    }
+
+    /**
+     * Separated for testability — override in tests to avoid mocking WorldEdit
+     * internals.
+     */
+    protected com.sk89q.worldedit.regions.Region getSelectionFromPlayer(org.bukkit.entity.Player player) {
+        try {
+            com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
+            return WorldEdit.getInstance().getSessionManager().get(actor).getSelection(actor.getWorld());
+        } catch (Exception e) {
+            return null;
         }
     }
 

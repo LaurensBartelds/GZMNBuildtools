@@ -11,6 +11,7 @@ import com.sk89q.worldedit.world.block.BlockType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.gradient.GradientDefinition;
+import nl.gzmn.gZMNBuildtools.util.MessageManager;
 import nl.gzmn.gZMNBuildtools.gradient.GradientDefinition.GradientDirection;
 import nl.gzmn.gZMNBuildtools.gradient.GradientDefinition.InterpolationMode;
 import nl.gzmn.gZMNBuildtools.ui.GradientUIManager;
@@ -26,20 +27,17 @@ public class GradientCommand {
     private final GradientUIManager uiManager;
 
     private static final List<String> BLOCK_SUGGESTIONS = Arrays.asList(
-        "stone,cobblestone,andesite",
-        "white_wool,light_gray_wool,gray_wool,black_wool",
-        "oak_planks,spruce_planks,dark_oak_planks",
-        "sandstone,red_sandstone",
-        "grass_block,dirt,coarse_dirt"
-    );
+            "stone,cobblestone,andesite",
+            "white_wool,light_gray_wool,gray_wool,black_wool",
+            "oak_planks,spruce_planks,dark_oak_planks",
+            "sandstone,red_sandstone",
+            "grass_block,dirt,coarse_dirt");
 
     private static final List<String> DIRECTION_SUGGESTIONS = Arrays.asList(
-        "VERTICAL_UP", "VERTICAL_DOWN", "HORIZONTAL_X", "HORIZONTAL_Z", "RADIAL"
-    );
+            "VERTICAL_UP", "VERTICAL_DOWN", "HORIZONTAL_X", "HORIZONTAL_Z", "RADIAL");
 
     private static final List<String> MODE_SUGGESTIONS = Arrays.asList(
-        "LINEAR", "SMOOTH", "DISCRETE"
-    );
+            "LINEAR", "SMOOTH", "DISCRETE");
 
     public GradientCommand(GradientUIManager uiManager) {
         this.uiManager = uiManager;
@@ -64,7 +62,7 @@ public class GradientCommand {
         if (uiManager != null) {
             uiManager.openGradientUI(player);
         } else {
-            player.sendMessage(Component.text("Gradient UI is not available.", NamedTextColor.RED));
+            MessageManager.error(player, "Gradient UI is not available.");
         }
     }
 
@@ -77,33 +75,37 @@ public class GradientCommand {
             GradientDirection direction = GradientDirection.valueOf(directionString.toUpperCase());
             InterpolationMode mode = InterpolationMode.valueOf(modeString.toUpperCase());
 
-            // Parse gradient
-            GradientDefinition gradient = GradientDefinition.parse(blocksString, direction, mode);
-
-            // Get WorldEdit selection
-            com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
-            Region region = WorldEdit.getInstance().getSessionManager().get(actor).getSelection(actor.getWorld());
+            // Get WorldEdit selection (overridable for tests)
+            Region region = getSelectionFromPlayer(player);
 
             if (region == null) {
-                player.sendMessage(Component.text("Please make a WorldEdit selection first.", NamedTextColor.RED));
+                MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
 
-            player.sendMessage(Component.text("Applying gradient...", NamedTextColor.YELLOW));
+            // Parse gradient (moved after selection check to avoid heavy static
+            // initialization when selection is missing)
+            GradientDefinition gradient = GradientDefinition.parse(blocksString, direction, mode);
+
+            com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
+
+            MessageManager.info(player, "Applying %s", "gradient");
 
             // Apply gradient
             int affected = applyGradient(actor, region, gradient);
 
-            player.sendMessage(Component.text("Gradient applied to " + affected + " blocks!", NamedTextColor.GREEN));
+            MessageManager.success(player, "Gradient applied to %d blocks.", affected);
 
         } catch (IllegalArgumentException e) {
-            player.sendMessage(Component.text("Error: " + e.getMessage(), NamedTextColor.RED));
-            player.sendMessage(Component.text("Valid directions: VERTICAL_UP, VERTICAL_DOWN, HORIZONTAL_X, HORIZONTAL_Z, RADIAL", NamedTextColor.GRAY));
-            player.sendMessage(Component.text("Valid modes: LINEAR, SMOOTH, DISCRETE", NamedTextColor.GRAY));
+            MessageManager.error(player, "Error: %s", e.getMessage());
+            MessageManager.send(player,
+                    Component.text("Valid directions: VERTICAL_UP, VERTICAL_DOWN, HORIZONTAL_X, HORIZONTAL_Z, RADIAL",
+                            NamedTextColor.GRAY));
+            MessageManager.send(player, Component.text("Valid modes: LINEAR, SMOOTH, DISCRETE", NamedTextColor.GRAY));
         } catch (IncompleteRegionException e) {
-            player.sendMessage(Component.text("Please make a WorldEdit selection first.", NamedTextColor.RED));
+            MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
         } catch (Exception e) {
-            player.sendMessage(Component.text("An error occurred: " + e.getMessage(), NamedTextColor.RED));
+            MessageManager.error(player, "An error occurred: %s", e.getMessage());
             e.printStackTrace();
         }
     }
@@ -142,9 +144,8 @@ public class GradientCommand {
                     BlockVector3 center = region.getCenter().toBlockPoint();
                     minValue = 0;
                     maxValue = Math.max(
-                        Math.max(Math.abs(max.x() - center.x()), Math.abs(min.x() - center.x())),
-                        Math.max(Math.abs(max.z() - center.z()), Math.abs(min.z() - center.z()))
-                    );
+                            Math.max(Math.abs(max.x() - center.x()), Math.abs(min.x() - center.x())),
+                            Math.max(Math.abs(max.z() - center.z()), Math.abs(min.z() - center.z())));
                     break;
                 default:
                     minValue = 0;
@@ -152,7 +153,8 @@ public class GradientCommand {
             }
 
             double range = maxValue - minValue;
-            if (range == 0) range = 1; // Avoid division by zero
+            if (range == 0)
+                range = 1; // Avoid division by zero
 
             // Apply gradient to each block
             for (BlockVector3 position : region) {
@@ -200,5 +202,18 @@ public class GradientCommand {
         }
 
         return count;
+    }
+
+    /**
+     * Separated for testability — override in tests to avoid mocking WorldEdit
+     * internals.
+     */
+    protected Region getSelectionFromPlayer(org.bukkit.entity.Player player) {
+        try {
+            com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
+            return WorldEdit.getInstance().getSessionManager().get(actor).getSelection(actor.getWorld());
+        } catch (Exception ex) {
+            return null;
+        }
     }
 }

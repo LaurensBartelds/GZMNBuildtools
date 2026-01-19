@@ -6,9 +6,12 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BlockType;
 import com.sk89q.worldedit.world.block.BlockTypes;
-import net.md_5.bungee.api.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import nl.gzmn.gZMNBuildtools.commands.GradientCommand;
 import nl.gzmn.gZMNBuildtools.gradient.GradientDefinition;
+import nl.gzmn.gZMNBuildtools.util.MessageManager;
 import nl.gzmn.gZMNBuildtools.gradient.GradientDefinition.GradientDirection;
 import nl.gzmn.gZMNBuildtools.gradient.GradientDefinition.GradientStop;
 import nl.gzmn.gZMNBuildtools.gradient.GradientDefinition.InterpolationMode;
@@ -53,7 +56,7 @@ public class GradientUIManager implements Listener {
      */
     public void openGradientUI(Player player) {
         GradientBuilder builder = activeBuilders.computeIfAbsent(player.getUniqueId(),
-            k -> new GradientBuilder());
+                k -> new GradientBuilder());
 
         Inventory inventory = createGradientInventory(builder);
         player.openInventory(inventory);
@@ -64,7 +67,8 @@ public class GradientUIManager implements Listener {
      */
     private Inventory createGradientInventory(GradientBuilder builder) {
         Inventory inv = Bukkit.createInventory(null, 54,
-            ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "Gradient Builder");
+                MessageManager.asLegacyString(Component.text("Gradient Builder").color(NamedTextColor.DARK_PURPLE)
+                        .decorate(TextDecoration.BOLD)));
 
         // Gradient stops (slots 0-8)
         for (int i = 0; i < 9; i++) {
@@ -74,19 +78,23 @@ public class GradientUIManager implements Listener {
                 if (material != null) {
                     ItemStack item = new ItemStack(material);
                     ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName(ChatColor.YELLOW + "Stop " + (i + 1) + ": " + blockType.id());
+                    meta.setDisplayName(MessageManager.asLegacyString(
+                            Component.text("Stop " + (i + 1) + ": " + blockType.id()).color(NamedTextColor.YELLOW)));
                     meta.setLore(Arrays.asList(
-                        ChatColor.GRAY + "Left-click to change",
-                        ChatColor.GRAY + "Right-click to remove"
-                    ));
+                            MessageManager
+                                    .asLegacyString(Component.text("Left-click to change").color(NamedTextColor.GRAY)),
+                            MessageManager.asLegacyString(
+                                    Component.text("Right-click to remove").color(NamedTextColor.GRAY))));
                     item.setItemMeta(meta);
                     inv.setItem(i, item);
                 }
             } else {
                 ItemStack addStop = new ItemStack(Material.LIME_DYE);
                 ItemMeta meta = addStop.getItemMeta();
-                meta.setDisplayName(ChatColor.GREEN + "Add Gradient Stop");
-                meta.setLore(Arrays.asList(ChatColor.GRAY + "Click to add a block"));
+                meta.setDisplayName(
+                        MessageManager.asLegacyString(Component.text("Add Gradient Stop").color(NamedTextColor.GREEN)));
+                meta.setLore(Arrays.asList(MessageManager
+                        .asLegacyString(Component.text("Click to add a block").color(NamedTextColor.GRAY))));
                 addStop.setItemMeta(meta);
                 inv.setItem(i, addStop);
                 break;
@@ -111,18 +119,19 @@ public class GradientUIManager implements Listener {
         // Apply button (slot 49)
         ItemStack apply = new ItemStack(Material.EMERALD);
         ItemMeta applyMeta = apply.getItemMeta();
-        applyMeta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + "Apply Gradient");
+        applyMeta.setDisplayName(MessageManager.asLegacyString(
+                Component.text("Apply Gradient").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD)));
         applyMeta.setLore(Arrays.asList(
-            ChatColor.GRAY + "Apply this gradient to your",
-            ChatColor.GRAY + "current WorldEdit selection"
-        ));
+                MessageManager.asLegacyString(Component.text("Apply this gradient to your").color(NamedTextColor.GRAY)),
+                MessageManager
+                        .asLegacyString(Component.text("current WorldEdit selection").color(NamedTextColor.GRAY))));
         apply.setItemMeta(applyMeta);
         inv.setItem(49, apply);
 
         // Cancel button (slot 53)
         ItemStack cancel = new ItemStack(Material.BARRIER);
         ItemMeta cancelMeta = cancel.getItemMeta();
-        cancelMeta.setDisplayName(ChatColor.RED + "Close");
+        cancelMeta.setDisplayName(MessageManager.asLegacyString(Component.text("Close").color(NamedTextColor.RED)));
         cancel.setItemMeta(cancelMeta);
         inv.setItem(53, cancel);
 
@@ -130,17 +139,20 @@ public class GradientUIManager implements Listener {
     }
 
     private void addDirectionButton(Inventory inv, int slot, GradientDirection direction,
-                                    String name, Material material, GradientBuilder builder) {
+            String name, Material material, GradientBuilder builder) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
 
         boolean isSelected = builder.direction == direction;
-        ChatColor color = isSelected ? ChatColor.GOLD : ChatColor.YELLOW;
-        String displayName = color + (isSelected ? ChatColor.BOLD.toString() : "") + name;
-        meta.setDisplayName(displayName);
+        NamedTextColor color = isSelected ? NamedTextColor.GOLD : NamedTextColor.YELLOW;
+        Component nameComp = Component.text(name).color(color);
+        if (isSelected)
+            nameComp = nameComp.decorate(TextDecoration.BOLD);
+        meta.setDisplayName(MessageManager.asLegacyString(nameComp));
 
         if (isSelected) {
-            meta.setLore(Arrays.asList(ChatColor.GREEN + "✓ Selected"));
+            meta.setLore(Arrays
+                    .asList(MessageManager.asLegacyString(Component.text("✓ Selected").color(NamedTextColor.GREEN))));
         }
 
         item.setItemMeta(meta);
@@ -148,17 +160,20 @@ public class GradientUIManager implements Listener {
     }
 
     private void addModeButton(Inventory inv, int slot, InterpolationMode mode,
-                               String name, Material material, GradientBuilder builder) {
+            String name, Material material, GradientBuilder builder) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
 
         boolean isSelected = builder.interpolationMode == mode;
-        ChatColor color = isSelected ? ChatColor.GOLD : ChatColor.YELLOW;
-        String displayName = color + (isSelected ? ChatColor.BOLD.toString() : "") + name;
-        meta.setDisplayName(displayName);
+        NamedTextColor color = isSelected ? NamedTextColor.GOLD : NamedTextColor.YELLOW;
+        Component nameComp = Component.text(name).color(color);
+        if (isSelected)
+            nameComp = nameComp.decorate(TextDecoration.BOLD);
+        meta.setDisplayName(MessageManager.asLegacyString(nameComp));
 
         if (isSelected) {
-            meta.setLore(Arrays.asList(ChatColor.GREEN + "✓ Selected"));
+            meta.setLore(Arrays
+                    .asList(MessageManager.asLegacyString(Component.text("✓ Selected").color(NamedTextColor.GREEN))));
         }
 
         item.setItemMeta(meta);
@@ -170,7 +185,8 @@ public class GradientUIManager implements Listener {
             // Show placeholder
             ItemStack placeholder = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
             ItemMeta meta = placeholder.getItemMeta();
-            meta.setDisplayName(ChatColor.GRAY + "Add at least 2 blocks");
+            meta.setDisplayName(
+                    MessageManager.asLegacyString(Component.text("Add at least 2 blocks").color(NamedTextColor.GRAY)));
             placeholder.setItemMeta(meta);
             for (int i = 36; i <= 44; i++) {
                 inv.setItem(i, placeholder);
@@ -190,7 +206,8 @@ public class GradientUIManager implements Listener {
                 if (material != null) {
                     ItemStack item = new ItemStack(material);
                     ItemMeta meta = item.getItemMeta();
-                    meta.setDisplayName(ChatColor.AQUA + "" + (int)(position * 100) + "%");
+                    meta.setDisplayName(MessageManager
+                            .asLegacyString(Component.text((int) (position * 100) + "%").color(NamedTextColor.AQUA)));
                     item.setItemMeta(meta);
                     inv.setItem(36 + i, item);
                 }
@@ -202,7 +219,8 @@ public class GradientUIManager implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player player))
+            return;
 
         String title = event.getView().getTitle();
         if (!title.contains("Gradient Builder")) {
@@ -211,10 +229,12 @@ public class GradientUIManager implements Listener {
 
         event.setCancelled(true);
 
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         GradientBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null) return;
+        if (builder == null)
+            return;
 
         int slot = event.getSlot();
 
@@ -260,29 +280,30 @@ public class GradientUIManager implements Listener {
 
     private void openBlockSelector(Player player, int stopIndex) {
         Inventory inv = Bukkit.createInventory(null, 54,
-            ChatColor.BLUE + "" + ChatColor.BOLD + "Select Block");
+                MessageManager.asLegacyString(
+                        Component.text("Select Block").color(NamedTextColor.BLUE).decorate(TextDecoration.BOLD)));
 
         // Common building blocks
         List<Material> commonBlocks = Arrays.asList(
-            Material.STONE, Material.COBBLESTONE, Material.ANDESITE, Material.DIORITE, Material.GRANITE,
-            Material.SANDSTONE, Material.RED_SANDSTONE, Material.SMOOTH_STONE,
-            Material.OAK_PLANKS, Material.SPRUCE_PLANKS, Material.BIRCH_PLANKS, Material.JUNGLE_PLANKS,
-            Material.ACACIA_PLANKS, Material.DARK_OAK_PLANKS, Material.MANGROVE_PLANKS, Material.CHERRY_PLANKS,
-            Material.WHITE_WOOL, Material.LIGHT_GRAY_WOOL, Material.GRAY_WOOL, Material.BLACK_WOOL,
-            Material.RED_WOOL, Material.ORANGE_WOOL, Material.YELLOW_WOOL, Material.LIME_WOOL,
-            Material.GREEN_WOOL, Material.CYAN_WOOL, Material.LIGHT_BLUE_WOOL, Material.BLUE_WOOL,
-            Material.PURPLE_WOOL, Material.MAGENTA_WOOL, Material.PINK_WOOL, Material.BROWN_WOOL,
-            Material.WHITE_CONCRETE, Material.LIGHT_GRAY_CONCRETE, Material.GRAY_CONCRETE, Material.BLACK_CONCRETE,
-            Material.RED_CONCRETE, Material.ORANGE_CONCRETE, Material.YELLOW_CONCRETE, Material.LIME_CONCRETE,
-            Material.GREEN_CONCRETE, Material.CYAN_CONCRETE, Material.LIGHT_BLUE_CONCRETE, Material.BLUE_CONCRETE,
-            Material.PURPLE_CONCRETE, Material.MAGENTA_CONCRETE, Material.PINK_CONCRETE, Material.BROWN_CONCRETE,
-            Material.DIRT, Material.GRASS_BLOCK, Material.COARSE_DIRT, Material.CLAY
-        );
+                Material.STONE, Material.COBBLESTONE, Material.ANDESITE, Material.DIORITE, Material.GRANITE,
+                Material.SANDSTONE, Material.RED_SANDSTONE, Material.SMOOTH_STONE,
+                Material.OAK_PLANKS, Material.SPRUCE_PLANKS, Material.BIRCH_PLANKS, Material.JUNGLE_PLANKS,
+                Material.ACACIA_PLANKS, Material.DARK_OAK_PLANKS, Material.MANGROVE_PLANKS, Material.CHERRY_PLANKS,
+                Material.WHITE_WOOL, Material.LIGHT_GRAY_WOOL, Material.GRAY_WOOL, Material.BLACK_WOOL,
+                Material.RED_WOOL, Material.ORANGE_WOOL, Material.YELLOW_WOOL, Material.LIME_WOOL,
+                Material.GREEN_WOOL, Material.CYAN_WOOL, Material.LIGHT_BLUE_WOOL, Material.BLUE_WOOL,
+                Material.PURPLE_WOOL, Material.MAGENTA_WOOL, Material.PINK_WOOL, Material.BROWN_WOOL,
+                Material.WHITE_CONCRETE, Material.LIGHT_GRAY_CONCRETE, Material.GRAY_CONCRETE, Material.BLACK_CONCRETE,
+                Material.RED_CONCRETE, Material.ORANGE_CONCRETE, Material.YELLOW_CONCRETE, Material.LIME_CONCRETE,
+                Material.GREEN_CONCRETE, Material.CYAN_CONCRETE, Material.LIGHT_BLUE_CONCRETE, Material.BLUE_CONCRETE,
+                Material.PURPLE_CONCRETE, Material.MAGENTA_CONCRETE, Material.PINK_CONCRETE, Material.BROWN_CONCRETE,
+                Material.DIRT, Material.GRASS_BLOCK, Material.COARSE_DIRT, Material.CLAY);
 
         for (int i = 0; i < Math.min(commonBlocks.size(), 45); i++) {
             ItemStack item = new ItemStack(commonBlocks.get(i));
             ItemMeta meta = item.getItemMeta();
-            meta.setDisplayName(ChatColor.YELLOW + commonBlocks.get(i).name().toLowerCase().replace("_", " "));
+            meta.setDisplayName(MessageManager.asLegacyString(Component
+                    .text(commonBlocks.get(i).name().toLowerCase().replace("_", " ")).color(NamedTextColor.YELLOW)));
             item.setItemMeta(meta);
             inv.setItem(i, item);
         }
@@ -290,7 +311,7 @@ public class GradientUIManager implements Listener {
         // Back button
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
-        backMeta.setDisplayName(ChatColor.GRAY + "← Back");
+        backMeta.setDisplayName(MessageManager.asLegacyString(Component.text("← Back").color(NamedTextColor.GRAY)));
         back.setItemMeta(backMeta);
         inv.setItem(53, back);
 
@@ -298,15 +319,15 @@ public class GradientUIManager implements Listener {
 
         // Store the stop index we're editing
         player.getPersistentDataContainer().set(
-            new org.bukkit.NamespacedKey(plugin, "editing_stop"),
-            org.bukkit.persistence.PersistentDataType.INTEGER,
-            stopIndex
-        );
+                new org.bukkit.NamespacedKey(plugin, "editing_stop"),
+                org.bukkit.persistence.PersistentDataType.INTEGER,
+                stopIndex);
     }
 
     @EventHandler
     public void onBlockSelectorClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player player))
+            return;
 
         String title = event.getView().getTitle();
         if (!title.contains("Select Block")) {
@@ -315,10 +336,12 @@ public class GradientUIManager implements Listener {
 
         event.setCancelled(true);
 
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         GradientBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null) return;
+        if (builder == null)
+            return;
 
         int slot = event.getSlot();
 
@@ -336,7 +359,7 @@ public class GradientUIManager implements Listener {
             if (blockType != null) {
                 org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "editing_stop");
                 Integer stopIndex = player.getPersistentDataContainer().get(key,
-                    org.bukkit.persistence.PersistentDataType.INTEGER);
+                        org.bukkit.persistence.PersistentDataType.INTEGER);
 
                 if (stopIndex != null) {
                     if (stopIndex < builder.stops.size()) {
@@ -370,7 +393,7 @@ public class GradientUIManager implements Listener {
     private void applyGradient(Player player, GradientBuilder builder) {
         try {
             if (builder.stops.size() < 2) {
-                player.sendMessage(ChatColor.RED + "Please add at least 2 gradient stops.");
+                MessageManager.error(player, "Please add at least 2 gradient stops.");
                 return;
             }
 
@@ -379,22 +402,22 @@ public class GradientUIManager implements Listener {
             Region region = WorldEdit.getInstance().getSessionManager().get(actor).getSelection(actor.getWorld());
 
             if (region == null) {
-                player.sendMessage(ChatColor.RED + "Please make a WorldEdit selection first.");
+                MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
 
             player.closeInventory();
-            player.sendMessage(ChatColor.YELLOW + "Applying gradient...");
+            MessageManager.info(player, "Applying %s", "gradient");
 
             int affected = gradientCommand.applyGradient(actor, region, gradient);
 
-            player.sendMessage(ChatColor.GREEN + "Gradient applied to " + affected + " blocks!");
+            MessageManager.success(player, "Gradient applied to %d blocks.", affected);
             activeBuilders.remove(player.getUniqueId());
 
         } catch (IncompleteRegionException e) {
-            player.sendMessage(ChatColor.RED + "Please make a WorldEdit selection first.");
+            MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
         } catch (Exception e) {
-            player.sendMessage(ChatColor.RED + "Error applying gradient: " + e.getMessage());
+            MessageManager.error(player, "Error applying gradient: %s", e.getMessage());
             e.printStackTrace();
         }
     }
