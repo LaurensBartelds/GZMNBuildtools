@@ -30,11 +30,23 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 
+/**
+ * Main coordinator for gradient UI system.
+ * Handles mode selection and delegates to Easy/Advanced mode UIs.
+ */
 public class GradientUIManager implements Listener {
+
+    private static final String MODE_SELECTION_TITLE = "Gradient Mode";
+    private static final String LEGACY_BUILDER_TITLE = "Gradient Builder";
+    private static final String LEGACY_BLOCK_SELECTOR_TITLE = "Select Block";
 
     private final Plugin plugin;
     private final GradientCommand gradientCommand;
     private final Map<UUID, GradientBuilder> activeBuilders;
+
+    private GradientPreviewRenderer previewRenderer;
+    private GradientEasyModeUI easyModeUI;
+    private GradientAdvancedModeUI advancedModeUI;
 
     public GradientUIManager(Plugin plugin, GradientCommand gradientCommand) {
         this.plugin = plugin;
@@ -44,19 +56,212 @@ public class GradientUIManager implements Listener {
 
     public void registerEvents() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
+
+        this.previewRenderer = new GradientPreviewRenderer(plugin);
+        this.easyModeUI = new GradientEasyModeUI(plugin, previewRenderer);
+        this.advancedModeUI = new GradientAdvancedModeUI(plugin, previewRenderer);
+
+        easyModeUI.registerEvents();
+        advancedModeUI.registerEvents();
     }
 
+    /**
+     * Open the mode selection screen (main entry point).
+     */
+    public void openModeSelection(Player player) {
+        Inventory inv = Bukkit.createInventory(null, 27,
+                Component.text(MODE_SELECTION_TITLE).color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
+
+        ItemStack info = new ItemStack(Material.BOOK);
+        ItemMeta infoMeta = info.getItemMeta();
+        infoMeta.displayName(Component.text("Gradient Builder").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
+        infoMeta.lore(Arrays.asList(
+                Component.text("Choose your workflow:").color(NamedTextColor.GRAY)
+        ));
+        info.setItemMeta(infoMeta);
+        inv.setItem(4, info);
+
+        ItemStack easyMode = new ItemStack(Material.GOLDEN_APPLE);
+        ItemMeta easyMeta = easyMode.getItemMeta();
+        easyMeta.displayName(Component.text("Easy Mode").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
+        easyMeta.lore(Arrays.asList(
+                Component.text("Quick presets").color(NamedTextColor.GRAY),
+                Component.text("Simple 2-click workflow").color(NamedTextColor.GRAY),
+                Component.empty(),
+                Component.text("Best for: Quick gradients").color(NamedTextColor.DARK_GRAY)
+        ));
+        easyMode.setItemMeta(easyMeta);
+        inv.setItem(11, easyMode);
+
+        ItemStack advancedMode = new ItemStack(Material.DIAMOND);
+        ItemMeta advancedMeta = advancedMode.getItemMeta();
+        advancedMeta.displayName(Component.text("Advanced Mode").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD));
+        advancedMeta.lore(Arrays.asList(
+                Component.text("Full control").color(NamedTextColor.GRAY),
+                Component.text("Custom stops & noise").color(NamedTextColor.GRAY),
+                Component.text("World preview").color(NamedTextColor.GRAY),
+                Component.empty(),
+                Component.text("Best for: Complex gradients").color(NamedTextColor.DARK_GRAY)
+        ));
+        advancedMode.setItemMeta(advancedMeta);
+        inv.setItem(15, advancedMode);
+
+        ItemStack close = new ItemStack(Material.BARRIER);
+        ItemMeta closeMeta = close.getItemMeta();
+        closeMeta.displayName(Component.text("Close").color(NamedTextColor.RED));
+        close.setItemMeta(closeMeta);
+        inv.setItem(26, close);
+
+        player.openInventory(inv);
+    }
+
+    /**
+     * Open the easy mode UI directly.
+     */
+    public void openEasyMode(Player player) {
+        easyModeUI.openPresetGallery(player);
+    }
+
+    /**
+     * Open the advanced mode UI directly.
+     */
+    public void openAdvancedMode(Player player) {
+        advancedModeUI.openMainUI(player);
+    }
+
+    /**
+     * Legacy method - opens mode selection (backward compatible).
+     */
     public void openGradientUI(Player player) {
-        GradientBuilder builder = activeBuilders.computeIfAbsent(player.getUniqueId(),
-                k -> new GradientBuilder());
-
-        Inventory inventory = createGradientInventory(builder);
-        player.openInventory(inventory);
+        openModeSelection(player);
     }
 
-    private Inventory createGradientInventory(GradientBuilder builder) {
+    /**
+     * Get the preview renderer for external use.
+     */
+    public GradientPreviewRenderer getPreviewRenderer() {
+        return previewRenderer;
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player player))
+            return;
+
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
+
+        if (title.contains(MODE_SELECTION_TITLE)) {
+            handleModeSelectionClick(event, player);
+        } else if (title.contains(LEGACY_BUILDER_TITLE) && !title.contains("Advanced") && !title.contains("Presets")) {
+            handleLegacyBuilderClick(event, player);
+        } else if (title.equals(LEGACY_BLOCK_SELECTOR_TITLE)) {
+            handleLegacyBlockSelectorClick(event, player);
+        }
+    }
+
+    private void handleModeSelectionClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
+        if (event.getCurrentItem() == null) return;
+
+        int slot = event.getSlot();
+
+        if (slot == 11) {
+            openEasyMode(player);
+        } else if (slot == 15) {
+            openAdvancedMode(player);
+        } else if (slot == 26) {
+            player.closeInventory();
+        }
+    }
+
+    private void handleLegacyBuilderClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
+
+        if (event.getCurrentItem() == null)
+            return;
+
+        GradientBuilder builder = activeBuilders.get(player.getUniqueId());
+        if (builder == null)
+            return;
+
+        int slot = event.getSlot();
+
+        if (slot >= 0 && slot < 9) {
+            if (event.getCurrentItem().getType() == Material.LIME_DYE) {
+                player.closeInventory();
+                openLegacyBlockSelector(player, builder.stops.size());
+            } else if (event.isRightClick() && slot < builder.stops.size()) {
+                builder.stops.remove(slot);
+                player.openInventory(createLegacyGradientInventory(builder));
+            }
+        }
+        else if (slot >= 18 && slot <= 22) {
+            GradientDirection[] directions = GradientDirection.values();
+            int dirIndex = slot - 18;
+            if (dirIndex < directions.length) {
+                builder.direction = directions[dirIndex];
+                player.openInventory(createLegacyGradientInventory(builder));
+            }
+        }
+        else if (slot >= 27 && slot <= 29) {
+            InterpolationMode[] modes = InterpolationMode.values();
+            int modeIndex = slot - 27;
+            if (modeIndex < modes.length) {
+                builder.interpolationMode = modes[modeIndex];
+                player.openInventory(createLegacyGradientInventory(builder));
+            }
+        }
+        else if (slot == 49) {
+            applyLegacyGradient(player, builder);
+        }
+        else if (slot == 53) {
+            player.closeInventory();
+        }
+    }
+
+    private void handleLegacyBlockSelectorClick(InventoryClickEvent event, Player player) {
+        event.setCancelled(true);
+
+        if (event.getCurrentItem() == null)
+            return;
+
+        GradientBuilder builder = activeBuilders.get(player.getUniqueId());
+        if (builder == null)
+            return;
+
+        int slot = event.getSlot();
+
+        if (slot == 53) {
+            player.openInventory(createLegacyGradientInventory(builder));
+            return;
+        }
+
+        if (slot < 45) {
+            Material selectedMaterial = event.getCurrentItem().getType();
+            BlockType blockType = BlockTypes.get("minecraft:" + selectedMaterial.name().toLowerCase());
+
+            if (blockType != null) {
+                org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "editing_stop");
+                Integer stopIndex = player.getPersistentDataContainer().get(key,
+                        org.bukkit.persistence.PersistentDataType.INTEGER);
+
+                if (stopIndex != null) {
+                    if (stopIndex < builder.stops.size()) {
+                        builder.stops.set(stopIndex, blockType);
+                    } else {
+                        builder.stops.add(blockType);
+                    }
+                    player.getPersistentDataContainer().remove(key);
+                }
+            }
+
+            player.openInventory(createLegacyGradientInventory(builder));
+        }
+    }
+
+    private Inventory createLegacyGradientInventory(GradientBuilder builder) {
         Inventory inv = Bukkit.createInventory(null, 54,
-                Component.text("Gradient Builder").color(NamedTextColor.DARK_PURPLE)
+                Component.text(LEGACY_BUILDER_TITLE).color(NamedTextColor.DARK_PURPLE)
                         .decorate(TextDecoration.BOLD));
 
         for (int i = 0; i < 9; i++) {
@@ -87,17 +292,17 @@ public class GradientUIManager implements Listener {
             }
         }
 
-        addDirectionButton(inv, 18, GradientDirection.VERTICAL_UP, "↑ Vertical Up", Material.ARROW, builder);
-        addDirectionButton(inv, 19, GradientDirection.VERTICAL_DOWN, "↓ Vertical Down", Material.ARROW, builder);
-        addDirectionButton(inv, 20, GradientDirection.HORIZONTAL_X, "→ Horizontal X", Material.ARROW, builder);
-        addDirectionButton(inv, 21, GradientDirection.HORIZONTAL_Z, "→ Horizontal Z", Material.ARROW, builder);
-        addDirectionButton(inv, 22, GradientDirection.RADIAL, "◉ Radial", Material.TARGET, builder);
+        addDirectionButton(inv, 18, GradientDirection.VERTICAL_UP, "Vertical Up", Material.ARROW, builder);
+        addDirectionButton(inv, 19, GradientDirection.VERTICAL_DOWN, "Vertical Down", Material.ARROW, builder);
+        addDirectionButton(inv, 20, GradientDirection.HORIZONTAL_X, "Horizontal X", Material.ARROW, builder);
+        addDirectionButton(inv, 21, GradientDirection.HORIZONTAL_Z, "Horizontal Z", Material.ARROW, builder);
+        addDirectionButton(inv, 22, GradientDirection.RADIAL, "Radial", Material.TARGET, builder);
 
         addModeButton(inv, 27, InterpolationMode.LINEAR, "Linear", Material.IRON_INGOT, builder);
         addModeButton(inv, 28, InterpolationMode.SMOOTH, "Smooth", Material.GOLD_INGOT, builder);
         addModeButton(inv, 29, InterpolationMode.DISCRETE, "Discrete", Material.DIAMOND, builder);
 
-        renderPreview(inv, builder);
+        renderLegacyPreview(inv, builder);
 
         ItemStack apply = new ItemStack(Material.EMERALD);
         ItemMeta applyMeta = apply.getItemMeta();
@@ -131,7 +336,7 @@ public class GradientUIManager implements Listener {
         meta.displayName(nameComp);
 
         if (isSelected) {
-            meta.lore(Arrays.asList(Component.text("✓ Selected").color(NamedTextColor.GREEN)));
+            meta.lore(Arrays.asList(Component.text("Selected").color(NamedTextColor.GREEN)));
         }
 
         item.setItemMeta(meta);
@@ -151,14 +356,14 @@ public class GradientUIManager implements Listener {
         meta.displayName(nameComp);
 
         if (isSelected) {
-            meta.lore(Arrays.asList(Component.text("✓ Selected").color(NamedTextColor.GREEN)));
+            meta.lore(Arrays.asList(Component.text("Selected").color(NamedTextColor.GREEN)));
         }
 
         item.setItemMeta(meta);
         inv.setItem(slot, item);
     }
 
-    private void renderPreview(Inventory inv, GradientBuilder builder) {
+    private void renderLegacyPreview(Inventory inv, GradientBuilder builder) {
         if (builder.stops.size() < 2) {
             ItemStack placeholder = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
             ItemMeta meta = placeholder.getItemMeta();
@@ -190,63 +395,9 @@ public class GradientUIManager implements Listener {
         }
     }
 
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player))
-            return;
-
-        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
-        if (!title.contains("Gradient Builder")) {
-            return;
-        }
-
-        event.setCancelled(true);
-
-        if (event.getCurrentItem() == null)
-            return;
-
-        GradientBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null)
-            return;
-
-        int slot = event.getSlot();
-
-        if (slot >= 0 && slot < 9) {
-            if (event.getCurrentItem().getType() == Material.LIME_DYE) {
-                player.closeInventory();
-                openBlockSelector(player, builder.stops.size());
-            } else if (event.isRightClick() && slot < builder.stops.size()) {
-                builder.stops.remove(slot);
-                player.openInventory(createGradientInventory(builder));
-            }
-        }
-        else if (slot >= 18 && slot <= 22) {
-            GradientDirection[] directions = GradientDirection.values();
-            int dirIndex = slot - 18;
-            if (dirIndex < directions.length) {
-                builder.direction = directions[dirIndex];
-                player.openInventory(createGradientInventory(builder));
-            }
-        }
-        else if (slot >= 27 && slot <= 29) {
-            InterpolationMode[] modes = InterpolationMode.values();
-            int modeIndex = slot - 27;
-            if (modeIndex < modes.length) {
-                builder.interpolationMode = modes[modeIndex];
-                player.openInventory(createGradientInventory(builder));
-            }
-        }
-        else if (slot == 49) {
-            applyGradient(player, builder);
-        }
-        else if (slot == 53) {
-            player.closeInventory();
-        }
-    }
-
-    private void openBlockSelector(Player player, int stopIndex) {
+    private void openLegacyBlockSelector(Player player, int stopIndex) {
         Inventory inv = Bukkit.createInventory(null, 54,
-                Component.text("Select Block").color(NamedTextColor.BLUE).decorate(TextDecoration.BOLD));
+                Component.text(LEGACY_BLOCK_SELECTOR_TITLE).color(NamedTextColor.BLUE).decorate(TextDecoration.BOLD));
 
         List<Material> commonBlocks = Arrays.asList(
                 Material.STONE, Material.COBBLESTONE, Material.ANDESITE, Material.DIORITE, Material.GRANITE,
@@ -273,7 +424,7 @@ public class GradientUIManager implements Listener {
 
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
-        backMeta.displayName(Component.text("← Back").color(NamedTextColor.GRAY));
+        backMeta.displayName(Component.text("<- Back").color(NamedTextColor.GRAY));
         back.setItemMeta(backMeta);
         inv.setItem(53, back);
 
@@ -286,58 +437,9 @@ public class GradientUIManager implements Listener {
     }
 
     @EventHandler
-    public void onBlockSelectorClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player))
-            return;
-
-        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
-        if (!title.contains("Select Block")) {
-            return;
-        }
-
-        event.setCancelled(true);
-
-        if (event.getCurrentItem() == null)
-            return;
-
-        GradientBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null)
-            return;
-
-        int slot = event.getSlot();
-
-        if (slot == 53) {
-            player.openInventory(createGradientInventory(builder));
-            return;
-        }
-
-        if (slot < 45) {
-            Material selectedMaterial = event.getCurrentItem().getType();
-            BlockType blockType = BlockTypes.get("minecraft:" + selectedMaterial.name().toLowerCase());
-
-            if (blockType != null) {
-                org.bukkit.NamespacedKey key = new org.bukkit.NamespacedKey(plugin, "editing_stop");
-                Integer stopIndex = player.getPersistentDataContainer().get(key,
-                        org.bukkit.persistence.PersistentDataType.INTEGER);
-
-                if (stopIndex != null) {
-                    if (stopIndex < builder.stops.size()) {
-                        builder.stops.set(stopIndex, blockType);
-                    } else {
-                        builder.stops.add(blockType);
-                    }
-                    player.getPersistentDataContainer().remove(key);
-                }
-            }
-
-            player.openInventory(createGradientInventory(builder));
-        }
-    }
-
-    @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
-        if (title.contains("Gradient Builder")) {
+        if (title.contains(LEGACY_BUILDER_TITLE) || title.contains(MODE_SELECTION_TITLE)) {
             Player player = (Player) event.getPlayer();
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (player.getOpenInventory().getTopInventory().getHolder() == null) {
@@ -347,7 +449,7 @@ public class GradientUIManager implements Listener {
         }
     }
 
-    private void applyGradient(Player player, GradientBuilder builder) {
+    private void applyLegacyGradient(Player player, GradientBuilder builder) {
         try {
             if (builder.stops.size() < 2) {
                 MessageManager.error(player, "Please add at least 2 gradient stops.");
@@ -364,7 +466,7 @@ public class GradientUIManager implements Listener {
             }
 
             player.closeInventory();
-            MessageManager.info(player, "Applying %s", "gradient");
+            MessageManager.info(player, "Applying gradient...");
 
             int affected = gradientCommand.applyGradient(actor, region, gradient);
 

@@ -138,4 +138,27 @@ public class GradientDefinition {
 
         return new GradientDefinition(stops, direction, mode);
     }
+
+    /**
+     * Create a GradientDefinition from a preset.
+     *
+     * @param preset The gradient preset to use
+     * @param direction The direction for the gradient
+     * @return A new GradientDefinition based on the preset
+     */
+    public static GradientDefinition fromPreset(GradientPreset preset, GradientDirection direction) {
+        return parse(preset.getBlocksString(), direction, InterpolationMode.LINEAR);
+    }
+
+    /**
+     * Create a GradientDefinition from a preset with custom interpolation mode.
+     *
+     * @param preset The gradient preset to use
+     * @param direction The direction for the gradient
+     * @param mode The interpolation mode
+     * @return A new GradientDefinition based on the preset
+     */
+    public static GradientDefinition fromPreset(GradientPreset preset, GradientDirection direction, InterpolationMode mode) {
+        return parse(preset.getBlocksString(), direction, mode);
+    }
 }

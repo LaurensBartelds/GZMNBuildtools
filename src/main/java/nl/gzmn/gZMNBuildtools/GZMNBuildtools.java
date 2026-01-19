@@ -92,6 +92,40 @@ public final class GZMNBuildtools extends JavaPlugin {
                                 gradientCommand.openUI((Player) ctx.getSource().getSender());
                                 return 1;
                             })
+                            .then(Commands.literal("easy")
+                                    .executes(ctx -> {
+                                        gradientCommand.openEasyMode((Player) ctx.getSource().getSender());
+                                        return 1;
+                                    }))
+                            .then(Commands.literal("advanced")
+                                    .executes(ctx -> {
+                                        gradientCommand.openAdvancedMode((Player) ctx.getSource().getSender());
+                                        return 1;
+                                    }))
+                            .then(Commands.literal("preset")
+                                    .then(Commands.argument("preset_id", StringArgumentType.word())
+                                            .suggests((ctx, builder) -> {
+                                                gradientCommand.getPresetSuggestions().stream()
+                                                        .filter(s -> s.toLowerCase()
+                                                                .startsWith(builder.getRemainingLowerCase()))
+                                                        .forEach(builder::suggest);
+                                                return builder.buildFuture();
+                                            })
+                                            .then(Commands.argument("direction", StringArgumentType.word())
+                                                    .suggests((ctx, builder) -> {
+                                                        gradientCommand.getDirectionSuggestions().stream()
+                                                                .filter(s -> s.toLowerCase()
+                                                                        .startsWith(builder.getRemainingLowerCase()))
+                                                                .forEach(builder::suggest);
+                                                        return builder.buildFuture();
+                                                    })
+                                                    .executes(ctx -> {
+                                                        String presetId = StringArgumentType.getString(ctx, "preset_id");
+                                                        String direction = StringArgumentType.getString(ctx, "direction");
+                                                        gradientCommand.executePreset((Player) ctx.getSource().getSender(),
+                                                                presetId, direction);
+                                                        return 1;
+                                                    }))))
                             .then(Commands.argument("blocks", StringArgumentType.word())
                                     .suggests((ctx, builder) -> {
                                         gradientCommand.getBlockSuggestions().stream()
@@ -133,7 +167,7 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                 return 1;
                                             })))
                             .build(),
-                    "Apply or create gradients with a visual UI.",
+                    "Apply or create gradients with a visual UI. Use /gradient easy for presets or /gradient advanced for full control.",
                     List.of("grad", "grd"));
         });
     }
