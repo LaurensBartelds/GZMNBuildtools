@@ -2,6 +2,7 @@ package nl.gzmn.gZMNBuildtools.util;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
@@ -36,7 +37,7 @@ public final class MessageManager {
 
     public static Component prefixed(Component body) {
         Component label = Component.text("[").color(NamedTextColor.WHITE)
-                .append(Component.text("GZMN").color(NamedTextColor.GREEN))
+                .append(Component.text("GZMN").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD))
                 .append(Component.text("] ").color(NamedTextColor.WHITE));
         Component bodyColored = body.color(NamedTextColor.GRAY);
         return label.append(bodyColored);
@@ -57,8 +58,7 @@ public final class MessageManager {
     }
 
     public static void warn(Player player, String template, Object... args) {
-        String text = String.format(Locale.ROOT, template, args);
-        send(player, Component.text(text).color(NamedTextColor.YELLOW));
+        info(player, template, args);
     }
 
     public static void error(Player player, String template, Object... args) {
