@@ -47,9 +47,19 @@ public class GradientPreviewRenderer {
             return;
         }
 
+        // Fixed seed for BLENDED mode preview consistency
+        Random previewRandom = gradient.getInterpolationMode() ==
+                GradientDefinition.InterpolationMode.BLENDED ? new Random(42L) : null;
+
         for (int i = 0; i < PREVIEW_SLOTS; i++) {
             double position = i / (double) (PREVIEW_SLOTS - 1);
-            BlockType blockType = gradient.getBlockAt(position);
+            BlockType blockType;
+            if (previewRandom != null) {
+                previewRandom.setSeed(42L + i); // Deterministic per-slot
+                blockType = gradient.getBlockAt(position, previewRandom);
+            } else {
+                blockType = gradient.getBlockAt(position);
+            }
 
             ItemStack item = createPreviewItem(blockType, position);
             inventory.setItem(startSlot + i, item);
@@ -66,7 +76,7 @@ public class GradientPreviewRenderer {
     }
 
     /**
-     * Render a preview bar from a list of block types.
+     * Render a preview bar from a list of block types (single block per stop).
      */
     public void renderPreviewBar(Inventory inventory, int startSlot, List<BlockType> blocks,
                                   GradientDefinition.GradientDirection direction,
@@ -80,6 +90,28 @@ public class GradientPreviewRenderer {
         for (int i = 0; i < blocks.size(); i++) {
             double position = blocks.size() > 1 ? (double) i / (blocks.size() - 1) : 0.5;
             stops.add(new GradientDefinition.GradientStop(blocks.get(i), position));
+        }
+
+        GradientDefinition gradient = new GradientDefinition(stops, direction, mode);
+        renderPreviewBar(inventory, startSlot, gradient);
+    }
+
+    /**
+     * Render a preview bar from a list of multi-block stops.
+     * Each stop can have multiple block types that are randomly selected.
+     */
+    public void renderPreviewBarMultiBlock(Inventory inventory, int startSlot, List<List<BlockType>> multiBlockStops,
+                                            GradientDefinition.GradientDirection direction,
+                                            GradientDefinition.InterpolationMode mode) {
+        if (multiBlockStops == null || multiBlockStops.size() < 2) {
+            renderEmptyPreview(inventory, startSlot);
+            return;
+        }
+
+        List<GradientDefinition.GradientStop> stops = new ArrayList<>();
+        for (int i = 0; i < multiBlockStops.size(); i++) {
+            double position = multiBlockStops.size() > 1 ? (double) i / (multiBlockStops.size() - 1) : 0.5;
+            stops.add(new GradientDefinition.GradientStop(multiBlockStops.get(i), position));
         }
 
         GradientDefinition gradient = new GradientDefinition(stops, direction, mode);

@@ -43,6 +43,7 @@ public class GradientUIManager implements Listener {
     private final Plugin plugin;
     private final GradientCommand gradientCommand;
     private final Map<UUID, GradientBuilder> activeBuilders;
+    private nl.gzmn.gZMNBuildtools.gradient.GradientStorageManager storageManager;
 
     private GradientPreviewRenderer previewRenderer;
     private GradientEasyModeUI easyModeUI;
@@ -52,6 +53,22 @@ public class GradientUIManager implements Listener {
         this.plugin = plugin;
         this.gradientCommand = gradientCommand;
         this.activeBuilders = new HashMap<>();
+    }
+
+    public void setStorageManager(nl.gzmn.gZMNBuildtools.gradient.GradientStorageManager storageManager) {
+        this.storageManager = storageManager;
+        if (easyModeUI != null) {
+            easyModeUI.setStorageManager(storageManager);
+        }
+        if (advancedModeUI != null) {
+            advancedModeUI.setStorageManager(storageManager);
+        }
+    }
+
+    public void setBlockColorService(nl.gzmn.gZMNBuildtools.gradient.BlockColorService blockColorService) {
+        if (advancedModeUI != null) {
+            advancedModeUI.setBlockColorService(blockColorService);
+        }
     }
 
     public void registerEvents() {
@@ -74,10 +91,10 @@ public class GradientUIManager implements Listener {
 
         ItemStack info = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = info.getItemMeta();
-        infoMeta.displayName(Component.text("Gradient Builder").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
+        infoMeta.displayName(
+                Component.text("Gradient Builder").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
         infoMeta.lore(Arrays.asList(
-                Component.text("Choose your workflow:").color(NamedTextColor.GRAY)
-        ));
+                Component.text("Choose your workflow:").color(NamedTextColor.GRAY)));
         info.setItemMeta(infoMeta);
         inv.setItem(4, info);
 
@@ -88,21 +105,20 @@ public class GradientUIManager implements Listener {
                 Component.text("Quick presets").color(NamedTextColor.GRAY),
                 Component.text("Simple 2-click workflow").color(NamedTextColor.GRAY),
                 Component.empty(),
-                Component.text("Best for: Quick gradients").color(NamedTextColor.DARK_GRAY)
-        ));
+                Component.text("Best for: Quick gradients").color(NamedTextColor.DARK_GRAY)));
         easyMode.setItemMeta(easyMeta);
         inv.setItem(11, easyMode);
 
         ItemStack advancedMode = new ItemStack(Material.DIAMOND);
         ItemMeta advancedMeta = advancedMode.getItemMeta();
-        advancedMeta.displayName(Component.text("Advanced Mode").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD));
+        advancedMeta.displayName(
+                Component.text("Advanced Mode").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD));
         advancedMeta.lore(Arrays.asList(
                 Component.text("Full control").color(NamedTextColor.GRAY),
                 Component.text("Custom stops & noise").color(NamedTextColor.GRAY),
                 Component.text("World preview").color(NamedTextColor.GRAY),
                 Component.empty(),
-                Component.text("Best for: Complex gradients").color(NamedTextColor.DARK_GRAY)
-        ));
+                Component.text("Best for: Complex gradients").color(NamedTextColor.DARK_GRAY)));
         advancedMode.setItemMeta(advancedMeta);
         inv.setItem(15, advancedMode);
 
@@ -132,8 +148,12 @@ public class GradientUIManager implements Listener {
     /**
      * Legacy method - opens mode selection (backward compatible).
      */
+    /**
+     * Legacy method - opens mode selection (backward compatible).
+     * Now defaults to Easy Mode as per user request.
+     */
     public void openGradientUI(Player player) {
-        openModeSelection(player);
+        openEasyMode(player);
     }
 
     /**
@@ -161,7 +181,8 @@ public class GradientUIManager implements Listener {
 
     private void handleModeSelectionClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         int slot = event.getSlot();
 
@@ -194,27 +215,23 @@ public class GradientUIManager implements Listener {
                 builder.stops.remove(slot);
                 player.openInventory(createLegacyGradientInventory(builder));
             }
-        }
-        else if (slot >= 18 && slot <= 22) {
+        } else if (slot >= 18 && slot <= 22) {
             GradientDirection[] directions = GradientDirection.values();
             int dirIndex = slot - 18;
             if (dirIndex < directions.length) {
                 builder.direction = directions[dirIndex];
                 player.openInventory(createLegacyGradientInventory(builder));
             }
-        }
-        else if (slot >= 27 && slot <= 29) {
+        } else if (slot >= 27 && slot <= 29) {
             InterpolationMode[] modes = InterpolationMode.values();
             int modeIndex = slot - 27;
             if (modeIndex < modes.length) {
                 builder.interpolationMode = modes[modeIndex];
                 player.openInventory(createLegacyGradientInventory(builder));
             }
-        }
-        else if (slot == 49) {
+        } else if (slot == 49) {
             applyLegacyGradient(player, builder);
-        }
-        else if (slot == 53) {
+        } else if (slot == 53) {
             player.closeInventory();
         }
     }
@@ -271,11 +288,11 @@ public class GradientUIManager implements Listener {
                 if (material != null) {
                     ItemStack item = new ItemStack(material);
                     ItemMeta meta = item.getItemMeta();
-                    meta.displayName(Component.text("Stop " + (i + 1) + ": " + blockType.id()).color(NamedTextColor.YELLOW));
+                    meta.displayName(
+                            Component.text("Stop " + (i + 1) + ": " + blockType.id()).color(NamedTextColor.YELLOW));
                     meta.lore(Arrays.asList(
                             Component.text("Left-click to change").color(NamedTextColor.GRAY),
-                            Component.text("Right-click to remove").color(NamedTextColor.GRAY)
-                    ));
+                            Component.text("Right-click to remove").color(NamedTextColor.GRAY)));
                     item.setItemMeta(meta);
                     inv.setItem(i, item);
                 }
@@ -284,8 +301,7 @@ public class GradientUIManager implements Listener {
                 ItemMeta meta = addStop.getItemMeta();
                 meta.displayName(Component.text("Add Gradient Stop").color(NamedTextColor.GREEN));
                 meta.lore(Arrays.asList(
-                        Component.text("Click to add a block").color(NamedTextColor.GRAY)
-                ));
+                        Component.text("Click to add a block").color(NamedTextColor.GRAY)));
                 addStop.setItemMeta(meta);
                 inv.setItem(i, addStop);
                 break;
@@ -306,11 +322,11 @@ public class GradientUIManager implements Listener {
 
         ItemStack apply = new ItemStack(Material.EMERALD);
         ItemMeta applyMeta = apply.getItemMeta();
-        applyMeta.displayName(Component.text("Apply Gradient").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
+        applyMeta.displayName(
+                Component.text("Apply Gradient").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
         applyMeta.lore(Arrays.asList(
                 Component.text("Apply this gradient to your").color(NamedTextColor.GRAY),
-                Component.text("current WorldEdit selection").color(NamedTextColor.GRAY)
-        ));
+                Component.text("current WorldEdit selection").color(NamedTextColor.GRAY)));
         apply.setItemMeta(applyMeta);
         inv.setItem(49, apply);
 
@@ -417,7 +433,8 @@ public class GradientUIManager implements Listener {
         for (int i = 0; i < Math.min(commonBlocks.size(), 45); i++) {
             ItemStack item = new ItemStack(commonBlocks.get(i));
             ItemMeta meta = item.getItemMeta();
-            meta.displayName(Component.text(commonBlocks.get(i).name().toLowerCase().replace("_", " ")).color(NamedTextColor.YELLOW));
+            meta.displayName(Component.text(commonBlocks.get(i).name().toLowerCase().replace("_", " "))
+                    .color(NamedTextColor.YELLOW));
             item.setItemMeta(meta);
             inv.setItem(i, item);
         }

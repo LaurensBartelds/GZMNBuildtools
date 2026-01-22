@@ -9,6 +9,8 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BlockType;
 import nl.gzmn.gZMNBuildtools.noise.NoiseSettings;
 
+import java.util.Random;
+
 /**
  * Centralized executor for applying gradients to WorldEdit selections.
  * Handles all gradient types through the GradientType interface.
@@ -70,10 +72,22 @@ public class GradientExecutor {
         int count = 0;
         LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
 
+        // Create seeded random for BLENDED mode reproducibility
+        boolean useBlended = definition.getInterpolationMode() == GradientDefinition.InterpolationMode.BLENDED;
+        long seed = context.hasNoise() ? context.getNoiseSettings().getSeed() : System.currentTimeMillis();
+
         try (EditSession editSession = localSession.createEditSession(actor)) {
             for (BlockVector3 position : region) {
                 double gradientPosition = gradientType.calculatePosition(position, region, context);
-                BlockType blockType = definition.getBlockAt(gradientPosition);
+
+                BlockType blockType;
+                if (useBlended) {
+                    // Position-based seed for deterministic per-block results
+                    Random random = new Random(positionHash(position, seed));
+                    blockType = definition.getBlockAt(gradientPosition, random);
+                } else {
+                    blockType = definition.getBlockAt(gradientPosition);
+                }
 
                 if (blockType != null) {
                     editSession.setBlock(position, blockType.getDefaultState());
@@ -87,6 +101,14 @@ public class GradientExecutor {
         }
 
         return GradientResult.success(count);
+    }
+
+    /**
+     * Create a deterministic hash from block position and seed.
+     * This ensures the same position always gets the same random result.
+     */
+    private long positionHash(BlockVector3 position, long seed) {
+        return seed ^ (position.x() * 73856093L) ^ (position.y() * 19349663L) ^ (position.z() * 83492791L);
     }
 
     /**

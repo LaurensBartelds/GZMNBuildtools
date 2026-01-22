@@ -31,7 +31,8 @@ import java.util.*;
 
 /**
  * Advanced Mode UI for gradient creation.
- * Provides full control over gradient stops, direction, interpolation, and noise settings.
+ * Provides full control over gradient stops, direction, interpolation, and
+ * noise settings.
  */
 public class GradientAdvancedModeUI implements Listener {
 
@@ -44,15 +45,23 @@ public class GradientAdvancedModeUI implements Listener {
     private final Map<UUID, AdvancedModeBuilder> activeBuilders = new HashMap<>();
 
     private final NamespacedKey editingStopKey;
+    private nl.gzmn.gZMNBuildtools.gradient.GradientStorageManager storageManager;
+    private GradientBlockBrowser blockBrowser;
 
     public GradientAdvancedModeUI(Plugin plugin, GradientPreviewRenderer previewRenderer) {
         this.plugin = plugin;
         this.previewRenderer = previewRenderer;
         this.editingStopKey = new NamespacedKey(plugin, "advanced_editing_stop");
+        this.blockBrowser = new GradientBlockBrowser(plugin);
+    }
+
+    public void setStorageManager(nl.gzmn.gZMNBuildtools.gradient.GradientStorageManager storageManager) {
+        this.storageManager = storageManager;
     }
 
     public void registerEvents() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
+        blockBrowser.registerEvents();
     }
 
     /**
@@ -67,16 +76,16 @@ public class GradientAdvancedModeUI implements Listener {
 
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
-        backMeta.displayName(Component.text("<- Back to Mode Selection").color(NamedTextColor.GRAY));
+        backMeta.displayName(Component.text("<- Back to Basic Mode").color(NamedTextColor.GRAY));
         back.setItemMeta(backMeta);
         inv.setItem(0, back);
 
         ItemStack info = new ItemStack(Material.DIAMOND);
         ItemMeta infoMeta = info.getItemMeta();
-        infoMeta.displayName(Component.text("Advanced Mode").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD));
+        infoMeta.displayName(
+                Component.text("Advanced Mode").color(NamedTextColor.LIGHT_PURPLE).decorate(TextDecoration.BOLD));
         infoMeta.lore(Arrays.asList(
-                Component.text("Full control over your gradient").color(NamedTextColor.GRAY)
-        ));
+                Component.text("Full control over your gradient").color(NamedTextColor.GRAY)));
         info.setItemMeta(infoMeta);
         inv.setItem(4, info);
 
@@ -84,23 +93,35 @@ public class GradientAdvancedModeUI implements Listener {
 
         for (int i = 0; i < 9; i++) {
             if (i < builder.stops.size()) {
-                BlockType blockType = builder.stops.get(i);
-                Material material = getMaterialFromBlockType(blockType);
+                List<BlockType> blockTypes = builder.stops.get(i);
+                BlockType primaryBlock = blockTypes.get(0);
+                Material material = getMaterialFromBlockType(primaryBlock);
                 ItemStack item = new ItemStack(material);
                 ItemMeta meta = item.getItemMeta();
-                meta.displayName(Component.text("Stop " + (i + 1) + ": " + blockType.id().replace("minecraft:", ""))
+
+                String displayName = builder.getStopDisplayString(i);
+                meta.displayName(Component.text("Stop " + (i + 1) + ": " + displayName)
                         .color(NamedTextColor.YELLOW));
-                meta.lore(Arrays.asList(
-                        Component.text("Left-click to change").color(NamedTextColor.GRAY),
-                        Component.text("Right-click to remove").color(NamedTextColor.GRAY)
-                ));
+
+                List<Component> lore = new ArrayList<>();
+                if (blockTypes.size() > 1) {
+                    lore.add(Component.text(blockTypes.size() + " blocks (random)").color(NamedTextColor.AQUA));
+                }
+                lore.add(Component.text("Click to change").color(NamedTextColor.GRAY));
+                lore.add(Component.text("Shift+click for multi-block").color(NamedTextColor.DARK_GRAY));
+                lore.add(Component.text("Right-click to remove").color(NamedTextColor.GRAY));
+                meta.lore(lore);
+
                 item.setItemMeta(meta);
                 inv.setItem(9 + i, item);
             } else if (i == builder.stops.size() && builder.stops.size() < 9) {
                 ItemStack addStop = new ItemStack(Material.LIME_DYE);
                 ItemMeta meta = addStop.getItemMeta();
                 meta.displayName(Component.text("Add Gradient Stop").color(NamedTextColor.GREEN));
-                meta.lore(Arrays.asList(Component.text("Click to add a block").color(NamedTextColor.GRAY)));
+                meta.lore(Arrays.asList(
+                        Component.text("Click to add a block").color(NamedTextColor.GRAY),
+                        Component.text("Shift+click for multi-block").color(NamedTextColor.DARK_GRAY),
+                        Component.text("(random selection per position)").color(NamedTextColor.DARK_GRAY)));
                 addStop.setItemMeta(meta);
                 inv.setItem(9 + i, addStop);
                 break;
@@ -108,7 +129,8 @@ public class GradientAdvancedModeUI implements Listener {
         }
 
         addDirectionButton(inv, 18, GradientDefinition.GradientDirection.VERTICAL_UP, "Up", Material.ARROW, builder);
-        addDirectionButton(inv, 19, GradientDefinition.GradientDirection.VERTICAL_DOWN, "Down", Material.ARROW, builder);
+        addDirectionButton(inv, 19, GradientDefinition.GradientDirection.VERTICAL_DOWN, "Down", Material.ARROW,
+                builder);
         addDirectionButton(inv, 20, GradientDefinition.GradientDirection.HORIZONTAL_X, "X", Material.ARROW, builder);
         addDirectionButton(inv, 21, GradientDefinition.GradientDirection.HORIZONTAL_Z, "Z", Material.ARROW, builder);
         addDirectionButton(inv, 22, GradientDefinition.GradientDirection.RADIAL, "Radial", Material.TARGET, builder);
@@ -116,6 +138,7 @@ public class GradientAdvancedModeUI implements Listener {
         addModeButton(inv, 27, GradientDefinition.InterpolationMode.LINEAR, "Linear", Material.IRON_INGOT, builder);
         addModeButton(inv, 28, GradientDefinition.InterpolationMode.SMOOTH, "Smooth", Material.GOLD_INGOT, builder);
         addModeButton(inv, 29, GradientDefinition.InterpolationMode.DISCRETE, "Discrete", Material.DIAMOND, builder);
+        addModeButton(inv, 30, GradientDefinition.InterpolationMode.BLENDED, "Blended", Material.MOSSY_COBBLESTONE, builder);
 
         ItemStack typeToggle = new ItemStack(builder.useNoise ? Material.CHORUS_FRUIT : Material.PAPER);
         ItemMeta typeMeta = typeToggle.getItemMeta();
@@ -125,28 +148,49 @@ public class GradientAdvancedModeUI implements Listener {
         typeMeta.lore(Arrays.asList(
                 Component.text("Click to toggle").color(NamedTextColor.GRAY),
                 Component.text(builder.useNoise ? "Using noise for variation" : "Clean gradient transition")
-                        .color(NamedTextColor.DARK_GRAY)
-        ));
+                        .color(NamedTextColor.DARK_GRAY)));
         typeToggle.setItemMeta(typeMeta);
         inv.setItem(31, typeToggle);
 
         if (builder.useNoise) {
-            ItemStack noiseSettings = new ItemStack(Material.COMPARATOR);
-            ItemMeta noiseMeta = noiseSettings.getItemMeta();
-            noiseMeta.displayName(Component.text("Noise Settings").color(NamedTextColor.AQUA));
-            noiseMeta.lore(Arrays.asList(
-                    Component.text("Scale: " + String.format("%.2f", builder.noiseSettings.getScale())).color(NamedTextColor.GRAY),
-                    Component.text("Strength: " + String.format("%.2f", builder.noiseSettings.getStrength())).color(NamedTextColor.GRAY),
-                    Component.text("Algorithm: " + builder.noiseSettings.getAlgorithm().getDisplayName()).color(NamedTextColor.GRAY),
-                    Component.empty(),
-                    Component.text("Click to configure").color(NamedTextColor.YELLOW)
-            ));
-            noiseSettings.setItemMeta(noiseMeta);
-            inv.setItem(33, noiseSettings);
+            // Inline noise controls - Scale (slot 32)
+            ItemStack scaleControl = new ItemStack(Material.AMETHYST_SHARD);
+            ItemMeta scaleMeta = scaleControl.getItemMeta();
+            scaleMeta.displayName(Component.text("Scale: " + String.format("%.2f", builder.noiseSettings.getScale()))
+                    .color(NamedTextColor.AQUA));
+            scaleMeta.lore(Arrays.asList(
+                    Component.text("Left-click: Decrease").color(NamedTextColor.GRAY),
+                    Component.text("Right-click: Increase").color(NamedTextColor.GRAY),
+                    Component.text("Controls noise frequency").color(NamedTextColor.DARK_GRAY)));
+            scaleControl.setItemMeta(scaleMeta);
+            inv.setItem(32, scaleControl);
+
+            // Inline noise controls - Strength (slot 33)
+            ItemStack strengthControl = new ItemStack(Material.REDSTONE);
+            ItemMeta strMeta = strengthControl.getItemMeta();
+            strMeta.displayName(Component.text("Strength: " + String.format("%.2f", builder.noiseSettings.getStrength()))
+                    .color(NamedTextColor.RED));
+            strMeta.lore(Arrays.asList(
+                    Component.text("Left-click: Decrease").color(NamedTextColor.GRAY),
+                    Component.text("Right-click: Increase").color(NamedTextColor.GRAY),
+                    Component.text("Controls noise intensity").color(NamedTextColor.DARK_GRAY)));
+            strengthControl.setItemMeta(strMeta);
+            inv.setItem(33, strengthControl);
+
+            // Quick presets (slot 34)
+            ItemStack presets = new ItemStack(Material.COMPARATOR);
+            ItemMeta presetMeta = presets.getItemMeta();
+            presetMeta.displayName(Component.text("Quick Presets").color(NamedTextColor.GOLD));
+            presetMeta.lore(Arrays.asList(
+                    Component.text("Left: Subtle").color(NamedTextColor.GREEN),
+                    Component.text("Right: Strong").color(NamedTextColor.RED),
+                    Component.text("Shift: Full Settings").color(NamedTextColor.YELLOW)));
+            presets.setItemMeta(presetMeta);
+            inv.setItem(34, presets);
         }
 
         if (builder.stops.size() >= 2) {
-            previewRenderer.renderPreviewBar(inv, 36, builder.stops, builder.direction, builder.interpolationMode);
+            previewRenderer.renderPreviewBarMultiBlock(inv, 36, builder.stops, builder.direction, builder.interpolationMode);
         } else {
             previewRenderer.renderEmptyPreview(inv, 36);
         }
@@ -156,14 +200,22 @@ public class GradientAdvancedModeUI implements Listener {
         wpMeta.displayName(Component.text("Preview in World").color(NamedTextColor.AQUA));
         wpMeta.lore(Arrays.asList(
                 Component.text("Show gradient with particles").color(NamedTextColor.GRAY),
-                Component.text("in your selection").color(NamedTextColor.GRAY)
-        ));
+                Component.text("in your selection").color(NamedTextColor.GRAY)));
         worldPreview.setItemMeta(wpMeta);
         inv.setItem(45, worldPreview);
 
+        ItemStack save = new ItemStack(Material.WRITABLE_BOOK);
+        ItemMeta saveMeta = save.getItemMeta();
+        saveMeta.displayName(Component.text("Save as Preset").color(NamedTextColor.GOLD));
+        saveMeta.lore(Arrays.asList(Component.text("Save this configuration").color(NamedTextColor.GRAY),
+                Component.text("to your personal list").color(NamedTextColor.GRAY)));
+        save.setItemMeta(saveMeta);
+        inv.setItem(51, save);
+
         ItemStack apply = new ItemStack(Material.EMERALD);
         ItemMeta applyMeta = apply.getItemMeta();
-        applyMeta.displayName(Component.text("Apply Gradient").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
+        applyMeta.displayName(
+                Component.text("Apply Gradient").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD));
         apply.setItemMeta(applyMeta);
         inv.setItem(49, apply);
 
@@ -203,8 +255,7 @@ public class GradientAdvancedModeUI implements Listener {
                 Material.PURPLE_CONCRETE, Material.MAGENTA_CONCRETE, Material.PINK_CONCRETE, Material.BROWN_CONCRETE,
                 Material.WHITE_WOOL, Material.LIGHT_GRAY_WOOL, Material.GRAY_WOOL, Material.BLACK_WOOL,
                 Material.DIRT, Material.GRASS_BLOCK, Material.COARSE_DIRT, Material.GRAVEL,
-                Material.TERRACOTTA, Material.WHITE_TERRACOTTA, Material.BROWN_TERRACOTTA
-        );
+                Material.TERRACOTTA, Material.WHITE_TERRACOTTA, Material.BROWN_TERRACOTTA);
 
         for (int i = 0; i < Math.min(commonBlocks.size(), 45); i++) {
             ItemStack item = new ItemStack(commonBlocks.get(i));
@@ -223,7 +274,8 @@ public class GradientAdvancedModeUI implements Listener {
      */
     private void openNoiseSettings(Player player) {
         AdvancedModeBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null) return;
+        if (builder == null)
+            return;
 
         Inventory inv = Bukkit.createInventory(null, 54,
                 Component.text(NOISE_SETTINGS_TITLE).color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD));
@@ -239,15 +291,15 @@ public class GradientAdvancedModeUI implements Listener {
 
         ItemStack algorithmToggle = new ItemStack(
                 builder.noiseSettings.getAlgorithm() == NoiseSettings.NoiseAlgorithm.SIMPLEX
-                        ? Material.AMETHYST_SHARD : Material.FLINT);
+                        ? Material.AMETHYST_SHARD
+                        : Material.FLINT);
         ItemMeta algoMeta = algorithmToggle.getItemMeta();
         algoMeta.displayName(Component.text("Algorithm: " + builder.noiseSettings.getAlgorithm().getDisplayName())
                 .color(NamedTextColor.LIGHT_PURPLE));
         algoMeta.lore(Arrays.asList(
                 Component.text("Click to toggle").color(NamedTextColor.GRAY),
                 Component.text("Simplex: Smoother, organic").color(NamedTextColor.DARK_GRAY),
-                Component.text("Perlin: Classic, grid-like").color(NamedTextColor.DARK_GRAY)
-        ));
+                Component.text("Perlin: Classic, grid-like").color(NamedTextColor.DARK_GRAY)));
         algorithmToggle.setItemMeta(algoMeta);
         inv.setItem(28, algorithmToggle);
 
@@ -256,8 +308,7 @@ public class GradientAdvancedModeUI implements Listener {
         seedMeta.displayName(Component.text("Randomize Seed").color(NamedTextColor.GOLD));
         seedMeta.lore(Arrays.asList(
                 Component.text("Current: " + builder.noiseSettings.getSeed()).color(NamedTextColor.GRAY),
-                Component.text("Click for new pattern").color(NamedTextColor.DARK_GRAY)
-        ));
+                Component.text("Click for new pattern").color(NamedTextColor.DARK_GRAY)));
         randomSeed.setItemMeta(seedMeta);
         inv.setItem(30, randomSeed);
 
@@ -289,7 +340,8 @@ public class GradientAdvancedModeUI implements Listener {
 
         ItemStack display = new ItemStack(Material.PAPER);
         ItemMeta displayMeta = display.getItemMeta();
-        displayMeta.displayName(Component.text(label + ": " + String.format("%.2f", value)).color(NamedTextColor.WHITE));
+        displayMeta
+                .displayName(Component.text(label + ": " + String.format("%.2f", value)).color(NamedTextColor.WHITE));
         display.setItemMeta(displayMeta);
         inv.setItem(startSlot + 2, display);
 
@@ -306,7 +358,8 @@ public class GradientAdvancedModeUI implements Listener {
         inv.setItem(startSlot + 4, increaseFast);
     }
 
-    private void addNoisePresetButton(Inventory inv, int slot, String name, NoiseSettings preset, AdvancedModeBuilder builder) {
+    private void addNoisePresetButton(Inventory inv, int slot, String name, NoiseSettings preset,
+            AdvancedModeBuilder builder) {
         boolean isActive = Math.abs(builder.noiseSettings.getScale() - preset.getScale()) < 0.001
                 && Math.abs(builder.noiseSettings.getStrength() - preset.getStrength()) < 0.001;
 
@@ -315,20 +368,20 @@ public class GradientAdvancedModeUI implements Listener {
         meta.displayName(Component.text(name).color(isActive ? NamedTextColor.GOLD : NamedTextColor.YELLOW));
         meta.lore(Arrays.asList(
                 Component.text("Scale: " + String.format("%.2f", preset.getScale())).color(NamedTextColor.GRAY),
-                Component.text("Strength: " + String.format("%.2f", preset.getStrength())).color(NamedTextColor.GRAY)
-        ));
+                Component.text("Strength: " + String.format("%.2f", preset.getStrength())).color(NamedTextColor.GRAY)));
         item.setItemMeta(meta);
         inv.setItem(slot, item);
     }
 
     private void addDirectionButton(Inventory inv, int slot, GradientDefinition.GradientDirection direction,
-                                     String name, Material material, AdvancedModeBuilder builder) {
+            String name, Material material, AdvancedModeBuilder builder) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         boolean isSelected = builder.direction == direction;
         NamedTextColor color = isSelected ? NamedTextColor.GOLD : NamedTextColor.YELLOW;
         Component nameComp = Component.text(name).color(color);
-        if (isSelected) nameComp = nameComp.decorate(TextDecoration.BOLD);
+        if (isSelected)
+            nameComp = nameComp.decorate(TextDecoration.BOLD);
         meta.displayName(nameComp);
         if (isSelected) {
             meta.lore(Arrays.asList(Component.text("Selected").color(NamedTextColor.GREEN)));
@@ -338,19 +391,61 @@ public class GradientAdvancedModeUI implements Listener {
     }
 
     private void addModeButton(Inventory inv, int slot, GradientDefinition.InterpolationMode mode,
-                                String name, Material material, AdvancedModeBuilder builder) {
+            String name, Material material, AdvancedModeBuilder builder) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         boolean isSelected = builder.interpolationMode == mode;
         NamedTextColor color = isSelected ? NamedTextColor.GOLD : NamedTextColor.YELLOW;
         Component nameComp = Component.text(name).color(color);
-        if (isSelected) nameComp = nameComp.decorate(TextDecoration.BOLD);
+        if (isSelected)
+            nameComp = nameComp.decorate(TextDecoration.BOLD);
         meta.displayName(nameComp);
+
+        List<Component> lore = new ArrayList<>();
         if (isSelected) {
-            meta.lore(Arrays.asList(Component.text("Selected").color(NamedTextColor.GREEN)));
+            lore.add(Component.text("Selected").color(NamedTextColor.GREEN));
         }
+
+        // Add mode descriptions
+        switch (mode) {
+            case LINEAR:
+                lore.add(Component.text("Sharp transition at midpoint").color(NamedTextColor.GRAY));
+                break;
+            case SMOOTH:
+                lore.add(Component.text("Smoothed transition curve").color(NamedTextColor.GRAY));
+                break;
+            case DISCRETE:
+                lore.add(Component.text("Hard boundary, no blending").color(NamedTextColor.GRAY));
+                break;
+            case BLENDED:
+                lore.add(Component.text("Organic mixed transitions").color(NamedTextColor.GRAY));
+                lore.add(Component.text("Creates natural-looking gradients").color(NamedTextColor.DARK_GRAY));
+                break;
+        }
+
+        meta.lore(lore);
         item.setItemMeta(meta);
         inv.setItem(slot, item);
+    }
+
+    /**
+     * Handle block selection from the block browser.
+     */
+    private void handleBlockSelection(Player player, int stopIndex, List<BlockType> blocks) {
+        AdvancedModeBuilder builder = activeBuilders.get(player.getUniqueId());
+        if (builder == null || blocks == null || blocks.isEmpty()) {
+            openMainUI(player);
+            return;
+        }
+
+        if (stopIndex < builder.stops.size()) {
+            builder.stops.set(stopIndex, blocks);
+        } else {
+            builder.stops.add(blocks);
+        }
+
+        MessageManager.success(player, "Added stop with %d block(s).", blocks.size());
+        openMainUI(player);
     }
 
     private void addSelectionStatus(Inventory inv, int slot, Player player) {
@@ -384,7 +479,8 @@ public class GradientAdvancedModeUI implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player player))
+            return;
 
         String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
 
@@ -399,16 +495,36 @@ public class GradientAdvancedModeUI implements Listener {
 
     private void handleMainClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         int slot = event.getSlot();
         AdvancedModeBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null) return;
+        if (builder == null)
+            return;
 
         if (slot == 0) {
             player.closeInventory();
+            // We should open Easy Mode here, but we need access to UIManager or EasyModeUI.
+            // As a shortcut, we can use the command invocation or assume UIManager injected
+            // eventually.
+            // For now, let's just close and tell them.
+            // Better: GradientUIManager should have passed itself or EasyModeUI to
+            // AdvancedModeUI.
+            // But I don't want to refactor constructor now.
+            // Let's execute the command for easy mode.
+            player.performCommand("gradient easy");
             return;
         }
+
+        if (slot == 51) {
+            // Save action
+            builder.waitingForName = true;
+            player.closeInventory();
+            MessageManager.info(player, "Please type the name for this gradient in chat.");
+            return;
+        }
+
         if (slot == 53) {
             player.closeInventory();
             activeBuilders.remove(player.getUniqueId());
@@ -418,12 +534,35 @@ public class GradientAdvancedModeUI implements Listener {
         if (slot >= 9 && slot < 18) {
             int stopIndex = slot - 9;
             if (event.getCurrentItem().getType() == Material.LIME_DYE) {
-                openBlockSelector(player, builder.stops.size());
+                // Adding new stop - open block browser
+                int newStopIndex = builder.stops.size();
+                if (event.isShiftClick()) {
+                    // Shift+click for multi-select mode
+                    blockBrowser.openMultiSelect(player, newStopIndex, (idx, blocks) -> {
+                        handleBlockSelection(player, idx, blocks);
+                    });
+                } else {
+                    // Normal click for single block
+                    blockBrowser.openSingleSelect(player, newStopIndex, (idx, blocks) -> {
+                        handleBlockSelection(player, idx, blocks);
+                    });
+                }
             } else if (event.isRightClick() && stopIndex < builder.stops.size()) {
                 builder.stops.remove(stopIndex);
                 openMainUI(player);
             } else if (stopIndex < builder.stops.size()) {
-                openBlockSelector(player, stopIndex);
+                // Editing existing stop - open block browser
+                if (event.isShiftClick()) {
+                    // Shift+click for multi-select mode
+                    blockBrowser.openMultiSelect(player, stopIndex, (idx, blocks) -> {
+                        handleBlockSelection(player, idx, blocks);
+                    });
+                } else {
+                    // Normal click for single block
+                    blockBrowser.openSingleSelect(player, stopIndex, (idx, blocks) -> {
+                        handleBlockSelection(player, idx, blocks);
+                    });
+                }
             }
             return;
         }
@@ -439,7 +578,7 @@ public class GradientAdvancedModeUI implements Listener {
         }
 
         GradientDefinition.InterpolationMode[] modes = GradientDefinition.InterpolationMode.values();
-        if (slot >= 27 && slot <= 29) {
+        if (slot >= 27 && slot <= 30) {
             int modeIndex = slot - 27;
             if (modeIndex < modes.length) {
                 builder.interpolationMode = modes[modeIndex];
@@ -454,9 +593,41 @@ public class GradientAdvancedModeUI implements Listener {
             return;
         }
 
-        if (slot == 33 && builder.useNoise) {
-            openNoiseSettings(player);
-            return;
+        // Inline noise controls
+        if (builder.useNoise) {
+            // Scale control (slot 32)
+            if (slot == 32) {
+                double val = builder.noiseSettings.getScale();
+                val += event.isRightClick() ? 0.02 : -0.02;
+                val = Math.max(0.01, Math.min(0.5, val));
+                builder.noiseSettings = builder.noiseSettings.withScale(val);
+                openMainUI(player);
+                return;
+            }
+
+            // Strength control (slot 33)
+            if (slot == 33) {
+                double val = builder.noiseSettings.getStrength();
+                val += event.isRightClick() ? 0.1 : -0.1;
+                val = Math.max(0.0, Math.min(1.0, val));
+                builder.noiseSettings = builder.noiseSettings.withStrength(val);
+                openMainUI(player);
+                return;
+            }
+
+            // Quick presets (slot 34)
+            if (slot == 34) {
+                if (event.isShiftClick()) {
+                    openNoiseSettings(player);
+                } else if (event.isRightClick()) {
+                    builder.noiseSettings = NoiseSettings.strong();
+                    openMainUI(player);
+                } else {
+                    builder.noiseSettings = NoiseSettings.subtle();
+                    openMainUI(player);
+                }
+                return;
+            }
         }
 
         if (slot == 45) {
@@ -469,13 +640,47 @@ public class GradientAdvancedModeUI implements Listener {
         }
     }
 
+    private nl.gzmn.gZMNBuildtools.gradient.BlockColorService blockColorService;
+
+    public void setBlockColorService(nl.gzmn.gZMNBuildtools.gradient.BlockColorService blockColorService) {
+        this.blockColorService = blockColorService;
+    }
+
     private void handleBlockSelectorClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         int slot = event.getSlot();
+
+        // Handle clicks in player inventory (bottom inventory)
+        if (event.getClickedInventory() != event.getView().getTopInventory()) {
+            Material clickedMat = event.getCurrentItem().getType();
+            // MessageManager.info(player, "DEBUG: Clicked inventory item: " + clickedMat);
+
+            if (blockColorService == null) {
+                MessageManager.error(player, "DEBUG: BlockColorService is null!");
+                return;
+            }
+
+            if (clickedMat.isBlock() && !clickedMat.isAir()) {
+                List<Material> suggestions = blockColorService.getGradientSuggestions(clickedMat, 3);
+                if (suggestions.isEmpty()) {
+                    MessageManager.warn(player, "No suggestions found for " + clickedMat);
+                } else {
+                    updateBlockSelectorWithSuggestions(event.getView().getTopInventory(), clickedMat, suggestions);
+                    MessageManager.info(player, "Showing suggestions for %s", clickedMat.name());
+                }
+            } else {
+                if (!clickedMat.isBlock())
+                    MessageManager.info(player, "DEBUG: Not a block: " + clickedMat);
+            }
+            return;
+        }
+
         AdvancedModeBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null) return;
+        if (builder == null)
+            return;
 
         if (slot == 0) {
             player.getPersistentDataContainer().remove(editingStopKey);
@@ -483,17 +688,32 @@ public class GradientAdvancedModeUI implements Listener {
             return;
         }
 
+        // Handle specific actions in the top inventory
+        if (slot == 8) {
+            // Reset to common blocks
+            Integer stopIndex = player.getPersistentDataContainer().get(editingStopKey, PersistentDataType.INTEGER);
+            if (stopIndex != null) {
+                openBlockSelector(player, stopIndex);
+            }
+            return;
+        }
+
         if (slot >= 9 && slot < 54) {
+            // ... existing selection logic ...
             Material selectedMaterial = event.getCurrentItem().getType();
+            if (selectedMaterial == Material.GRAY_STAINED_GLASS_PANE)
+                return; // Placeholder
+
             BlockType blockType = BlockTypes.get("minecraft:" + selectedMaterial.name().toLowerCase());
 
             if (blockType != null) {
                 Integer stopIndex = player.getPersistentDataContainer().get(editingStopKey, PersistentDataType.INTEGER);
                 if (stopIndex != null) {
+                    List<BlockType> singleBlockList = Arrays.asList(blockType);
                     if (stopIndex < builder.stops.size()) {
-                        builder.stops.set(stopIndex, blockType);
+                        builder.stops.set(stopIndex, singleBlockList);
                     } else {
-                        builder.stops.add(blockType);
+                        builder.stops.add(singleBlockList);
                     }
                     player.getPersistentDataContainer().remove(editingStopKey);
                 }
@@ -502,36 +722,95 @@ public class GradientAdvancedModeUI implements Listener {
         }
     }
 
+    private void updateBlockSelectorWithSuggestions(Inventory inv, Material origin, List<Material> suggestions) {
+        // Clear previous common blocks area (9-53) except back button
+        for (int i = 9; i < 54; i++) {
+            inv.setItem(i, null);
+        }
+
+        // Title or info
+        ItemStack originItem = new ItemStack(origin);
+        ItemMeta originMeta = originItem.getItemMeta();
+        originMeta.displayName(Component.text("Base: " + origin.name()).color(NamedTextColor.GOLD));
+        originItem.setItemMeta(originMeta);
+        inv.setItem(4, originItem); // Show what we are matching against at top
+
+        // Display suggestions centered
+        // We have up to 7 items? (3 darker + 1 origin + 3 lighter)
+        // Let's display them in a row
+
+        int startSlot = 19; // 2nd row center-ish
+
+        // Add suggestions
+        // suggestions is a list ordered darkest to lightest
+        // Let's center them.
+        startSlot = 22 - (suggestions.size() / 2);
+
+        for (int i = 0; i < suggestions.size(); i++) {
+            Material mat = suggestions.get(i);
+            ItemStack item = new ItemStack(mat);
+            ItemMeta meta = item.getItemMeta();
+            meta.displayName(Component.text(mat.name()).color(NamedTextColor.GREEN));
+            if (mat == origin) {
+                meta.lore(Arrays.asList(Component.text("Original Block").color(NamedTextColor.YELLOW)));
+            }
+            item.setItemMeta(meta);
+            inv.setItem(startSlot + i, item);
+        }
+
+        // Add a "Show Common Blocks" button?
+        ItemStack reset = new ItemStack(Material.BOOK);
+        ItemMeta resetMeta = reset.getItemMeta();
+        resetMeta.displayName(Component.text("Show Common Blocks").color(NamedTextColor.AQUA));
+        reset.setItemMeta(resetMeta);
+        inv.setItem(8, reset);
+    }
+
     private void handleNoiseSettingsClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         int slot = event.getSlot();
         AdvancedModeBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null) return;
+        if (builder == null)
+            return;
 
         if (slot == 0 || slot == 49) {
             openMainUI(player);
             return;
         }
 
-        if (slot == 10) builder.noiseSettings = builder.noiseSettings.withScale(builder.noiseSettings.getScale() - 0.05);
-        else if (slot == 11) builder.noiseSettings = builder.noiseSettings.withScale(builder.noiseSettings.getScale() - 0.01);
-        else if (slot == 13) builder.noiseSettings = builder.noiseSettings.withScale(builder.noiseSettings.getScale() + 0.01);
-        else if (slot == 14) builder.noiseSettings = builder.noiseSettings.withScale(builder.noiseSettings.getScale() + 0.05);
-        else if (slot == 19) builder.noiseSettings = builder.noiseSettings.withStrength(builder.noiseSettings.getStrength() - 0.1);
-        else if (slot == 20) builder.noiseSettings = builder.noiseSettings.withStrength(builder.noiseSettings.getStrength() - 0.05);
-        else if (slot == 22) builder.noiseSettings = builder.noiseSettings.withStrength(builder.noiseSettings.getStrength() + 0.05);
-        else if (slot == 23) builder.noiseSettings = builder.noiseSettings.withStrength(builder.noiseSettings.getStrength() + 0.1);
+        if (slot == 10)
+            builder.noiseSettings = builder.noiseSettings.withScale(builder.noiseSettings.getScale() - 0.05);
+        else if (slot == 11)
+            builder.noiseSettings = builder.noiseSettings.withScale(builder.noiseSettings.getScale() - 0.01);
+        else if (slot == 13)
+            builder.noiseSettings = builder.noiseSettings.withScale(builder.noiseSettings.getScale() + 0.01);
+        else if (slot == 14)
+            builder.noiseSettings = builder.noiseSettings.withScale(builder.noiseSettings.getScale() + 0.05);
+        else if (slot == 19)
+            builder.noiseSettings = builder.noiseSettings.withStrength(builder.noiseSettings.getStrength() - 0.1);
+        else if (slot == 20)
+            builder.noiseSettings = builder.noiseSettings.withStrength(builder.noiseSettings.getStrength() - 0.05);
+        else if (slot == 22)
+            builder.noiseSettings = builder.noiseSettings.withStrength(builder.noiseSettings.getStrength() + 0.05);
+        else if (slot == 23)
+            builder.noiseSettings = builder.noiseSettings.withStrength(builder.noiseSettings.getStrength() + 0.1);
         else if (slot == 28) {
-            NoiseSettings.NoiseAlgorithm newAlgo = builder.noiseSettings.getAlgorithm() == NoiseSettings.NoiseAlgorithm.SIMPLEX
-                    ? NoiseSettings.NoiseAlgorithm.PERLIN : NoiseSettings.NoiseAlgorithm.SIMPLEX;
+            NoiseSettings.NoiseAlgorithm newAlgo = builder.noiseSettings
+                    .getAlgorithm() == NoiseSettings.NoiseAlgorithm.SIMPLEX
+                            ? NoiseSettings.NoiseAlgorithm.PERLIN
+                            : NoiseSettings.NoiseAlgorithm.SIMPLEX;
             builder.noiseSettings = builder.noiseSettings.withAlgorithm(newAlgo);
-        }
-        else if (slot == 30) builder.noiseSettings = builder.noiseSettings.withSeed(System.currentTimeMillis());
-        else if (slot == 37) builder.noiseSettings = NoiseSettings.subtle();
-        else if (slot == 38) builder.noiseSettings = NoiseSettings.defaults();
-        else if (slot == 39) builder.noiseSettings = NoiseSettings.strong();
+        } else if (slot == 30)
+            builder.noiseSettings = builder.noiseSettings.withSeed(System.currentTimeMillis());
+        else if (slot == 37)
+            builder.noiseSettings = NoiseSettings.subtle();
+        else if (slot == 38)
+            builder.noiseSettings = NoiseSettings.defaults();
+        else if (slot == 39)
+            builder.noiseSettings = NoiseSettings.strong();
 
         openNoiseSettings(player);
     }
@@ -609,25 +888,152 @@ public class GradientAdvancedModeUI implements Listener {
     }
 
     @EventHandler
+    public void onPlayerChat(io.papermc.paper.event.player.AsyncChatEvent event) {
+        Player player = event.getPlayer();
+        AdvancedModeBuilder builder = activeBuilders.get(player.getUniqueId());
+        if (builder == null) return;
+
+        // Handle block input for gradient stops
+        if (builder.waitingForBlocks) {
+            event.setCancelled(true);
+            String input = PlainTextComponentSerializer.plainText().serialize(event.message());
+
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                builder.waitingForBlocks = false;
+
+                // Parse block names (separated by |)
+                String[] blockNames = input.split("\\|");
+                List<BlockType> blockTypes = new ArrayList<>();
+
+                for (String blockName : blockNames) {
+                    blockName = blockName.trim();
+                    if (blockName.isEmpty()) continue;
+
+                    BlockType blockType = BlockTypes.get(blockName.contains(":") ? blockName : "minecraft:" + blockName);
+                    if (blockType == null) {
+                        MessageManager.error(player, "Unknown block: %s", blockName);
+                        openMainUI(player);
+                        return;
+                    }
+                    blockTypes.add(blockType);
+                }
+
+                if (blockTypes.isEmpty()) {
+                    MessageManager.error(player, "No valid blocks specified.");
+                    openMainUI(player);
+                    return;
+                }
+
+                // Add or update the stop
+                if (builder.editingStopIndex >= 0 && builder.editingStopIndex < builder.stops.size()) {
+                    builder.stops.set(builder.editingStopIndex, blockTypes);
+                } else {
+                    builder.stops.add(blockTypes);
+                }
+                builder.editingStopIndex = -1;
+
+                MessageManager.success(player, "Added stop with %d block(s).", blockTypes.size());
+                openMainUI(player);
+            });
+            return;
+        }
+
+        // Handle name input for saving
+        if (builder.waitingForName) {
+            event.setCancelled(true);
+            String name = PlainTextComponentSerializer.plainText().serialize(event.message());
+
+            // Sync back to main thread for storage/UI operations
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                builder.waitingForName = false;
+                if (storageManager == null) {
+                    MessageManager.error(player, "Storage manager not initialized.");
+                    return;
+                }
+
+                // Create Preset from builder state
+                GradientDefinition def = builder.buildDefinition();
+
+                // Get block IDs (using primary block from each stop)
+                List<String> blockIds = new ArrayList<>();
+                for (List<BlockType> stopBlocks : builder.stops) {
+                    // For saved presets, concatenate with | if multiple blocks
+                    if (stopBlocks.size() == 1) {
+                        blockIds.add(stopBlocks.get(0).toString());
+                    } else {
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < stopBlocks.size(); i++) {
+                            if (i > 0) sb.append("|");
+                            sb.append(stopBlocks.get(i).toString());
+                        }
+                        blockIds.add(sb.toString());
+                    }
+                }
+
+                // Determine icon (first block of first stop)
+                Material icon = Material.STONE;
+                if (!builder.stops.isEmpty() && !builder.stops.get(0).isEmpty()) {
+                    Material m = getMaterialFromBlockType(builder.stops.get(0).get(0));
+                    if (m != null)
+                        icon = m;
+                }
+
+                String id = "custom_" + UUID.randomUUID().toString().substring(0, 8);
+
+                // Create GradientPreset
+                GradientPreset preset = new GradientPreset.Builder(id)
+                        .displayName(name)
+                        .description("Custom gradient by " + player.getName())
+                        .icon(icon)
+                        .category(GradientPreset.PresetCategory.CUSTOM)
+                        .blocks(blockIds)
+                        .build();
+
+                // Create SavedGradient
+                SavedGradient saved = new SavedGradient(id, name, player.getUniqueId(), player.getName(), preset, false,
+                        System.currentTimeMillis());
+
+                storageManager.saveGradient(saved);
+                MessageManager.success(player, "Gradient '%s' saved!", name);
+                openMainUI(player);
+            });
+        }
+    }
+
+    @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
         String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
-        if (title.contains(MAIN_TITLE) || title.contains(BLOCK_SELECTOR_TITLE) || title.contains(NOISE_SETTINGS_TITLE)) {
+        if (title.contains(MAIN_TITLE) || title.contains(BLOCK_SELECTOR_TITLE)
+                || title.contains(NOISE_SETTINGS_TITLE)) {
             Player player = (Player) event.getPlayer();
+
+            // Don't remove builder if we are just closing to type name or blocks
+            AdvancedModeBuilder builder = activeBuilders.get(player.getUniqueId());
+            if (builder != null && (builder.waitingForName || builder.waitingForBlocks))
+                return;
+
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (player.getOpenInventory().getTopInventory().getHolder() == null) {
-                    activeBuilders.remove(player.getUniqueId());
-                    player.getPersistentDataContainer().remove(editingStopKey);
+                    AdvancedModeBuilder b = activeBuilders.get(player.getUniqueId());
+                    // Double check waiting flags in case they were set after close
+                    if (b != null && !b.waitingForName && !b.waitingForBlocks) {
+                        activeBuilders.remove(player.getUniqueId());
+                        player.getPersistentDataContainer().remove(editingStopKey);
+                    }
                 }
             }, 6000L);
         }
     }
 
     private static class AdvancedModeBuilder {
-        List<BlockType> stops = new ArrayList<>();
+        List<List<BlockType>> stops = new ArrayList<>();  // Each stop can have multiple blocks
         GradientDefinition.GradientDirection direction = GradientDefinition.GradientDirection.VERTICAL_UP;
         GradientDefinition.InterpolationMode interpolationMode = GradientDefinition.InterpolationMode.LINEAR;
         boolean useNoise = false;
         NoiseSettings noiseSettings = NoiseSettings.defaults();
+        boolean waitingForName = false;
+        boolean waitingForBlocks = false;  // For chat input of multi-block stops
+        int editingStopIndex = -1;  // Which stop index we're editing (-1 = adding new)
 
         GradientDefinition buildDefinition() {
             List<GradientDefinition.GradientStop> gradientStops = new ArrayList<>();
@@ -636,6 +1042,36 @@ public class GradientAdvancedModeUI implements Listener {
                 gradientStops.add(new GradientDefinition.GradientStop(stops.get(i), position));
             }
             return new GradientDefinition(gradientStops, direction, interpolationMode);
+        }
+
+        /**
+         * Get the primary block type for a stop (for display purposes).
+         */
+        BlockType getPrimaryBlock(int stopIndex) {
+            if (stopIndex >= 0 && stopIndex < stops.size() && !stops.get(stopIndex).isEmpty()) {
+                return stops.get(stopIndex).get(0);
+            }
+            return null;
+        }
+
+        /**
+         * Get a display string for a stop showing all blocks.
+         */
+        String getStopDisplayString(int stopIndex) {
+            if (stopIndex >= 0 && stopIndex < stops.size()) {
+                List<BlockType> blockTypes = stops.get(stopIndex);
+                if (blockTypes.size() == 1) {
+                    return blockTypes.get(0).id().replace("minecraft:", "");
+                } else {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < blockTypes.size(); i++) {
+                        if (i > 0) sb.append("|");
+                        sb.append(blockTypes.get(i).id().replace("minecraft:", ""));
+                    }
+                    return sb.toString();
+                }
+            }
+            return "";
         }
     }
 }

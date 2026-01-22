@@ -29,7 +29,8 @@ public class GradientPreset {
         COOL("Cool Tones", Material.BLUE_WOOL, "Blues, cyans, and purples"),
         NATURE("Nature", Material.OAK_LEAVES, "Greens and natural colors"),
         EARTH("Earth Tones", Material.BROWN_WOOL, "Browns, tans, and sandy colors"),
-        STONE("Stone & Rock", Material.STONE, "Stone and rock materials");
+        STONE("Stone & Rock", Material.STONE, "Stone and rock materials"),
+        CUSTOM("Custom", Material.NAME_TAG, "User-created gradients");
 
         private final String displayName;
         private final Material icon;
