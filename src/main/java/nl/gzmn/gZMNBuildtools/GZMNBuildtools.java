@@ -4,12 +4,14 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.sk89q.worldedit.WorldEdit;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import nl.gzmn.gZMNBuildtools.commands.GradientCommand;
-import nl.gzmn.gZMNBuildtools.commands.TypeReplaceCommand;
-import nl.gzmn.gZMNBuildtools.ui.GradientUIManager;
-import nl.gzmn.gZMNBuildtools.ui.TypeReplaceUIManager;
-import nl.gzmn.gZMNBuildtools.util.MessageManager;
-import nl.gzmn.gZMNBuildtools.worldedit.GradientPatternParser;
+import nl.gzmn.gZMNBuildtools.command.GradientCommand;
+import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
+import nl.gzmn.gZMNBuildtools.gradient.service.BlockColorService;
+import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
+import nl.gzmn.gZMNBuildtools.ui.gradient.GradientUIManager;
+import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
+import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -20,7 +22,7 @@ public final class GZMNBuildtools extends JavaPlugin {
 
         private GradientUIManager gradientUIManager;
         private TypeReplaceUIManager typeReplaceUIManager;
-        private nl.gzmn.gZMNBuildtools.gradient.GradientStorageManager storageManager;
+        private GradientStorageManager storageManager;
         private GradientCommand gradientCommand;
 
         public GZMNBuildtools() {
@@ -107,97 +109,128 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                                                                                 .getSender());
                                                                                 return 1;
                                                                         }))
-                                                        // /gradient save <name> [public]
+                                                        
                                                         .then(Commands.literal("save")
-                                                                        .then(Commands.argument("name", StringArgumentType.word())
+                                                                        .then(Commands.argument("name",
+                                                                                        StringArgumentType.word())
                                                                                         .executes(ctx -> {
                                                                                                 gradientCommand.saveGradient(
-                                                                                                                (Player) ctx.getSource().getSender(),
-                                                                                                                StringArgumentType.getString(ctx, "name"),
+                                                                                                                (Player) ctx.getSource()
+                                                                                                                                .getSender(),
+                                                                                                                StringArgumentType
+                                                                                                                                .getString(ctx, "name"),
                                                                                                                 false);
                                                                                                 return 1;
                                                                                         })
                                                                                         .then(Commands.literal("public")
                                                                                                         .executes(ctx -> {
                                                                                                                 gradientCommand.saveGradient(
-                                                                                                                                (Player) ctx.getSource().getSender(),
-                                                                                                                                StringArgumentType.getString(ctx, "name"),
+                                                                                                                                (Player) ctx.getSource()
+                                                                                                                                                .getSender(),
+                                                                                                                                StringArgumentType
+                                                                                                                                                .getString(ctx, "name"),
                                                                                                                                 true);
                                                                                                                 return 1;
                                                                                                         }))))
-                                                        // /gradient use <name> <direction>
+                                                        
                                                         .then(Commands.literal("use")
-                                                                        .then(Commands.argument("name", StringArgumentType.word())
+                                                                        .then(Commands.argument("name",
+                                                                                        StringArgumentType.word())
                                                                                         .suggests((ctx, builder) -> {
                                                                                                 gradientCommand.getSavedGradientSuggestions(
-                                                                                                                (Player) ctx.getSource().getSender())
+                                                                                                                (Player) ctx.getSource()
+                                                                                                                                .getSender())
                                                                                                                 .stream()
-                                                                                                                .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
+                                                                                                                .filter(s -> s.toLowerCase()
+                                                                                                                                .startsWith(builder
+                                                                                                                                                .getRemainingLowerCase()))
                                                                                                                 .forEach(builder::suggest);
                                                                                                 return builder.buildFuture();
                                                                                         })
-                                                                                        .then(Commands.argument("direction", StringArgumentType.word())
+                                                                                        .then(Commands.argument(
+                                                                                                        "direction",
+                                                                                                        StringArgumentType
+                                                                                                                        .word())
                                                                                                         .suggests((ctx, builder) -> {
                                                                                                                 gradientCommand.getDirectionSuggestions()
                                                                                                                                 .stream()
-                                                                                                                                .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
+                                                                                                                                .filter(s -> s.toLowerCase()
+                                                                                                                                                .startsWith(builder
+                                                                                                                                                                .getRemainingLowerCase()))
                                                                                                                                 .forEach(builder::suggest);
                                                                                                                 return builder.buildFuture();
                                                                                                         })
                                                                                                         .executes(ctx -> {
                                                                                                                 gradientCommand.useGradient(
-                                                                                                                                (Player) ctx.getSource().getSender(),
-                                                                                                                                StringArgumentType.getString(ctx, "name"),
-                                                                                                                                StringArgumentType.getString(ctx, "direction"));
+                                                                                                                                (Player) ctx.getSource()
+                                                                                                                                                .getSender(),
+                                                                                                                                StringArgumentType
+                                                                                                                                                .getString(ctx, "name"),
+                                                                                                                                StringArgumentType
+                                                                                                                                                .getString(ctx, "direction"));
                                                                                                                 return 1;
                                                                                                         }))))
-                                                        // /gradient list [global]
+                                                        
                                                         .then(Commands.literal("list")
                                                                         .executes(ctx -> {
                                                                                 gradientCommand.listGradients(
-                                                                                                (Player) ctx.getSource().getSender(),
+                                                                                                (Player) ctx.getSource()
+                                                                                                                .getSender(),
                                                                                                 false);
                                                                                 return 1;
                                                                         })
                                                                         .then(Commands.literal("global")
                                                                                         .executes(ctx -> {
                                                                                                 gradientCommand.listGradients(
-                                                                                                                (Player) ctx.getSource().getSender(),
+                                                                                                                (Player) ctx.getSource()
+                                                                                                                                .getSender(),
                                                                                                                 true);
                                                                                                 return 1;
                                                                                         })))
-                                                        // /gradient delete <name>
+                                                        
                                                         .then(Commands.literal("delete")
-                                                                        .then(Commands.argument("name", StringArgumentType.word())
+                                                                        .then(Commands.argument("name",
+                                                                                        StringArgumentType.word())
                                                                                         .suggests((ctx, builder) -> {
                                                                                                 gradientCommand.getSavedGradientSuggestions(
-                                                                                                                (Player) ctx.getSource().getSender())
+                                                                                                                (Player) ctx.getSource()
+                                                                                                                                .getSender())
                                                                                                                 .stream()
-                                                                                                                .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
+                                                                                                                .filter(s -> s.toLowerCase()
+                                                                                                                                .startsWith(builder
+                                                                                                                                                .getRemainingLowerCase()))
                                                                                                                 .forEach(builder::suggest);
                                                                                                 return builder.buildFuture();
                                                                                         })
                                                                                         .executes(ctx -> {
                                                                                                 gradientCommand.deleteGradient(
-                                                                                                                (Player) ctx.getSource().getSender(),
-                                                                                                                StringArgumentType.getString(ctx, "name"));
+                                                                                                                (Player) ctx.getSource()
+                                                                                                                                .getSender(),
+                                                                                                                StringArgumentType
+                                                                                                                                .getString(ctx, "name"));
                                                                                                 return 1;
                                                                                         })))
-                                                        // /gradient share <name>
+                                                        
                                                         .then(Commands.literal("share")
-                                                                        .then(Commands.argument("name", StringArgumentType.word())
+                                                                        .then(Commands.argument("name",
+                                                                                        StringArgumentType.word())
                                                                                         .suggests((ctx, builder) -> {
                                                                                                 gradientCommand.getSavedGradientSuggestions(
-                                                                                                                (Player) ctx.getSource().getSender())
+                                                                                                                (Player) ctx.getSource()
+                                                                                                                                .getSender())
                                                                                                                 .stream()
-                                                                                                                .filter(s -> s.toLowerCase().startsWith(builder.getRemainingLowerCase()))
+                                                                                                                .filter(s -> s.toLowerCase()
+                                                                                                                                .startsWith(builder
+                                                                                                                                                .getRemainingLowerCase()))
                                                                                                                 .forEach(builder::suggest);
                                                                                                 return builder.buildFuture();
                                                                                         })
                                                                                         .executes(ctx -> {
                                                                                                 gradientCommand.shareGradient(
-                                                                                                                (Player) ctx.getSource().getSender(),
-                                                                                                                StringArgumentType.getString(ctx, "name"));
+                                                                                                                (Player) ctx.getSource()
+                                                                                                                                .getSender(),
+                                                                                                                StringArgumentType
+                                                                                                                                .getString(ctx, "name"));
                                                                                                 return 1;
                                                                                         })))
                                                         .then(Commands.literal("preset")
@@ -304,18 +337,21 @@ public final class GZMNBuildtools extends JavaPlugin {
                                         List.of("grad", "grd"));
 
                         commands.register(
-                                Commands.literal("gzmndebug")
-                                        .requires(source -> source.getSender().hasPermission("gzmnbuildtools.admin"))
-                                        .executes(ctx -> {
-                                            getLogger().info("Manual registration triggered via /gzmndebug");
-                                            registerWorldEditPatterns();
-                                            ctx.getSource().getSender().sendMessage(net.kyori.adventure.text.Component.text("Attempted to re-register patterns. Check console."));
-                                            return 1;
-                                        })
-                                        .build(),
-                                "Debug GZMNBuildtools",
-                                List.of()
-                        );
+                                        Commands.literal("gzmndebug")
+                                                        .requires(source -> source.getSender()
+                                                                        .hasPermission("gzmnbuildtools.admin"))
+                                                        .executes(ctx -> {
+                                                                getLogger().info(
+                                                                                "Manual registration triggered via /gzmndebug");
+                                                                registerWorldEditPatterns();
+                                                                ctx.getSource().getSender().sendMessage(
+                                                                                net.kyori.adventure.text.Component.text(
+                                                                                                "Attempted to re-register patterns. Check console."));
+                                                                return 1;
+                                                        })
+                                                        .build(),
+                                        "Debug GZMNBuildtools",
+                                        List.of());
                 });
         }
 
@@ -329,13 +365,13 @@ public final class GZMNBuildtools extends JavaPlugin {
                         return;
                 }
 
-                storageManager = new nl.gzmn.gZMNBuildtools.gradient.GradientStorageManager(this);
+                storageManager = new GradientStorageManager(this);
                 storageManager.load();
 
-                nl.gzmn.gZMNBuildtools.gradient.BlockColorService blockColorService = new nl.gzmn.gZMNBuildtools.gradient.BlockColorService(
+                BlockColorService blockColorService = new BlockColorService(
                                 this);
 
-                // Pass storage manager and color service to UI and command
+                
                 gradientUIManager.setStorageManager(storageManager);
                 gradientUIManager.setBlockColorService(blockColorService);
                 gradientCommand.setStorageManager(storageManager);
@@ -343,7 +379,7 @@ public final class GZMNBuildtools extends JavaPlugin {
                 gradientUIManager.registerEvents();
                 typeReplaceUIManager.registerEvents();
 
-                // Register WorldEdit patterns
+                
                 registerWorldEditPatterns();
 
                 getLogger().info("WorldEdit/FAWE detected, plugin enabled!");
@@ -358,10 +394,7 @@ public final class GZMNBuildtools extends JavaPlugin {
                 getLogger().info("Material groups: all_copper, all_waxed_copper, copper_all");
         }
 
-        /**
-         * Register custom WorldEdit patterns.
-         * Enables usage like: //set #gradient[up][linear][stone,andesite]
-         */
+        
         private void registerWorldEditPatterns() {
                 try {
                         WorldEdit worldEdit = WorldEdit.getInstance();
