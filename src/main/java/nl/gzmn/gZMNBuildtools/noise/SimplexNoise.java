@@ -1,10 +1,6 @@
 package nl.gzmn.gZMNBuildtools.noise;
 
-/**
- * OpenSimplex2 noise implementation.
- * Patent-free alternative to Perlin noise with better visual characteristics.
- * Based on OpenSimplex2 by KdotJPG.
- */
+
 public class SimplexNoise implements NoiseGenerator {
 
     private static final String ID = "simplex";

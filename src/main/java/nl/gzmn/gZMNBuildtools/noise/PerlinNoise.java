@@ -1,10 +1,6 @@
 package nl.gzmn.gZMNBuildtools.noise;
 
-/**
- * Classic Perlin noise implementation.
- * Produces slightly more "grid-like" patterns compared to Simplex noise.
- * Good for traditional procedural textures.
- */
+
 public class PerlinNoise implements NoiseGenerator {
 
     private static final String ID = "perlin";

@@ -1,9 +1,6 @@
 package nl.gzmn.gZMNBuildtools.noise;
 
-/**
- * Configuration container for noise parameters used in gradient blending.
- * Immutable class with builder pattern for safe configuration.
- */
+
 public class NoiseSettings {
 
     private final double scale;
@@ -14,9 +11,7 @@ public class NoiseSettings {
     private final long seed;
     private final NoiseAlgorithm algorithm;
 
-    /**
-     * Available noise algorithms.
-     */
+    
     public enum NoiseAlgorithm {
         SIMPLEX("simplex", "Simplex"),
         PERLIN("perlin", "Perlin");
@@ -52,18 +47,12 @@ public class NoiseSettings {
         return Math.max(min, Math.min(max, value));
     }
 
-    /**
-     * Create default noise settings.
-     * Scale: 0.1, Strength: 0.3, Octaves: 3, Simplex algorithm
-     */
+    
     public static NoiseSettings defaults() {
         return new Builder().build();
     }
 
-    /**
-     * Create subtle noise settings for gentle variation.
-     * Lower scale and strength for minimal effect.
-     */
+    
     public static NoiseSettings subtle() {
         return new Builder()
                 .scale(0.05)
@@ -72,10 +61,7 @@ public class NoiseSettings {
                 .build();
     }
 
-    /**
-     * Create strong noise settings for pronounced variation.
-     * Higher scale and strength for visible effect.
-     */
+    
     public static NoiseSettings strong() {
         return new Builder()
                 .scale(0.15)
@@ -84,103 +70,67 @@ public class NoiseSettings {
                 .build();
     }
 
-    /**
-     * Get the noise frequency scale.
-     * Higher values = more detailed/frequent noise patterns.
-     * @return Scale value (0.01 - 1.0)
-     */
+    
     public double getScale() {
         return scale;
     }
 
-    /**
-     * Get the noise strength/intensity.
-     * How much the noise affects the gradient position.
-     * @return Strength value (0.0 - 1.0)
-     */
+    
     public double getStrength() {
         return strength;
     }
 
-    /**
-     * Get the number of fractal octaves.
-     * More octaves = more detail but slower.
-     * @return Octaves (1 - 8)
-     */
+    
     public int getOctaves() {
         return octaves;
     }
 
-    /**
-     * Get the persistence (amplitude falloff per octave).
-     * @return Persistence value (0.1 - 0.9)
-     */
+    
     public double getPersistence() {
         return persistence;
     }
 
-    /**
-     * Get the lacunarity (frequency multiplier per octave).
-     * @return Lacunarity value (1.5 - 4.0)
-     */
+    
     public double getLacunarity() {
         return lacunarity;
     }
 
-    /**
-     * Get the random seed for reproducible patterns.
-     * @return Seed value
-     */
+    
     public long getSeed() {
         return seed;
     }
 
-    /**
-     * Get the noise algorithm to use.
-     * @return NoiseAlgorithm enum value
-     */
+    
     public NoiseAlgorithm getAlgorithm() {
         return algorithm;
     }
 
-    /**
-     * Create a new NoiseSettings with a different scale.
-     */
+    
     public NoiseSettings withScale(double newScale) {
         return new Builder(this).scale(newScale).build();
     }
 
-    /**
-     * Create a new NoiseSettings with a different strength.
-     */
+    
     public NoiseSettings withStrength(double newStrength) {
         return new Builder(this).strength(newStrength).build();
     }
 
-    /**
-     * Create a new NoiseSettings with a different seed.
-     */
+    
     public NoiseSettings withSeed(long newSeed) {
         return new Builder(this).seed(newSeed).build();
     }
 
-    /**
-     * Create a new NoiseSettings with a different algorithm.
-     */
+    
     public NoiseSettings withAlgorithm(NoiseAlgorithm newAlgorithm) {
         return new Builder(this).algorithm(newAlgorithm).build();
     }
 
-    /**
-     * Create a builder for custom noise settings.
-     */
+    
     public static Builder builder() {
         return new Builder();
     }
 
-    /**
-     * Builder for NoiseSettings.
-     */
+    
     public static class Builder {
         private double scale = 0.1;
         private double strength = 0.3;
