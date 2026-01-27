@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.commands;
+package nl.gzmn.gZMNBuildtools.command;
 
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.IncompleteRegionException;
@@ -9,8 +9,8 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
-import nl.gzmn.gZMNBuildtools.util.BlockTypeFamily;
-import nl.gzmn.gZMNBuildtools.util.MessageManager;
+import nl.gzmn.gZMNBuildtools.typereplace.BlockTypeFamily;
+import nl.gzmn.gZMNBuildtools.common.MessageManager;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -105,7 +105,7 @@ public class TypeReplaceCommand {
     }
 
     private ReplaceResult performTypeReplace(com.sk89q.worldedit.entity.Player actor, Region region,
-            BlockTypeFamily sourceFamily, BlockTypeFamily targetFamily) {
+                                             BlockTypeFamily sourceFamily, BlockTypeFamily targetFamily) {
         int count = 0;
 
         LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
@@ -126,10 +126,9 @@ public class TypeReplaceCommand {
 
                         String targetVariant = BlockTypeFamily.getVariantType(targetType);
 
-                        boolean isCrossTypeConnectorConversion =
-                            isVerticalConnector(sourceVariant) &&
-                            isVerticalConnector(targetVariant) &&
-                            !sourceVariant.equals(targetVariant);
+                        boolean isCrossTypeConnectorConversion = isVerticalConnector(sourceVariant) &&
+                                isVerticalConnector(targetVariant) &&
+                                !sourceVariant.equals(targetVariant);
 
                         try {
                             newState = preserveBlockProperties(currentBlock, newState, isCrossTypeConnectorConversion);
@@ -157,7 +156,8 @@ public class TypeReplaceCommand {
         return variantType.equals("wall") || variantType.equals("fence") || variantType.equals("bars");
     }
 
-    private BlockState preserveBlockProperties(BlockState source, BlockState target, boolean skipDirectionalConnections) {
+    private BlockState preserveBlockProperties(BlockState source, BlockState target,
+                                               boolean skipDirectionalConnections) {
         BlockState result = target;
 
         Set<String> directionalProperties = Set.of("north", "south", "east", "west", "up");

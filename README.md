@@ -5,6 +5,7 @@ This is a WorldEdit/FastAsyncWorldEdit extension for type replacement and gradie
 **Status: Work in Progress**
 
 This project is currently under development.
+
 - The Type Replace feature is functional.
 - The Gradient tool is currently not fully implemented.
 
@@ -23,13 +24,15 @@ This project is currently under development.
 
 ### Type Replace
 
-The Type Replace tool allows replacing entire families of blocks (stairs, slabs, walls, fences) while preserving their orientation and properties where possible.
+The Type Replace tool allows replacing entire families of blocks (stairs, slabs, walls, fences) while preserving their
+orientation and properties where possible.
 
 Command: `/typereplace <from> <to>`
 
 This command operates on your current WorldEdit selection.
 
 Arguments:
+
 - `from`: The source material name or group to replace (e.g., `stone`, `copper`).
 - `to`: The target material family to replace with (e.g., `andesite`, `waxed_exposed_copper`).
 
@@ -45,7 +48,8 @@ This will replace oak stairs with spruce stairs, oak slabs with spruce slabs, et
 
 Command: `/gradient`
 
-This command is intended to open a gradient UI or accept command syntax for generating gradients, but it is currently incomplete.
+This command is intended to open a gradient UI or accept command syntax for generating gradients, but it is currently
+incomplete.
 
 ## Permissions
 

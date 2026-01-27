@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.commands;
+package nl.gzmn.gZMNBuildtools.command;
 
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.WorldEdit;

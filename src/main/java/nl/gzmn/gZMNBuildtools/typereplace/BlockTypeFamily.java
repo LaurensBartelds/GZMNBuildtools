@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.util;
+package nl.gzmn.gZMNBuildtools.typereplace;
 
 import com.sk89q.worldedit.world.block.BlockType;
 import com.sk89q.worldedit.world.block.BlockTypes;
@@ -64,8 +64,8 @@ public class BlockTypeFamily {
         register("end_stone_brick").base("end_stone_bricks", "end_stone_brick").stairs().slab().wall().build();
         register("purpur").base("purpur_block", "purpur").stairs().slab().build();
 
-        for (String wood : new String[] { "oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove",
-                "cherry", "bamboo", "crimson", "warped" }) {
+        for (String wood : new String[]{"oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove",
+                "cherry", "bamboo", "crimson", "warped"}) {
             String planksName = wood.equals("bamboo") ? "bamboo_planks" : wood + "_planks";
             register(wood).base(planksName, wood).stairs().slab().fence().fenceGate().build();
         }
@@ -386,8 +386,8 @@ public class BlockTypeFamily {
         final String barsName;
 
         MaterialDefinition(String blockName, String variantPrefix, boolean hasStairs, boolean hasSlab,
-                boolean hasWall, boolean hasFence, boolean hasFenceGate,
-                boolean hasBars, boolean hasGrate, String grateName, String barsName) {
+                           boolean hasWall, boolean hasFence, boolean hasFenceGate,
+                           boolean hasBars, boolean hasGrate, String grateName, String barsName) {
             this.blockName = blockName;
             this.variantPrefix = variantPrefix;
             this.hasStairs = hasStairs;

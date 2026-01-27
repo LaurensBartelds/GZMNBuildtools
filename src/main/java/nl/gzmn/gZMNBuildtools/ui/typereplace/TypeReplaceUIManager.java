@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.ui;
+package nl.gzmn.gZMNBuildtools.ui.typereplace;
 
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -7,9 +7,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import nl.gzmn.gZMNBuildtools.commands.TypeReplaceCommand;
-import nl.gzmn.gZMNBuildtools.util.BlockTypeFamily;
-import nl.gzmn.gZMNBuildtools.util.MessageManager;
+import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
+import nl.gzmn.gZMNBuildtools.typereplace.BlockTypeFamily;
+import nl.gzmn.gZMNBuildtools.common.MessageManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -66,33 +66,27 @@ public class TypeReplaceUIManager implements Listener {
                 "stone_brick", "mossy_stone_brick",
                 "granite", "polished_granite",
                 "diorite", "polished_diorite",
-                "andesite", "polished_andesite"
-        ));
+                "andesite", "polished_andesite"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.DEEPSLATE, Arrays.asList(
                 "deepslate", "cobbled_deepslate", "polished_deepslate",
-                "deepslate_brick", "deepslate_tile"
-        ));
+                "deepslate_brick", "deepslate_tile"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.BRICKS, Arrays.asList(
-                "brick", "mud_brick"
-        ));
+                "brick", "mud_brick"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.SANDSTONE, Arrays.asList(
                 "sandstone", "smooth_sandstone", "cut_sandstone",
-                "red_sandstone", "smooth_red_sandstone", "cut_red_sandstone"
-        ));
+                "red_sandstone", "smooth_red_sandstone", "cut_red_sandstone"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.WOOD, Arrays.asList(
                 "oak", "spruce", "birch", "jungle", "acacia",
                 "dark_oak", "mangrove", "cherry", "bamboo",
-                "crimson", "warped"
-        ));
+                "crimson", "warped"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.NETHER, Arrays.asList(
                 "nether_brick", "red_nether_brick",
-                "blackstone", "polished_blackstone", "polished_blackstone_brick"
-        ));
+                "blackstone", "polished_blackstone", "polished_blackstone_brick"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.COPPER, Arrays.asList(
                 "copper", "cut_copper",
@@ -102,28 +96,22 @@ public class TypeReplaceUIManager implements Listener {
                 "waxed_copper", "waxed_cut_copper",
                 "waxed_exposed_copper", "waxed_exposed_cut_copper",
                 "waxed_weathered_copper", "waxed_weathered_cut_copper",
-                "waxed_oxidized_copper", "waxed_oxidized_cut_copper"
-        ));
+                "waxed_oxidized_copper", "waxed_oxidized_cut_copper"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.PRISMARINE, Arrays.asList(
-                "prismarine", "prismarine_brick", "dark_prismarine"
-        ));
+                "prismarine", "prismarine_brick", "dark_prismarine"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.QUARTZ, Arrays.asList(
-                "quartz", "smooth_quartz"
-        ));
+                "quartz", "smooth_quartz"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.END, Arrays.asList(
-                "end_stone_brick", "purpur"
-        ));
+                "end_stone_brick", "purpur"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.TUFF, Arrays.asList(
-                "tuff", "polished_tuff", "tuff_brick"
-        ));
+                "tuff", "polished_tuff", "tuff_brick"));
 
         CATEGORY_MATERIALS.put(MaterialCategory.OTHER, Arrays.asList(
-                "iron"
-        ));
+                "iron"));
     }
 
     public TypeReplaceUIManager(Plugin plugin, TypeReplaceCommand typeReplaceCommand) {
@@ -199,25 +187,25 @@ public class TypeReplaceUIManager implements Listener {
             inv.setItem(16, empty.clone());
         }
 
-        ItemStack selectSource = new ItemStack(builder.sourceMaterial != null ? Material.LIME_DYE : Material.YELLOW_DYE);
+        ItemStack selectSource = new ItemStack(
+                builder.sourceMaterial != null ? Material.LIME_DYE : Material.YELLOW_DYE);
         ItemMeta sourceMeta = selectSource.getItemMeta();
         sourceMeta.displayName(Component.text(builder.sourceMaterial != null ? "Change Source" : "Select Source")
-                        .color(NamedTextColor.GREEN));
+                .color(NamedTextColor.GREEN));
         sourceMeta.lore(Arrays.asList(
                 Component.text("Click to select the material").color(NamedTextColor.GRAY),
-                Component.text("you want to replace FROM").color(NamedTextColor.GRAY)
-        ));
+                Component.text("you want to replace FROM").color(NamedTextColor.GRAY)));
         selectSource.setItemMeta(sourceMeta);
         inv.setItem(37, selectSource);
 
-        ItemStack selectTarget = new ItemStack(builder.targetMaterial != null ? Material.LIME_DYE : Material.YELLOW_DYE);
+        ItemStack selectTarget = new ItemStack(
+                builder.targetMaterial != null ? Material.LIME_DYE : Material.YELLOW_DYE);
         ItemMeta targetMeta = selectTarget.getItemMeta();
         targetMeta.displayName(Component.text(builder.targetMaterial != null ? "Change Target" : "Select Target")
-                        .color(NamedTextColor.GREEN));
+                .color(NamedTextColor.GREEN));
         targetMeta.lore(Arrays.asList(
                 Component.text("Click to select the material").color(NamedTextColor.GRAY),
-                Component.text("you want to replace TO").color(NamedTextColor.GRAY)
-        ));
+                Component.text("you want to replace TO").color(NamedTextColor.GRAY)));
         selectTarget.setItemMeta(targetMeta);
         inv.setItem(43, selectTarget);
 
@@ -225,19 +213,17 @@ public class TypeReplaceUIManager implements Listener {
         ItemStack execute = new ItemStack(canExecute ? Material.EMERALD : Material.COAL);
         ItemMeta executeMeta = execute.getItemMeta();
         executeMeta.displayName(Component.text("Execute Replacement")
-                        .color(canExecute ? NamedTextColor.GREEN : NamedTextColor.GRAY)
-                        .decorate(TextDecoration.BOLD));
+                .color(canExecute ? NamedTextColor.GREEN : NamedTextColor.GRAY)
+                .decorate(TextDecoration.BOLD));
         if (canExecute) {
             executeMeta.lore(Arrays.asList(
                     Component.text("Click to replace all").color(NamedTextColor.GRAY),
                     Component.text(builder.sourceMaterial + " → " + builder.targetMaterial)
-                            .color(NamedTextColor.YELLOW)
-            ));
+                            .color(NamedTextColor.YELLOW)));
         } else {
             executeMeta.lore(Arrays.asList(
                     Component.text("Select both source and target").color(NamedTextColor.RED),
-                    Component.text("materials first").color(NamedTextColor.RED)
-            ));
+                    Component.text("materials first").color(NamedTextColor.RED)));
         }
         execute.setItemMeta(executeMeta);
         inv.setItem(49, execute);
@@ -281,8 +267,7 @@ public class TypeReplaceUIManager implements Listener {
             meta.displayName(Component.text(category.displayName).color(NamedTextColor.YELLOW));
             meta.lore(Arrays.asList(
                     Component.text(CATEGORY_MATERIALS.get(category).size() + " materials")
-                            .color(NamedTextColor.GRAY)
-            ));
+                            .color(NamedTextColor.GRAY)));
             item.setItemMeta(meta);
             inv.setItem(9 + i, item);
         }
@@ -294,7 +279,8 @@ public class TypeReplaceUIManager implements Listener {
         player.getPersistentDataContainer().set(categoryKey, PersistentDataType.INTEGER, category.ordinal());
 
         String selecting = player.getPersistentDataContainer().get(selectingKey, PersistentDataType.STRING);
-        String title = selecting != null && selecting.equals("source") ? "Select Source Material" : "Select Target Material";
+        String title = selecting != null && selecting.equals("source") ? "Select Source Material"
+                : "Select Target Material";
 
         Inventory inv = Bukkit.createInventory(null, 54,
                 Component.text(title).color(NamedTextColor.DARK_GREEN)
@@ -316,7 +302,8 @@ public class TypeReplaceUIManager implements Listener {
 
         ItemStack categoryItem = new ItemStack(category.icon);
         ItemMeta categoryMeta = categoryItem.getItemMeta();
-        categoryMeta.displayName(Component.text(category.displayName).color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
+        categoryMeta.displayName(
+                Component.text(category.displayName).color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD));
         categoryItem.setItemMeta(categoryMeta);
         inv.setItem(4, categoryItem);
 
@@ -334,7 +321,8 @@ public class TypeReplaceUIManager implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (!(event.getWhoClicked() instanceof Player player))
+            return;
 
         String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
 
@@ -350,10 +338,12 @@ public class TypeReplaceUIManager implements Listener {
     private void handleMainPageClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
 
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         TypeReplaceBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null) return;
+        if (builder == null)
+            return;
 
         int slot = event.getSlot();
 
@@ -368,7 +358,8 @@ public class TypeReplaceUIManager implements Listener {
     private void handleCategoryPageClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
 
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         int slot = event.getSlot();
 
@@ -389,7 +380,8 @@ public class TypeReplaceUIManager implements Listener {
     private void handleMaterialPageClick(InventoryClickEvent event, Player player) {
         event.setCancelled(true);
 
-        if (event.getCurrentItem() == null) return;
+        if (event.getCurrentItem() == null)
+            return;
 
         int slot = event.getSlot();
 
@@ -405,7 +397,8 @@ public class TypeReplaceUIManager implements Listener {
 
         if (slot >= 9 && slot <= 44) {
             Integer categoryOrdinal = player.getPersistentDataContainer().get(categoryKey, PersistentDataType.INTEGER);
-            if (categoryOrdinal == null) return;
+            if (categoryOrdinal == null)
+                return;
 
             MaterialCategory category = MaterialCategory.values()[categoryOrdinal];
             List<String> materials = CATEGORY_MATERIALS.get(category);
@@ -435,10 +428,12 @@ public class TypeReplaceUIManager implements Listener {
 
     private void setMaterialSelection(Player player, String material) {
         TypeReplaceBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null) return;
+        if (builder == null)
+            return;
 
         String selecting = player.getPersistentDataContainer().get(selectingKey, PersistentDataType.STRING);
-        if (selecting == null) return;
+        if (selecting == null)
+            return;
 
         if (selecting.equals("source")) {
             builder.sourceMaterial = material;
@@ -488,8 +483,7 @@ public class TypeReplaceUIManager implements Listener {
                 Component.text("material with another.").color(NamedTextColor.GRAY),
                 Component.text(""),
                 Component.text("Converts: stairs, slabs,").color(NamedTextColor.YELLOW),
-                Component.text("walls, fences, bars, etc.").color(NamedTextColor.YELLOW)
-        ));
+                Component.text("walls, fences, bars, etc.").color(NamedTextColor.YELLOW)));
         item.setItemMeta(meta);
         return item;
     }
@@ -499,12 +493,11 @@ public class TypeReplaceUIManager implements Listener {
         ItemStack item = new ItemStack(hasSelection ? Material.LIME_CONCRETE : Material.RED_CONCRETE);
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text(hasSelection ? "Selection Ready" : "No Selection!")
-                        .color(hasSelection ? NamedTextColor.GREEN : NamedTextColor.RED));
+                .color(hasSelection ? NamedTextColor.GREEN : NamedTextColor.RED));
         if (!hasSelection) {
             meta.lore(Arrays.asList(
                     Component.text("Use WorldEdit to select").color(NamedTextColor.GRAY),
-                    Component.text("an area first (//wand)").color(NamedTextColor.GRAY)
-            ));
+                    Component.text("an area first (//wand)").color(NamedTextColor.GRAY)));
         }
         item.setItemMeta(meta);
         return item;
@@ -515,7 +508,7 @@ public class TypeReplaceUIManager implements Listener {
         ItemStack item = new ItemStack(icon);
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text(label + ": " + formatMaterialName(materialName))
-                        .color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD));
+                .color(NamedTextColor.AQUA).decorate(TextDecoration.BOLD));
         item.setItemMeta(meta);
         return item;
     }
@@ -535,17 +528,21 @@ public class TypeReplaceUIManager implements Listener {
         if (baseBlock != null) {
             String id = baseBlock.id().replace("minecraft:", "").toUpperCase();
             Material mat = Material.matchMaterial(id);
-            if (mat != null) return mat;
+            if (mat != null)
+                return mat;
         }
 
         Material direct = Material.matchMaterial(materialName.toUpperCase());
-        if (direct != null) return direct;
+        if (direct != null)
+            return direct;
 
         Material planks = Material.matchMaterial(materialName.toUpperCase() + "_PLANKS");
-        if (planks != null) return planks;
+        if (planks != null)
+            return planks;
 
         Material block = Material.matchMaterial(materialName.toUpperCase() + "_BLOCK");
-        if (block != null) return block;
+        if (block != null)
+            return block;
 
         return Material.STONE;
     }
