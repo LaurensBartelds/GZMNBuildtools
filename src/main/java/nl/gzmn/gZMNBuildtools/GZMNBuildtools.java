@@ -6,6 +6,8 @@ import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 @SuppressWarnings("UnstableApiUsage")
@@ -45,16 +47,21 @@ public final class GZMNBuildtools extends JavaPlugin {
 
         commandRegistry.registerWorldEditPatterns();
 
-        getLogger().info("WorldEdit/FAWE detected, plugin enabled!");
-        getLogger().info("Available commands:");
-        getLogger().info(
-                "  /typereplace <from> <to> - Replace block families (stairs, slabs, walls, fences, bars/grates)");
-        getLogger().info("  /gradient                - Open gradient UI or use command syntax");
-        getLogger().info("  /gradient save/use/list  - Save and reuse gradients");
-        getLogger().info("  //set #gradient[direction][mode][blocks] - Use gradients with WorldEdit commands");
-        getLogger().info("  Example: //set #gradient[up][linear][stone,andesite,deepslate]");
-        getLogger().info("  Example: //set #gradient[down][smooth][50%stone,30%andesite,20%deepslate]");
-        getLogger().info("Material groups: all_copper, all_waxed_copper, copper_all");
+        commandRegistry.registerWorldEditPatterns();
+
+        String[] logo = {
+                "   ______ ______  __  __ _   _ ",
+                "  / _____|___  / |  \\/  | \\ | |",
+                " | |  __    / /  | \\  / |  \\| |",
+                " | | |_ |  / /   | |\\/| | . ` |",
+                " | |__| | / /__  | |  | | |\\  |",
+                "  \\_____|/_____| |_|  |_|_| \\_|"
+        };
+
+        for (String line : logo) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + line);
+        }
+        Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "GZMNBuildtools started up successfully!");
     }
 
     @Override
