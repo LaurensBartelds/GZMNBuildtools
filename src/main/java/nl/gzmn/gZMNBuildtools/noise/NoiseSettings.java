@@ -11,7 +11,7 @@ public class NoiseSettings {
     private final long seed;
     private final NoiseAlgorithm algorithm;
 
-    
+
     public enum NoiseAlgorithm {
         SIMPLEX("simplex", "Simplex"),
         PERLIN("perlin", "Perlin");
@@ -47,12 +47,12 @@ public class NoiseSettings {
         return Math.max(min, Math.min(max, value));
     }
 
-    
+
     public static NoiseSettings defaults() {
         return new Builder().build();
     }
 
-    
+
     public static NoiseSettings subtle() {
         return new Builder()
                 .scale(0.05)
@@ -61,7 +61,7 @@ public class NoiseSettings {
                 .build();
     }
 
-    
+
     public static NoiseSettings strong() {
         return new Builder()
                 .scale(0.15)
@@ -70,67 +70,67 @@ public class NoiseSettings {
                 .build();
     }
 
-    
+
     public double getScale() {
         return scale;
     }
 
-    
+
     public double getStrength() {
         return strength;
     }
 
-    
+
     public int getOctaves() {
         return octaves;
     }
 
-    
+
     public double getPersistence() {
         return persistence;
     }
 
-    
+
     public double getLacunarity() {
         return lacunarity;
     }
 
-    
+
     public long getSeed() {
         return seed;
     }
 
-    
+
     public NoiseAlgorithm getAlgorithm() {
         return algorithm;
     }
 
-    
+
     public NoiseSettings withScale(double newScale) {
         return new Builder(this).scale(newScale).build();
     }
 
-    
+
     public NoiseSettings withStrength(double newStrength) {
         return new Builder(this).strength(newStrength).build();
     }
 
-    
+
     public NoiseSettings withSeed(long newSeed) {
         return new Builder(this).seed(newSeed).build();
     }
 
-    
+
     public NoiseSettings withAlgorithm(NoiseAlgorithm newAlgorithm) {
         return new Builder(this).algorithm(newAlgorithm).build();
     }
 
-    
+
     public static Builder builder() {
         return new Builder();
     }
 
-    
+
     public static class Builder {
         private double scale = 0.1;
         private double strength = 0.3;
@@ -140,7 +140,8 @@ public class NoiseSettings {
         private long seed = System.currentTimeMillis();
         private NoiseAlgorithm algorithm = NoiseAlgorithm.SIMPLEX;
 
-        public Builder() {}
+        public Builder() {
+        }
 
         public Builder(NoiseSettings copy) {
             this.scale = copy.scale;

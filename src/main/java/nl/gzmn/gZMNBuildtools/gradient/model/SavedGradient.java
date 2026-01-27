@@ -13,7 +13,7 @@ public class SavedGradient {
     private final long createdAt;
 
     public SavedGradient(String id, String name, UUID authorInfo, String authorName, GradientPreset preset,
-            boolean isPublic, long createdAt) {
+                         boolean isPublic, long createdAt) {
         this.id = id;
         this.name = name;
         this.authorInfo = authorInfo;

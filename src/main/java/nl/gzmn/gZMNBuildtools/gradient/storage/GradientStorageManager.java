@@ -19,7 +19,7 @@ public class GradientStorageManager {
     private final Gson gson;
     private final File storageFile;
 
-    
+
     private final Map<UUID, List<SavedGradient>> playerGradients = new ConcurrentHashMap<>();
     private final List<SavedGradient> globalGradients = Collections.synchronizedList(new ArrayList<>());
 
@@ -69,10 +69,10 @@ public class GradientStorageManager {
     }
 
     public void saveGradient(SavedGradient gradient) {
-        
+
         playerGradients.computeIfAbsent(gradient.getAuthorInfo(), k -> new ArrayList<>()).add(gradient);
 
-        
+
         if (gradient.isPublic()) {
             globalGradients.add(gradient);
         }
@@ -98,9 +98,9 @@ public class GradientStorageManager {
         return new ArrayList<>(globalGradients);
     }
 
-    
+
     public Optional<SavedGradient> findByName(UUID playerUuid, String name) {
-        
+
         List<SavedGradient> playerGrads = getPlayerGradients(playerUuid);
         Optional<SavedGradient> found = playerGrads.stream()
                 .filter(g -> g.getName().equalsIgnoreCase(name))
@@ -110,20 +110,20 @@ public class GradientStorageManager {
             return found;
         }
 
-        
+
         return globalGradients.stream()
                 .filter(g -> g.getName().equalsIgnoreCase(name))
                 .findFirst();
     }
 
-    
+
     public List<String> getPlayerGradientNames(UUID playerUuid) {
         List<String> names = new ArrayList<>();
 
-        
+
         getPlayerGradients(playerUuid).forEach(g -> names.add(g.getName()));
 
-        
+
         globalGradients.forEach(g -> {
             if (!names.contains(g.getName())) {
                 names.add(g.getName());
@@ -133,7 +133,7 @@ public class GradientStorageManager {
         return names;
     }
 
-    
+
     public void togglePublic(UUID playerUuid, String gradientId) {
         List<SavedGradient> userGradients = playerGradients.get(playerUuid);
         if (userGradients == null)
@@ -142,13 +142,13 @@ public class GradientStorageManager {
         for (int i = 0; i < userGradients.size(); i++) {
             SavedGradient g = userGradients.get(i);
             if (g.getId().equals(gradientId)) {
-                
+
                 SavedGradient updated = new SavedGradient(
                         g.getId(), g.getName(), g.getAuthorInfo(), g.getAuthorName(),
                         g.getPreset(), !g.isPublic(), g.getCreatedAt());
                 userGradients.set(i, updated);
 
-                
+
                 if (updated.isPublic()) {
                     globalGradients.add(updated);
                 } else {
@@ -161,7 +161,7 @@ public class GradientStorageManager {
         }
     }
 
-    
+
     private static class StorageData {
         Map<UUID, List<SavedGradient>> playerGradients;
         List<SavedGradient> globalGradients;

@@ -39,39 +39,39 @@ public class GradientContext {
         return generator;
     }
 
-    
+
     public GradientDefinition.GradientDirection getDirection() {
         return direction;
     }
 
-    
+
     public NoiseGenerator getNoiseGenerator() {
         return noiseGenerator;
     }
 
-    
+
     public NoiseSettings getNoiseSettings() {
         return noiseSettings;
     }
 
-    
+
     public boolean hasNoise() {
         return noiseGenerator != null && noiseSettings != null;
     }
 
-    
+
     public static Builder builder() {
         return new Builder();
     }
 
-    
+
     public static GradientContext linear(GradientDefinition.GradientDirection direction) {
         return new Builder()
                 .direction(direction)
                 .build();
     }
 
-    
+
     public static GradientContext withNoise(GradientDefinition.GradientDirection direction) {
         return new Builder()
                 .direction(direction)
@@ -79,7 +79,7 @@ public class GradientContext {
                 .build();
     }
 
-    
+
     public static GradientContext withNoise(GradientDefinition.GradientDirection direction, NoiseSettings settings) {
         return new Builder()
                 .direction(direction)
@@ -87,7 +87,7 @@ public class GradientContext {
                 .build();
     }
 
-    
+
     public static class Builder {
         private GradientDefinition.GradientDirection direction = GradientDefinition.GradientDirection.VERTICAL_UP;
         private NoiseGenerator noiseGenerator;

@@ -18,14 +18,14 @@ public class SimplexNoise implements NoiseGenerator {
     private static final double NORM_2D = 47.0;
     private static final double NORM_3D = 103.0;
 
-    private static final byte[] gradients2D = new byte[] {
+    private static final byte[] gradients2D = new byte[]{
             5, 2, 2, 5,
             -5, 2, -2, 5,
             5, -2, 2, -5,
             -5, -2, -2, -5,
     };
 
-    private static final byte[] gradients3D = new byte[] {
+    private static final byte[] gradients3D = new byte[]{
             -11, 4, 4, -4, 11, 4, -4, 4, 11,
             11, 4, 4, 4, 11, 4, 4, 4, 11,
             -11, -4, 4, -4, -11, 4, -4, -4, 11,

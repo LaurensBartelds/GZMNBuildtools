@@ -105,7 +105,7 @@ public class TypeReplaceCommand {
     }
 
     private ReplaceResult performTypeReplace(com.sk89q.worldedit.entity.Player actor, Region region,
-            BlockTypeFamily sourceFamily, BlockTypeFamily targetFamily) {
+                                             BlockTypeFamily sourceFamily, BlockTypeFamily targetFamily) {
         int count = 0;
 
         LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
@@ -157,7 +157,7 @@ public class TypeReplaceCommand {
     }
 
     private BlockState preserveBlockProperties(BlockState source, BlockState target,
-            boolean skipDirectionalConnections) {
+                                               boolean skipDirectionalConnections) {
         BlockState result = target;
 
         Set<String> directionalProperties = Set.of("north", "south", "east", "west", "up");

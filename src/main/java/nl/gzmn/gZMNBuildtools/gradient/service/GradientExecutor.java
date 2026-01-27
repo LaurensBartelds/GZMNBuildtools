@@ -17,7 +17,7 @@ import java.util.Random;
 
 public class GradientExecutor {
 
-    
+
     public static class GradientResult {
         private final int blocksAffected;
         private final boolean success;
@@ -50,9 +50,9 @@ public class GradientExecutor {
         }
     }
 
-    
+
     public GradientResult apply(Player actor, Region region, GradientDefinition definition,
-            GradientType gradientType, GradientContext context) {
+                                GradientType gradientType, GradientContext context) {
         if (definition.getStops().size() < 2) {
             return GradientResult.failure("Gradient must have at least 2 stops");
         }
@@ -60,7 +60,7 @@ public class GradientExecutor {
         int count = 0;
         LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
 
-        
+
         boolean useBlended = definition.getInterpolationMode() == GradientDefinition.InterpolationMode.BLENDED;
         long seed = context.hasNoise() ? context.getNoiseSettings().getSeed() : System.currentTimeMillis();
 
@@ -70,7 +70,7 @@ public class GradientExecutor {
 
                 BlockType blockType;
                 if (useBlended) {
-                    
+
                     Random random = new Random(positionHash(position, seed));
                     blockType = definition.getBlockAt(gradientPosition, random);
                 } else {
@@ -91,35 +91,35 @@ public class GradientExecutor {
         return GradientResult.success(count);
     }
 
-    
+
     private long positionHash(BlockVector3 position, long seed) {
         return seed ^ (position.x() * 73856093L) ^ (position.y() * 19349663L) ^ (position.z() * 83492791L);
     }
 
-    
+
     public GradientResult applyLinear(Player actor, Region region, GradientDefinition definition) {
         GradientType linear = new LinearGradient();
         GradientContext context = GradientContext.linear(definition.getDirection());
         return apply(actor, region, definition, linear, context);
     }
 
-    
+
     public GradientResult applyNoise(Player actor, Region region, GradientDefinition definition) {
         return applyNoise(actor, region, definition, NoiseSettings.defaults());
     }
 
-    
+
     public GradientResult applyNoise(Player actor, Region region, GradientDefinition definition,
-            NoiseSettings noiseSettings) {
+                                     NoiseSettings noiseSettings) {
         GradientType noise = new NoiseGradient();
         GradientContext context = GradientContext.withNoise(definition.getDirection(), noiseSettings);
         return apply(actor, region, definition, noise, context);
     }
 
-    
+
     public GradientResult applyPreset(Player actor, Region region, GradientPreset preset,
-            GradientDefinition.GradientDirection direction,
-            boolean useNoise, NoiseSettings noiseSettings) {
+                                      GradientDefinition.GradientDirection direction,
+                                      boolean useNoise, NoiseSettings noiseSettings) {
         GradientDefinition definition = GradientDefinition.fromPreset(preset, direction);
 
         if (useNoise && noiseSettings != null) {
@@ -129,7 +129,7 @@ public class GradientExecutor {
         }
     }
 
-    
+
     private static final GradientExecutor INSTANCE = new GradientExecutor();
 
     public static GradientExecutor getInstance() {

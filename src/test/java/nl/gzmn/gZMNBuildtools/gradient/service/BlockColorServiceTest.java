@@ -22,42 +22,5 @@ class BlockColorServiceTest {
 
     private BlockColorService colorService;
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
 
-    
-    
-    
-    
-    
-    
-
-    
-    
-    
-
-    
-    
-    
-    
-    
-
-    
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
 }

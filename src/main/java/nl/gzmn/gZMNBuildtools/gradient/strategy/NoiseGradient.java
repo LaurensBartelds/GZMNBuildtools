@@ -61,10 +61,10 @@ public class NoiseGradient implements GradientType {
         return Math.max(0.0, Math.min(1.0, finalPosition));
     }
 
-    
+
     public static double calculateNoisePosition(BlockVector3 position, Region region,
-            GradientDefinition.GradientDirection direction,
-            NoiseGenerator noise, NoiseSettings settings) {
+                                                GradientDefinition.GradientDirection direction,
+                                                NoiseGenerator noise, NoiseSettings settings) {
         double basePosition = LinearGradient.calculateLinearPosition(position, region, direction);
 
         double noiseValue = noise.fractalNoise(

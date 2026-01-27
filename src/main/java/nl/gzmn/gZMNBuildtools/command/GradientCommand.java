@@ -1,13 +1,10 @@
 package nl.gzmn.gZMNBuildtools.command;
 
-import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.IncompleteRegionException;
-import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
-import com.sk89q.worldedit.world.block.BlockType;
+
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.config.GradientPresets;
@@ -38,6 +35,7 @@ public class GradientCommand {
 
     // Direction aliases mapping
     private static final Map<String, GradientDirection> DIRECTION_ALIASES = new HashMap<>();
+
     static {
         DIRECTION_ALIASES.put("up", GradientDirection.VERTICAL_UP);
         DIRECTION_ALIASES.put("down", GradientDirection.VERTICAL_DOWN);
@@ -77,7 +75,7 @@ public class GradientCommand {
     public List<String> getBlockSuggestions() {
         return com.sk89q.worldedit.world.block.BlockType.REGISTRY
                 .values().stream()
-                .map(bt -> bt.getId().replace("minecraft:", ""))
+                .map(bt -> bt.toString().replace("minecraft:", ""))
                 .sorted()
                 .limit(50)
                 .map(id -> "[" + id + "]")
@@ -129,7 +127,7 @@ public class GradientCommand {
     }
 
     public void executeNoise(Player player, String blocksString, String directionString,
-            double scale, double strength) {
+                             double scale, double strength) {
         try {
             GradientDirection direction = parseDirection(directionString);
             Region region = getSelectionFromPlayer(player);
@@ -183,9 +181,15 @@ public class GradientCommand {
 
             MessageManager.info(player, "Applying %s", "gradient");
 
-            int affected = applyGradient(actor, region, gradient);
+            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyLinear(actor, region,
+                    gradient);
 
-            MessageManager.success(player, "Gradient applied to %d blocks.", affected);
+            if (result.isSuccess()) {
+                MessageManager.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
+                trackLastGradient(player.getUniqueId(), gradient.getBlockIds(), directionString, modeString);
+            } else {
+                MessageManager.error(player, "Failed: %s", result.getErrorMessage());
+            }
 
         } catch (IllegalArgumentException e) {
             MessageManager.error(player, "Error: %s", e.getMessage());
@@ -200,101 +204,6 @@ public class GradientCommand {
             MessageManager.error(player, "An error occurred: %s", e.getMessage());
             e.printStackTrace();
         }
-    }
-
-    public int applyGradient(com.sk89q.worldedit.entity.Player actor, Region region, GradientDefinition gradient) {
-        int count = 0;
-
-        LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
-
-        boolean useBlended = gradient.getInterpolationMode() == InterpolationMode.BLENDED;
-        long seed = System.currentTimeMillis();
-
-        try (EditSession editSession = localSession.createEditSession(actor)) {
-            BlockVector3 min = region.getMinimumPoint();
-            BlockVector3 max = region.getMaximumPoint();
-
-            double minValue, maxValue;
-            switch (gradient.getDirection()) {
-                case VERTICAL_UP:
-                case VERTICAL_DOWN:
-                    minValue = min.y();
-                    maxValue = max.y();
-                    break;
-                case HORIZONTAL_X:
-                    minValue = min.x();
-                    maxValue = max.x();
-                    break;
-                case HORIZONTAL_Z:
-                    minValue = min.z();
-                    maxValue = max.z();
-                    break;
-                case RADIAL:
-                    BlockVector3 center = region.getCenter().toBlockPoint();
-                    minValue = 0;
-                    maxValue = Math.max(
-                            Math.max(Math.abs(max.x() - center.x()), Math.abs(min.x() - center.x())),
-                            Math.max(Math.abs(max.z() - center.z()), Math.abs(min.z() - center.z())));
-                    break;
-                default:
-                    minValue = 0;
-                    maxValue = 1;
-            }
-
-            double range = maxValue - minValue;
-            if (range == 0)
-                range = 1;
-
-            for (BlockVector3 position : region) {
-                double value;
-
-                switch (gradient.getDirection()) {
-                    case VERTICAL_UP:
-                        value = position.y();
-                        break;
-                    case VERTICAL_DOWN:
-                        value = maxValue - (position.y() - minValue);
-                        break;
-                    case HORIZONTAL_X:
-                        value = position.x();
-                        break;
-                    case HORIZONTAL_Z:
-                        value = position.z();
-                        break;
-                    case RADIAL:
-                        BlockVector3 center = region.getCenter().toBlockPoint();
-                        double dx = position.x() - center.x();
-                        double dz = position.z() - center.z();
-                        value = Math.sqrt(dx * dx + dz * dz);
-                        break;
-                    default:
-                        value = minValue;
-                }
-
-                double normalizedPosition = (value - minValue) / range;
-
-                BlockType blockType;
-                if (useBlended) {
-                    long posHash = seed ^ (position.x() * 73856093L) ^ (position.y() * 19349663L)
-                            ^ (position.z() * 83492791L);
-                    Random random = new Random(posHash);
-                    blockType = gradient.getBlockAt(normalizedPosition, random);
-                } else {
-                    blockType = gradient.getBlockAt(normalizedPosition);
-                }
-
-                if (blockType != null) {
-                    boolean placed = editSession.setBlock(position, blockType.getDefaultState());
-                    count++;
-                }
-            }
-
-            localSession.remember(editSession);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return count;
     }
 
     protected Region getSelectionFromPlayer(org.bukkit.entity.Player player) {
@@ -338,7 +247,7 @@ public class GradientCommand {
     }
 
     public void saveGradientWithBlocks(Player player, String name, String blocksString,
-            String directionString, String modeString, boolean isPublic) {
+                                       String directionString, String modeString, boolean isPublic) {
         if (storageManager == null) {
             MessageManager.error(player, "Storage manager not available.");
             return;

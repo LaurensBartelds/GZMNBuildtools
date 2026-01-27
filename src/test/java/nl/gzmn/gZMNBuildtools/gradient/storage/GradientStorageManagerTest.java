@@ -41,7 +41,7 @@ class GradientStorageManagerTest {
 
     @Test
     void saveAndLoadGradient_shouldPersistData() {
-        
+
         UUID authorId = UUID.randomUUID();
         String authorName = "TestUser";
         GradientPreset preset = new GradientPreset.Builder("test_id")
@@ -60,17 +60,16 @@ class GradientStorageManagerTest {
                 false,
                 System.currentTimeMillis());
 
-        
+
         storageManager.saveGradient(savedGradient);
 
-        
+
         GradientStorageManager newManager = new GradientStorageManager(plugin);
-        
-        
-        
+
+
         newManager.load();
 
-        
+
         List<SavedGradient> loaded = newManager.getPlayerGradients(authorId);
         assertEquals(1, loaded.size());
         SavedGradient loadedGradient = loaded.get(0);
@@ -82,18 +81,18 @@ class GradientStorageManagerTest {
 
     @Test
     void deleteGradient_shouldRemoveData() {
-        
+
         UUID authorId = UUID.randomUUID();
         SavedGradient savedGradient = createTestGradient(authorId, "g1");
         storageManager.saveGradient(savedGradient);
 
-        
+
         storageManager.deleteGradient(authorId, savedGradient.getId());
 
-        
+
         assertTrue(storageManager.getPlayerGradients(authorId).isEmpty());
 
-        
+
         GradientStorageManager newManager = new GradientStorageManager(plugin);
         newManager.load();
         assertTrue(newManager.getPlayerGradients(authorId).isEmpty());
@@ -101,11 +100,11 @@ class GradientStorageManagerTest {
 
     @Test
     void globalGradients_shouldSeparateFromPlayer() {
-        
+
         UUID authorId = UUID.randomUUID();
         SavedGradient privateGradient = createTestGradient(authorId, "private");
 
-        
+
         GradientPreset pubPreset = new GradientPreset.Builder("public")
                 .blocks(java.util.Arrays.asList("minecraft:dirt", "minecraft:grass_block"))
                 .category(PresetCategory.CUSTOM)
@@ -113,22 +112,16 @@ class GradientStorageManagerTest {
         SavedGradient publicGradient = new SavedGradient("public", "Public", authorId, "User", pubPreset, true,
                 System.currentTimeMillis());
 
-        
+
         storageManager.saveGradient(privateGradient);
         storageManager.saveGradient(publicGradient);
 
-        
-        
-        
-        
-        
 
-        
         List<SavedGradient> playerList = storageManager.getPlayerGradients(authorId);
         List<SavedGradient> globalList = storageManager.getGlobalGradients();
 
         assertTrue(playerList.stream().anyMatch(g -> g.getId().equals("private")));
-        assertTrue(playerList.stream().anyMatch(g -> g.getId().equals("public"))); 
+        assertTrue(playerList.stream().anyMatch(g -> g.getId().equals("public")));
 
         assertTrue(globalList.stream().anyMatch(g -> g.getId().equals("public")));
         assertFalse(globalList.stream().anyMatch(g -> g.getId().equals("private")));

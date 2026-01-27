@@ -90,9 +90,9 @@ public class LinearGradient implements GradientType {
         return Math.max(0.0, Math.min(1.0, normalized));
     }
 
-    
+
     public static double calculateLinearPosition(BlockVector3 position, Region region,
-            nl.gzmn.gZMNBuildtools.gradient.model.GradientDefinition.GradientDirection direction) {
+                                                 nl.gzmn.gZMNBuildtools.gradient.model.GradientDefinition.GradientDirection direction) {
         LinearGradient linear = new LinearGradient();
         GradientContext context = GradientContext.linear(direction);
         return linear.calculatePosition(position, region, context);

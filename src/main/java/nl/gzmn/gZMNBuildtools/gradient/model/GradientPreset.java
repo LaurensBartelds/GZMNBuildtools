@@ -17,7 +17,7 @@ public class GradientPreset {
     private final List<String> blockIds;
     private final PresetCategory category;
 
-    
+
     public enum PresetCategory {
         GRAYSCALE("Grayscale", Material.GRAY_WOOL, "Black, white, and gray tones"),
         WARM("Warm Tones", Material.ORANGE_WOOL, "Reds, oranges, and yellows"),
@@ -83,17 +83,17 @@ public class GradientPreset {
         return category;
     }
 
-    
+
     public String getBlocksString() {
         return String.join(",", blockIds);
     }
 
-    
+
     public static Builder builder(String id) {
         return new Builder(id);
     }
 
-    
+
     public static class Builder {
         private final String id;
         private String displayName;

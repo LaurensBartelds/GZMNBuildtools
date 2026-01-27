@@ -26,7 +26,7 @@ public class BlockColorService {
                 continue;
             }
 
-            
+
             String name = material.name();
             if (name.contains("DOOR") || name.contains("FENCE") || name.contains("WALL") ||
                     name.contains("PANE") || name.contains("TORCH") || name.contains("FLOWER")
@@ -38,10 +38,6 @@ public class BlockColorService {
                 BlockData itemData = material.createBlockData();
                 Color color = itemData.getMapColor();
 
-                
-                
-                
-                
 
                 float[] hsv = new float[3];
                 java.awt.Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsv);
@@ -49,37 +45,37 @@ public class BlockColorService {
                 blockColors.put(material, new BlockColorInfo(material, color, hsv[0], hsv[1], hsv[2]));
 
             } catch (Exception ignored) {
-                
+
             }
         }
     }
 
-    
+
     public List<Material> getGradientSuggestions(Material input, int count) {
         BlockColorInfo inputInfo = blockColors.get(input);
         if (inputInfo == null)
             return Collections.emptyList();
 
-        
-        double hueThreshold = 0.1; 
-        double satThreshold = 0.3; 
+
+        double hueThreshold = 0.1;
+        double satThreshold = 0.3;
 
         List<BlockColorInfo> candidates = blockColors.values().stream()
                 .filter(info -> Math.abs(info.hue - inputInfo.hue) < hueThreshold ||
-                        Math.abs(info.hue - inputInfo.hue) > (1.0 - hueThreshold)) 
+                        Math.abs(info.hue - inputInfo.hue) > (1.0 - hueThreshold))
                 .filter(info -> Math.abs(info.saturation - inputInfo.saturation) < satThreshold)
                 .sorted(Comparator.comparingDouble(info -> info.brightness))
                 .collect(Collectors.toList());
 
-        
+
         if (candidates.size() < count * 2) {
             candidates = blockColors.values().stream()
-                    .filter(info -> Math.abs(info.saturation - inputInfo.saturation) < 0.5) 
+                    .filter(info -> Math.abs(info.saturation - inputInfo.saturation) < 0.5)
                     .sorted(Comparator.comparingDouble(info -> info.brightness))
                     .collect(Collectors.toList());
         }
 
-        
+
         int centerIndex = -1;
         double minDiff = Double.MAX_VALUE;
         for (int i = 0; i < candidates.size(); i++) {
@@ -96,14 +92,12 @@ public class BlockColorService {
 
         List<Material> result = new ArrayList<>();
 
-        
+
         for (int i = Math.max(0, centerIndex - count); i < centerIndex; i++) {
             result.add(candidates.get(i).material);
         }
 
-        
 
-        
         for (int i = centerIndex + 1; i < Math.min(candidates.size(), centerIndex + 1 + count); i++) {
             result.add(candidates.get(i).material);
         }

@@ -139,7 +139,7 @@ public class GradientDefinition {
     }
 
     public GradientDefinition(List<GradientStop> stops, GradientDirection direction,
-            InterpolationMode interpolationMode) {
+                              InterpolationMode interpolationMode) {
         if (stops.size() < 2) {
             throw new IllegalArgumentException("Gradient must have at least 2 stops");
         }
@@ -247,7 +247,7 @@ public class GradientDefinition {
      * Example: [[stone][cobblestone,stone_bricks]][dirt] = 2 layers
      */
     private static GradientDefinition parseBracketFormat(String gradientString, GradientDirection direction,
-            InterpolationMode mode) {
+                                                         InterpolationMode mode) {
         List<GradientStop> stops = new ArrayList<>();
         List<String> layers = new ArrayList<>();
 
@@ -308,7 +308,7 @@ public class GradientDefinition {
      * Parse legacy comma format: stone,dirt,andesite
      */
     private static GradientDefinition parseCommaFormat(String gradientString, GradientDirection direction,
-            InterpolationMode mode) {
+                                                       InterpolationMode mode) {
         String[] stopStrings = gradientString.split(",");
         List<GradientStop> stops = new ArrayList<>();
 
@@ -370,7 +370,21 @@ public class GradientDefinition {
     }
 
     public static GradientDefinition fromPreset(GradientPreset preset, GradientDirection direction,
-            InterpolationMode mode) {
+                                                InterpolationMode mode) {
         return parse(preset.getBlocksString(), direction, mode);
+    }
+
+    public List<String> getBlockIds() {
+        List<String> ids = new ArrayList<>();
+        for (GradientStop stop : stops) {
+            if (stop.hasMultipleBlocks()) {
+                for (WeightedBlock wb : stop.getWeightedBlocks()) {
+                    ids.add(wb.getBlockType().toString().replace("minecraft:", ""));
+                }
+            } else {
+                ids.add(stop.getBlockType().toString().replace("minecraft:", ""));
+            }
+        }
+        return ids;
     }
 }
