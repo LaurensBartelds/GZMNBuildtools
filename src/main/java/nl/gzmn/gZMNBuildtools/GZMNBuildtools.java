@@ -4,11 +4,10 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.sk89q.worldedit.WorldEdit;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import nl.gzmn.gZMNBuildtools.command.BracketBlocksArgumentType;
 import nl.gzmn.gZMNBuildtools.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
-import nl.gzmn.gZMNBuildtools.gradient.service.BlockColorService;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
-import nl.gzmn.gZMNBuildtools.ui.gradient.GradientUIManager;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import nl.gzmn.gZMNBuildtools.common.MessageManager;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
@@ -20,15 +19,12 @@ import java.util.List;
 @SuppressWarnings("UnstableApiUsage")
 public final class GZMNBuildtools extends JavaPlugin {
 
-        private GradientUIManager gradientUIManager;
         private TypeReplaceUIManager typeReplaceUIManager;
         private GradientStorageManager storageManager;
         private GradientCommand gradientCommand;
 
         public GZMNBuildtools() {
-                this.gradientUIManager = new GradientUIManager(this, null);
-
-                this.gradientCommand = new GradientCommand(gradientUIManager);
+                this.gradientCommand = new GradientCommand();
                 TypeReplaceCommand typeReplaceCommand = new TypeReplaceCommand();
                 this.typeReplaceUIManager = new TypeReplaceUIManager(this, typeReplaceCommand);
 
@@ -91,25 +87,43 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                                         source.getSender().hasPermission(
                                                                                         "gzmnbuildtools.gradient"))
                                                         .executes(ctx -> {
-                                                                gradientCommand.openUI(
-                                                                                (Player) ctx.getSource().getSender());
+                                                                Player player = (Player) ctx.getSource().getSender();
+                                                                MessageManager.info(player,
+                                                                                "Usage: /gradient <blocks> <direction> [mode]");
+                                                                MessageManager.info(player,
+                                                                                "Single block layer: [stone]");
+                                                                MessageManager.info(player,
+                                                                                "Multi-block layer: [cobblestone,stone]");
+                                                                MessageManager.info(player,
+                                                                                "Example: /gradient [stone][cobblestone,stone] up blended");
+
+                                                                // Show clickable block examples
+                                                                MessageManager.info(player,
+                                                                                "Click to start (then add more blocks):");
+                                                                String[] examples = { "stone", "dirt", "cobblestone",
+                                                                                "andesite", "deepslate" };
+                                                                for (String block : examples) {
+                                                                        player.sendMessage(
+                                                                                        net.kyori.adventure.text.Component
+                                                                                                        .text("  [" + block
+                                                                                                                        + "]")
+                                                                                                        .color(net.kyori.adventure.text.format.NamedTextColor.YELLOW)
+                                                                                                        .clickEvent(net.kyori.adventure.text.event.ClickEvent
+                                                                                                                        .suggestCommand(
+                                                                                                                                        "/gradient [" + block
+                                                                                                                                                        + "]"))
+                                                                                                        .hoverEvent(net.kyori.adventure.text.event.HoverEvent
+                                                                                                                        .showText(
+                                                                                                                                        net.kyori.adventure.text.Component
+                                                                                                                                                        .text("Click to use "
+                                                                                                                                                                        + block))));
+                                                                }
+
+                                                                // Show subcommands
+                                                                MessageManager.info(player,
+                                                                                "Subcommands: save, use, list, delete, share, preset");
                                                                 return 1;
                                                         })
-                                                        .then(Commands.literal("easy")
-                                                                        .executes(ctx -> {
-                                                                                gradientCommand.openEasyMode(
-                                                                                                (Player) ctx.getSource()
-                                                                                                                .getSender());
-                                                                                return 1;
-                                                                        }))
-                                                        .then(Commands.literal("advanced")
-                                                                        .executes(ctx -> {
-                                                                                gradientCommand.openAdvancedMode(
-                                                                                                (Player) ctx.getSource()
-                                                                                                                .getSender());
-                                                                                return 1;
-                                                                        }))
-                                                        
                                                         .then(Commands.literal("save")
                                                                         .then(Commands.argument("name",
                                                                                         StringArgumentType.word())
@@ -132,7 +146,7 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                                                                                                 true);
                                                                                                                 return 1;
                                                                                                         }))))
-                                                        
+
                                                         .then(Commands.literal("use")
                                                                         .then(Commands.argument("name",
                                                                                         StringArgumentType.word())
@@ -170,7 +184,7 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                                                                                                                 .getString(ctx, "direction"));
                                                                                                                 return 1;
                                                                                                         }))))
-                                                        
+
                                                         .then(Commands.literal("list")
                                                                         .executes(ctx -> {
                                                                                 gradientCommand.listGradients(
@@ -187,7 +201,7 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                                                                                 true);
                                                                                                 return 1;
                                                                                         })))
-                                                        
+
                                                         .then(Commands.literal("delete")
                                                                         .then(Commands.argument("name",
                                                                                         StringArgumentType.word())
@@ -210,7 +224,7 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                                                                                                 .getString(ctx, "name"));
                                                                                                 return 1;
                                                                                         })))
-                                                        
+
                                                         .then(Commands.literal("share")
                                                                         .then(Commands.argument("name",
                                                                                         StringArgumentType.word())
@@ -270,15 +284,115 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                                                                                                 direction);
                                                                                                                 return 1;
                                                                                                         }))))
-                                                        .then(Commands.argument("blocks", StringArgumentType.word())
+                                                        .then(Commands.argument("blocks", BracketBlocksArgumentType.bracketBlocks())
                                                                         .suggests((ctx, builder) -> {
-                                                                                gradientCommand.getBlockSuggestions()
-                                                                                                .stream()
-                                                                                                .filter(s -> s.toLowerCase()
-                                                                                                                .startsWith(builder
-                                                                                                                                .getRemainingLowerCase()))
-                                                                                                .forEach(builder::suggest);
+                                                                                String remaining = builder
+                                                                                                .getRemaining();
+
+                                                                                String prefix;
+                                                                                String searchTerm;
+                                                                                String suffix;
+
+                                                                                // Detect if we're inside a bracket
+                                                                                boolean insideBracket = remaining
+                                                                                                .lastIndexOf('[') > remaining
+                                                                                                                .lastIndexOf(']');
+
+                                                                                if (insideBracket) {
+                                                                                        // Inside [... — check for comma (multi-block layer)
+                                                                                        int lastComma = remaining.lastIndexOf(',');
+                                                                                        int lastOpen = remaining.lastIndexOf('[');
+                                                                                        int splitPos = Math.max(lastComma, lastOpen);
+                                                                                        prefix = remaining.substring(0, splitPos + 1);
+                                                                                        searchTerm = remaining.substring(splitPos + 1).toLowerCase();
+                                                                                        suffix = "]";
+                                                                                } else if (remaining.endsWith("]")) {
+                                                                                        // Just closed a layer, suggest opening a new one
+                                                                                        prefix = remaining + "[";
+                                                                                        searchTerm = "";
+                                                                                        suffix = "]";
+                                                                                } else if (remaining.isEmpty()) {
+                                                                                        // Starting fresh
+                                                                                        prefix = "[";
+                                                                                        searchTerm = "";
+                                                                                        suffix = "]";
+                                                                                } else {
+                                                                                        prefix = "[";
+                                                                                        searchTerm = remaining.toLowerCase();
+                                                                                        suffix = "]";
+                                                                                }
+
+                                                                                final String fPrefix = prefix;
+                                                                                final String fSearch = searchTerm;
+                                                                                final String fSuffix = suffix;
+                                                                                com.sk89q.worldedit.world.block.BlockType.REGISTRY
+                                                                                                .values().stream()
+                                                                                                .map(bt -> bt.getId()
+                                                                                                                .replace("minecraft:",
+                                                                                                                                ""))
+                                                                                                .filter(id -> id.startsWith(fSearch))
+                                                                                                .sorted()
+                                                                                                .limit(50)
+                                                                                                .forEach(id -> builder.suggest(
+                                                                                                                fPrefix + id + fSuffix));
+
                                                                                 return builder.buildFuture();
+                                                                        })
+                                                                        .executes(ctx -> {
+                                                                                // User provided blocks but no direction
+                                                                                // - give clickable suggestions
+                                                                                Player player = (Player) ctx.getSource()
+                                                                                                .getSender();
+                                                                                String blocks = BracketBlocksArgumentType
+                                                                                                .getString(ctx, "blocks");
+                                                                                MessageManager.info(player,
+                                                                                                "Please specify a direction (click to use):");
+
+                                                                                // Send each direction as a separate
+                                                                                // clickable line
+                                                                                for (String dir : gradientCommand
+                                                                                                .getDirectionSuggestions()) {
+                                                                                        player.sendMessage(
+                                                                                                        net.kyori.adventure.text.Component
+                                                                                                                        .text("  [" + dir
+                                                                                                                                        + "]")
+                                                                                                                        .color(net.kyori.adventure.text.format.NamedTextColor.GREEN)
+                                                                                                                        .clickEvent(net.kyori.adventure.text.event.ClickEvent
+                                                                                                                                        .suggestCommand(
+                                                                                                                                                        "/gradient " + blocks
+                                                                                                                                                                        + " "
+                                                                                                                                                                        + dir
+                                                                                                                                                                        + " "))
+                                                                                                                        .hoverEvent(net.kyori.adventure.text.event.HoverEvent
+                                                                                                                                        .showText(
+                                                                                                                                                        net.kyori.adventure.text.Component
+                                                                                                                                                                        .text("Click to use "
+                                                                                                                                                                                        + dir))));
+                                                                                }
+
+                                                                                // Also show mode options
+                                                                                MessageManager.info(player,
+                                                                                                "Optional modes (click to add):");
+                                                                                for (String mode : gradientCommand
+                                                                                                .getModeSuggestions()) {
+                                                                                        player.sendMessage(
+                                                                                                        net.kyori.adventure.text.Component
+                                                                                                                        .text("  [" + mode
+                                                                                                                                        + "]")
+                                                                                                                        .color(net.kyori.adventure.text.format.NamedTextColor.AQUA)
+                                                                                                                        .clickEvent(net.kyori.adventure.text.event.ClickEvent
+                                                                                                                                        .suggestCommand(
+                                                                                                                                                        "/gradient " + blocks
+                                                                                                                                                                        + " VERTICAL_UP "
+                                                                                                                                                                        + mode))
+                                                                                                                        .hoverEvent(net.kyori.adventure.text.event.HoverEvent
+                                                                                                                                        .showText(
+                                                                                                                                                        net.kyori.adventure.text.Component
+                                                                                                                                                                        .text("Click to use "
+                                                                                                                                                                                        + mode
+                                                                                                                                                                                        + " mode"))));
+                                                                                }
+                                                                                return 1;
                                                                         })
                                                                         .then(Commands.argument("direction",
                                                                                         StringArgumentType.word())
@@ -333,25 +447,22 @@ public final class GZMNBuildtools extends JavaPlugin {
                                                                                                 return 1;
                                                                                         })))
                                                         .build(),
-                                        "Apply or create gradients with a visual UI. Use /gradient easy for presets or /gradient advanced for full control.",
+                                        "Apply or create gradients. Use /gradient <blocks> <direction> [mode]",
                                         List.of("grad", "grd"));
 
-                        commands.register(
-                                        Commands.literal("gzmndebug")
-                                                        .requires(source -> source.getSender()
-                                                                        .hasPermission("gzmnbuildtools.admin"))
-                                                        .executes(ctx -> {
-                                                                getLogger().info(
-                                                                                "Manual registration triggered via /gzmndebug");
-                                                                registerWorldEditPatterns();
-                                                                ctx.getSource().getSender().sendMessage(
-                                                                                net.kyori.adventure.text.Component.text(
-                                                                                                "Attempted to re-register patterns. Check console."));
-                                                                return 1;
-                                                        })
-                                                        .build(),
-                                        "Debug GZMNBuildtools",
-                                        List.of());
+                        commands.register(Commands.literal("gzmndebug")
+                                        .requires(source -> source.getSender().hasPermission("gzmnbuildtools.admin"))
+                                        .executes(ctx ->
+
+                                        {
+                                                getLogger().info(
+                                                                "Manual registration triggered via /gzmndebug");
+                                                registerWorldEditPatterns();
+                                                ctx.getSource().getSender().sendMessage(
+                                                                net.kyori.adventure.text.Component.text(
+                                                                                "Attempted to re-register patterns. Check console."));
+                                                return 1;
+                                        }).build(), "Debug GZMNBuildtools", List.of());
                 });
         }
 
@@ -368,18 +479,11 @@ public final class GZMNBuildtools extends JavaPlugin {
                 storageManager = new GradientStorageManager(this);
                 storageManager.load();
 
-                BlockColorService blockColorService = new BlockColorService(
-                                this);
-
-                
-                gradientUIManager.setStorageManager(storageManager);
-                gradientUIManager.setBlockColorService(blockColorService);
                 gradientCommand.setStorageManager(storageManager);
 
-                gradientUIManager.registerEvents();
+                typeReplaceUIManager.registerEvents();
                 typeReplaceUIManager.registerEvents();
 
-                
                 registerWorldEditPatterns();
 
                 getLogger().info("WorldEdit/FAWE detected, plugin enabled!");
@@ -394,7 +498,6 @@ public final class GZMNBuildtools extends JavaPlugin {
                 getLogger().info("Material groups: all_copper, all_waxed_copper, copper_all");
         }
 
-        
         private void registerWorldEditPatterns() {
                 try {
                         WorldEdit worldEdit = WorldEdit.getInstance();
@@ -413,10 +516,6 @@ public final class GZMNBuildtools extends JavaPlugin {
                         storageManager.save();
                 }
                 getLogger().info("GZMNBuildtools disabled.");
-        }
-
-        public GradientUIManager getGradientUIManager() {
-                return gradientUIManager;
         }
 
         public TypeReplaceUIManager getTypeReplaceUIManager() {

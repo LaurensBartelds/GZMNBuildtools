@@ -23,7 +23,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-
 class MockBukkitIntegrationTest {
 
     private Path tempDir;
@@ -31,17 +30,16 @@ class MockBukkitIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        
+
         tempDir = Files.createTempDirectory("gzmn-test");
 
-        
         mockPlugin = mock(Plugin.class);
         when(mockPlugin.getDataFolder()).thenReturn(tempDir.toFile());
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        
+
         if (tempDir != null && Files.exists(tempDir)) {
             Files.walk(tempDir)
                     .sorted(Comparator.reverseOrder())
@@ -55,38 +53,15 @@ class MockBukkitIntegrationTest {
     }
 
     @Test
-    void gradientCommand_withMockPlayer_shouldHandleNoUIGracefully() {
-        
-        Player player = mock(Player.class);
-        when(player.getName()).thenReturn("TestPlayer");
-        when(player.getUniqueId()).thenReturn(UUID.randomUUID());
-
-        
-        GradientCommand cmd = new GradientCommand(null);
-
-        
-        cmd.openUI(player);
-
-        
-        ArgumentCaptor<Component> captor = ArgumentCaptor.forClass(Component.class);
-        verify(player).sendMessage(captor.capture());
-
-        
-        assertNotNull(captor.getValue());
-    }
-
-    @Test
     void gradientCommand_invalidDirection_shouldSendError() {
         Player player = mock(Player.class);
         when(player.getName()).thenReturn("TestPlayer");
         when(player.getUniqueId()).thenReturn(UUID.randomUUID());
 
-        GradientCommand cmd = new GradientCommand(null);
+        GradientCommand cmd = new GradientCommand();
 
-        
         cmd.execute(player, "stone,dirt", "INVALID_DIR", "LINEAR");
 
-        
         ArgumentCaptor<Component> captor = ArgumentCaptor.forClass(Component.class);
         verify(player, atLeast(1)).sendMessage(captor.capture());
         assertFalse(captor.getAllValues().isEmpty());
@@ -94,10 +69,9 @@ class MockBukkitIntegrationTest {
 
     @Test
     void gradientStorageManager_shouldPersistAndReload() {
-        
+
         GradientStorageManager storageManager = new GradientStorageManager(mockPlugin);
 
-        
         UUID playerUuid = UUID.randomUUID();
         GradientPreset preset = new GradientPreset.Builder("integration_test_1")
                 .displayName("Integration Test Gradient")
@@ -117,11 +91,9 @@ class MockBukkitIntegrationTest {
 
         storageManager.saveGradient(saved);
 
-        
         GradientStorageManager reloadedManager = new GradientStorageManager(mockPlugin);
         reloadedManager.load();
 
-        
         List<SavedGradient> loaded = reloadedManager.getPlayerGradients(playerUuid);
         assertEquals(1, loaded.size());
         assertEquals("integration_test_1", loaded.get(0).getId());
@@ -134,7 +106,6 @@ class MockBukkitIntegrationTest {
 
         UUID authorId = UUID.randomUUID();
 
-        
         GradientPreset privatePreset = new GradientPreset.Builder("private_grad")
                 .displayName("Private Gradient")
                 .category(GradientPreset.PresetCategory.CUSTOM)
@@ -143,7 +114,6 @@ class MockBukkitIntegrationTest {
         SavedGradient privateGradient = new SavedGradient(
                 "private_grad", "Private", authorId, "User", privatePreset, false, System.currentTimeMillis());
 
-        
         GradientPreset publicPreset = new GradientPreset.Builder("public_grad")
                 .displayName("Public Gradient")
                 .category(GradientPreset.PresetCategory.CUSTOM)
@@ -152,19 +122,15 @@ class MockBukkitIntegrationTest {
         SavedGradient publicGradient = new SavedGradient(
                 "public_grad", "Public", authorId, "User", publicPreset, true, System.currentTimeMillis());
 
-        
         storageManager.saveGradient(privateGradient);
         storageManager.saveGradient(publicGradient);
 
-        
         List<SavedGradient> playerList = storageManager.getPlayerGradients(authorId);
         List<SavedGradient> globalList = storageManager.getGlobalGradients();
 
-        
         assertTrue(playerList.stream().anyMatch(g -> g.getId().equals("private_grad")));
         assertTrue(playerList.stream().anyMatch(g -> g.getId().equals("public_grad")));
 
-        
         assertTrue(globalList.stream().anyMatch(g -> g.getId().equals("public_grad")));
         assertFalse(globalList.stream().anyMatch(g -> g.getId().equals("private_grad")));
     }
@@ -184,13 +150,10 @@ class MockBukkitIntegrationTest {
         storageManager.saveGradient(gradient);
         assertEquals(1, storageManager.getPlayerGradients(authorId).size());
 
-        
         storageManager.deleteGradient(authorId, "to_delete");
 
-        
         assertTrue(storageManager.getPlayerGradients(authorId).isEmpty());
 
-        
         GradientStorageManager reloaded = new GradientStorageManager(mockPlugin);
         reloaded.load();
         assertTrue(reloaded.getPlayerGradients(authorId).isEmpty());

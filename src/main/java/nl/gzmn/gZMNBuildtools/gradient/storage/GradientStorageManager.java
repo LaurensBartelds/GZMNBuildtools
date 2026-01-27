@@ -56,6 +56,7 @@ public class GradientStorageManager {
     }
 
     public void save() {
+        storageFile.getParentFile().mkdirs();
         try (Writer writer = new FileWriter(storageFile)) {
             StorageData data = new StorageData();
             data.playerGradients = new HashMap<>(playerGradients);

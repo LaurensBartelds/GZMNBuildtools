@@ -36,7 +36,7 @@ public class GradientPatternParser extends RichParser<Pattern> {
                 return Stream.of("linear", "smooth", "discrete", "blended", "noise", "l", "s", "b", "n")
                         .filter(s -> s.startsWith(argumentInput.toLowerCase()));
             case 2:
-                
+
                 if (argumentInput.toLowerCase().startsWith("preset:")) {
                     String partialPreset = argumentInput.substring(7);
                     return GradientPresets.getAllIds().stream()
@@ -44,16 +44,50 @@ public class GradientPatternParser extends RichParser<Pattern> {
                             .map(id -> "preset:" + id);
                 }
 
-                
-                Stream<String> presets = GradientPresets.getAllIds().stream()
-                        .map(id -> "preset:" + id);
-                Stream<String> commonBlocks = Stream.of(
-                        "stone,andesite,deepslate",
-                        "white_wool,gray_wool,black_wool",
-                        "grass_block,dirt,stone",
-                        "50%stone,30%andesite,20%deepslate");
-                return Stream.concat(presets, commonBlocks)
-                        .filter(s -> s.toLowerCase().startsWith(argumentInput.toLowerCase()));
+                // Preset suggestions when starting fresh
+                if (argumentInput.isEmpty()) {
+                    Stream<String> presetSuggestions = GradientPresets.getAllIds().stream()
+                            .map(id -> "preset:" + id);
+                    Stream<String> blockSuggestions = com.sk89q.worldedit.world.block.BlockType.REGISTRY
+                            .values().stream()
+                            .map(bt -> bt.getId().replace("minecraft:", ""))
+                            .sorted()
+                            .limit(50)
+                            .map(id -> "[" + id + "]");
+                    return Stream.concat(presetSuggestions, blockSuggestions);
+                }
+
+                // Bracket-aware block suggestions from WorldEdit registry
+                boolean insideBracket = argumentInput.lastIndexOf('[') > argumentInput.lastIndexOf(']');
+
+                final String prefix;
+                final String searchTerm;
+                final String suffix;
+
+                if (insideBracket) {
+                    int lastComma = argumentInput.lastIndexOf(',');
+                    int lastOpen = argumentInput.lastIndexOf('[');
+                    int splitPos = Math.max(lastComma, lastOpen);
+                    prefix = argumentInput.substring(0, splitPos + 1);
+                    searchTerm = argumentInput.substring(splitPos + 1).toLowerCase();
+                    suffix = "]";
+                } else if (argumentInput.endsWith("]")) {
+                    prefix = argumentInput + "[";
+                    searchTerm = "";
+                    suffix = "]";
+                } else {
+                    prefix = "[";
+                    searchTerm = argumentInput.toLowerCase();
+                    suffix = "]";
+                }
+
+                return com.sk89q.worldedit.world.block.BlockType.REGISTRY
+                        .values().stream()
+                        .map(bt -> bt.getId().replace("minecraft:", ""))
+                        .filter(id -> id.startsWith(searchTerm))
+                        .sorted()
+                        .limit(50)
+                        .map(id -> prefix + id + suffix);
             default:
                 return Stream.empty();
         }
@@ -69,7 +103,21 @@ public class GradientPatternParser extends RichParser<Pattern> {
 
         String directionStr = arguments[0].trim();
         String modeStr = arguments[1].trim();
-        String blocksStr = arguments[2].trim();
+
+        // RichParser splits on ][ delimiters, which breaks nested brackets like
+        // [[50%stone,30%andesite][white_wool]]. Re-join extra arguments to reconstruct
+        // the original blocks string.
+        String blocksStr;
+        if (arguments.length > 3) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 2; i < arguments.length; i++) {
+                if (i > 2) sb.append("][");
+                sb.append(arguments[i]);
+            }
+            blocksStr = sb.toString();
+        } else {
+            blocksStr = arguments[2].trim();
+        }
 
         logger.info("Parsing gradient: direction=" + directionStr + ", mode=" + modeStr + ", blocks=" + blocksStr);
 

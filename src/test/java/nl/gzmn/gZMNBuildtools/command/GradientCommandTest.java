@@ -16,24 +16,9 @@ import static org.mockito.Mockito.*;
 class GradientCommandTest {
 
     @Test
-    void openUI_withoutUiManager_sendsPrefixedError() {
-        Player player = mock(Player.class);
-        GradientCommand cmd = new GradientCommand(null);
-
-        cmd.openUI(player);
-
-        ArgumentCaptor<Component> cap = ArgumentCaptor.forClass(Component.class);
-        verify(player).sendMessage(cap.capture());
-
-        String plain = PlainTextComponentSerializer.plainText().serialize(cap.getValue());
-        assertTrue(plain.startsWith("[GZMN]"), "message should be prefixed");
-        assertTrue(plain.contains("Gradient UI is not available."));
-    }
-
-    @Test
     void execute_invalidDirection_sendsErrorAndHelp() {
         Player player = mock(Player.class);
-        GradientCommand cmd = new GradientCommand(null);
+        GradientCommand cmd = new GradientCommand();
 
         cmd.execute(player, "stone,cobble", "BAD_DIR", "LINEAR");
 
@@ -55,7 +40,7 @@ class GradientCommandTest {
     @Test
     void execute_noSelection_sendsSelectionError() throws Exception {
         Player player = mock(Player.class);
-        GradientCommand cmd = new GradientCommand(null) {
+        GradientCommand cmd = new GradientCommand() {
             @Override
             protected com.sk89q.worldedit.regions.Region getSelectionFromPlayer(org.bukkit.entity.Player p) {
                 return null;
