@@ -2,13 +2,6 @@
 
 This is a WorldEdit/FastAsyncWorldEdit extension for type replacement and gradient generation.
 
-**Status: Work in Progress**
-
-This project is currently under development.
-
-- The Type Replace feature is functional.
-- The Gradient tool is currently not fully implemented.
-
 ## Requirements
 
 - Paper 1.21+
@@ -44,17 +37,37 @@ This will replace oak stairs with spruce stairs, oak slabs with spruce slabs, et
 
 ### Gradient
 
-**Note: This feature is not yet fully implemented.**
+Command: `/gradient <blocks> <direction> [mode]`
 
-Command: `/gradient`
+Applies a gradient across your current WorldEdit selection.
 
-This command is intended to open a gradient UI or accept command syntax for generating gradients, but it is currently
-incomplete.
+- `blocks`: One or more block layers, e.g. `[stone]` or `[cobblestone,stone]`.
+- `direction`: `up`, `down`, `x`, `z`, `radial` (or the long forms `VERTICAL_UP`, etc.).
+- `mode` (optional): `LINEAR`, `SMOOTH`, `DISCRETE`, or `BLENDED`.
+
+Example: `/gradient [stone][cobblestone,stone] up blended`
+
+Subcommands: `save`, `use`, `list`, `delete`, `share`, and `preset`. Saved gradients can be kept private or shared
+publicly. Presets are listed with `/gradient preset <id> <direction>`.
+
+You can also use the gradient as a WorldEdit pattern: `#gradient[up][linear][stone,andesite,deepslate]`.
+
+## Configuration
+
+On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
+
+- `config.yml`: General settings (e.g. `messages.verbose`).
+- `presets.yml`: The built-in gradient presets. Add or edit entries here to create your own presets without
+  recompiling.
+- `messages.yml`: Message template defaults.
+
+After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to apply changes without restarting.
 
 ## Permissions
 
 - `gzmnbuildtools.typereplace`: Grants access to the type replace command.
 - `gzmnbuildtools.gradient`: Grants access to the gradient command.
+- `gzmnbuildtools.admin`: Grants access to `/gzmnbuildtools reload`.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.
