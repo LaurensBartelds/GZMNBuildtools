@@ -59,6 +59,8 @@ On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
 - `config.yml`: General settings (e.g. `messages.verbose`).
 - `presets.yml`: The built-in gradient presets. Add or edit entries here to create your own presets without
   recompiling.
+- `block-families.yml`: The block families used by `/typereplace` (which stairs/slabs/walls/etc. each material has)
+  and the material tabs shown in the Type Replace GUI (`categories:`).
 - `messages.yml`: Message template defaults.
 
 After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to apply changes without restarting.
@@ -71,3 +73,22 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.
+
+## Extending (for plugin developers)
+
+GZMNBuildtools exposes a small API through Bukkit's `ServicesManager`, so other plugins can register gradient
+presets or block families at runtime:
+
+```java
+RegisteredServiceProvider<GzmnBuildtoolsApi> rsp =
+        getServer().getServicesManager().getRegistration(GzmnBuildtoolsApi.class);
+if (rsp != null) {
+    GzmnBuildtoolsApi api = rsp.getProvider();
+    api.presets().register(myPreset);
+    api.blockFamilies().register("my_material", myDefinition);
+    api.messages().info(player, "Hello from my addon");
+}
+```
+
+The API surface lives in the `nl.gzmn.gZMNBuildtools.api` package (`GzmnBuildtoolsApi`, `PresetRegistry`,
+`BlockFamilyRegistry`, `Messages`).
