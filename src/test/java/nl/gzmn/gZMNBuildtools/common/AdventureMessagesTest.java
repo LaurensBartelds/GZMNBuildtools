@@ -7,12 +7,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MessageManagerTest {
+class AdventureMessagesTest {
 
     @Test
     void prefixedComponent_hasExpectedPlainText_andColors() {
+        AdventureMessages messages = AdventureMessages.basic();
         Component body = Component.text("Replaced 5 blocks.");
-        Component prefixed = MessageManager.prefixed(body);
+        Component prefixed = messages.prefixed(body);
 
         String plain = PlainTextComponentSerializer.plainText().serialize(prefixed);
         assertEquals("[GZMN] Replaced 5 blocks.", plain);
@@ -40,5 +41,13 @@ class MessageManagerTest {
                 break;
         }
         assertTrue(found, "expected to find a child with text 'GZMN'");
+    }
+
+    @Test
+    void verbose_respectsFlag() {
+        AdventureMessages quiet = new AdventureMessages(false);
+        assertFalse(quiet.isVerbose());
+        quiet.setVerbose(true);
+        assertTrue(quiet.isVerbose());
     }
 }

@@ -7,22 +7,31 @@ import com.sk89q.worldedit.regions.Region;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import nl.gzmn.gZMNBuildtools.config.GradientPresets;
+import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
+import nl.gzmn.gZMNBuildtools.gradient.registry.InMemoryPresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.model.*;
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientDefinition.GradientDirection;
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientDefinition.InterpolationMode;
 import nl.gzmn.gZMNBuildtools.gradient.service.GradientExecutor;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
 import nl.gzmn.gZMNBuildtools.noise.NoiseSettings;
-import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class GradientCommand {
 
+    private static final Logger LOGGER = Logger.getLogger("GZMNBuildtools");
+
     private GradientStorageManager storageManager;
+    private GradientExecutor executor = new GradientExecutor();
+    private Messages messages = AdventureMessages.basic();
+    private PresetRegistry presetRegistry = new InMemoryPresetRegistry();
     private final Map<UUID, LastGradientInfo> lastUsedGradients = new HashMap<>();
 
     private static final List<String> DIRECTION_SUGGESTIONS = Arrays.asList(
@@ -64,6 +73,18 @@ public class GradientCommand {
         this.storageManager = storageManager;
     }
 
+    public void setExecutor(GradientExecutor executor) {
+        this.executor = executor;
+    }
+
+    public void setMessages(Messages messages) {
+        this.messages = messages;
+    }
+
+    public void setPresetRegistry(PresetRegistry presetRegistry) {
+        this.presetRegistry = presetRegistry;
+    }
+
     public List<String> getDirectionSuggestions() {
         return DIRECTION_SUGGESTIONS;
     }
@@ -83,16 +104,16 @@ public class GradientCommand {
     }
 
     public List<String> getPresetSuggestions() {
-        return GradientPresets.getAllIds();
+        return presetRegistry.ids();
     }
 
     public void executePreset(Player player, String presetId, String directionString) {
         try {
-            GradientPreset preset = GradientPresets.get(presetId);
+            GradientPreset preset = presetRegistry.get(presetId).orElse(null);
             if (preset == null) {
-                MessageManager.error(player, "Unknown preset: %s", presetId);
-                MessageManager.send(player, Component.text("Available presets: " +
-                        String.join(", ", GradientPresets.getAllIds()), NamedTextColor.GRAY));
+                messages.error(player, "Unknown preset: %s", presetId);
+                messages.send(player, Component.text("Available presets: " +
+                        String.join(", ", presetRegistry.ids()), NamedTextColor.GRAY));
                 return;
             }
 
@@ -100,29 +121,29 @@ public class GradientCommand {
             Region region = getSelectionFromPlayer(player);
 
             if (region == null) {
-                MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
+                messages.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
 
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
-            MessageManager.info(player, "Applying preset: %s", preset.getDisplayName());
+            messages.info(player, "Applying preset: %s", preset.getDisplayName());
 
-            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyPreset(
+            GradientExecutor.GradientResult result = executor.applyPreset(
                     actor, region, preset, direction, false, null);
 
             if (result.isSuccess()) {
-                MessageManager.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
+                messages.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
             } else {
-                MessageManager.error(player, "Failed: %s", result.getErrorMessage());
+                messages.error(player, "Failed: %s", result.getErrorMessage());
             }
 
         } catch (IllegalArgumentException e) {
-            MessageManager.error(player, "Invalid direction: %s", directionString);
-            MessageManager.send(player, Component.text("Valid directions: " +
+            messages.error(player, "Invalid direction: %s", directionString);
+            messages.send(player, Component.text("Valid directions: " +
                     String.join(", ", DIRECTION_SUGGESTIONS), NamedTextColor.GRAY));
         } catch (Exception e) {
-            MessageManager.error(player, "An error occurred: %s", e.getMessage());
-            e.printStackTrace();
+            messages.error(player, "An error occurred: %s", e.getMessage());
+            LOGGER.log(Level.SEVERE, "Unexpected error in gradient command", e);
         }
     }
 
@@ -133,7 +154,7 @@ public class GradientCommand {
             Region region = getSelectionFromPlayer(player);
 
             if (region == null) {
-                MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
+                messages.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
 
@@ -144,22 +165,22 @@ public class GradientCommand {
                     .build();
 
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
-            MessageManager.info(player, "Applying noise gradient (scale=%.2f, strength=%.2f)", scale, strength);
+            messages.info(player, "Applying noise gradient (scale=%.2f, strength=%.2f)", scale, strength);
 
-            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyNoise(
+            GradientExecutor.GradientResult result = executor.applyNoise(
                     actor, region, gradient, noiseSettings);
 
             if (result.isSuccess()) {
-                MessageManager.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
+                messages.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
             } else {
-                MessageManager.error(player, "Failed: %s", result.getErrorMessage());
+                messages.error(player, "Failed: %s", result.getErrorMessage());
             }
 
         } catch (IllegalArgumentException e) {
-            MessageManager.error(player, "Error: %s", e.getMessage());
+            messages.error(player, "Error: %s", e.getMessage());
         } catch (Exception e) {
-            MessageManager.error(player, "An error occurred: %s", e.getMessage());
-            e.printStackTrace();
+            messages.error(player, "An error occurred: %s", e.getMessage());
+            LOGGER.log(Level.SEVERE, "Unexpected error in gradient command", e);
         }
     }
 
@@ -171,7 +192,7 @@ public class GradientCommand {
             Region region = getSelectionFromPlayer(player);
 
             if (region == null) {
-                MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
+                messages.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
 
@@ -179,30 +200,30 @@ public class GradientCommand {
 
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
 
-            MessageManager.info(player, "Applying %s", "gradient");
+            messages.info(player, "Applying %s", "gradient");
 
-            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyLinear(actor, region,
+            GradientExecutor.GradientResult result = executor.applyLinear(actor, region,
                     gradient);
 
             if (result.isSuccess()) {
-                MessageManager.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
+                messages.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
                 trackLastGradient(player.getUniqueId(), gradient.getBlockIds(), directionString, modeString);
             } else {
-                MessageManager.error(player, "Failed: %s", result.getErrorMessage());
+                messages.error(player, "Failed: %s", result.getErrorMessage());
             }
 
         } catch (IllegalArgumentException e) {
-            MessageManager.error(player, "Error: %s", e.getMessage());
-            MessageManager.send(player,
+            messages.error(player, "Error: %s", e.getMessage());
+            messages.send(player,
                     Component.text("Valid directions: " + String.join(", ", DIRECTION_SUGGESTIONS),
                             NamedTextColor.GRAY));
-            MessageManager.send(player,
+            messages.send(player,
                     Component.text("Valid modes: " + String.join(", ", MODE_SUGGESTIONS), NamedTextColor.GRAY));
         } catch (IncompleteRegionException e) {
-            MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
+            messages.error(player, "Selection required. Use WorldEdit to select an area.");
         } catch (Exception e) {
-            MessageManager.error(player, "An error occurred: %s", e.getMessage());
-            e.printStackTrace();
+            messages.error(player, "An error occurred: %s", e.getMessage());
+            LOGGER.log(Level.SEVERE, "Unexpected error in gradient command", e);
         }
     }
 
@@ -217,14 +238,14 @@ public class GradientCommand {
 
     public void saveGradient(Player player, String name, boolean isPublic) {
         if (storageManager == null) {
-            MessageManager.error(player, "Storage manager not available.");
+            messages.error(player, "Storage manager not available.");
             return;
         }
 
         LastGradientInfo lastInfo = lastUsedGradients.get(player.getUniqueId());
         if (lastInfo == null) {
-            MessageManager.error(player, "No recent gradient to save. Use a gradient first, or specify blocks.");
-            MessageManager.info(player, "Usage: /gradient save <name> <blocks> <direction> [mode]");
+            messages.error(player, "No recent gradient to save. Use a gradient first, or specify blocks.");
+            messages.info(player, "Usage: /gradient save <name> <blocks> <direction> [mode]");
             return;
         }
 
@@ -243,13 +264,13 @@ public class GradientCommand {
                 preset, isPublic, System.currentTimeMillis());
 
         storageManager.saveGradient(saved);
-        MessageManager.success(player, "Gradient '%s' saved%s!", name, isPublic ? " (public)" : "");
+        messages.success(player, "Gradient '%s' saved%s!", name, isPublic ? " (public)" : "");
     }
 
     public void saveGradientWithBlocks(Player player, String name, String blocksString,
                                        String directionString, String modeString, boolean isPublic) {
         if (storageManager == null) {
-            MessageManager.error(player, "Storage manager not available.");
+            messages.error(player, "Storage manager not available.");
             return;
         }
 
@@ -274,23 +295,23 @@ public class GradientCommand {
                     preset, isPublic, System.currentTimeMillis());
 
             storageManager.saveGradient(saved);
-            MessageManager.success(player, "Gradient '%s' saved%s!", name, isPublic ? " (public)" : "");
+            messages.success(player, "Gradient '%s' saved%s!", name, isPublic ? " (public)" : "");
 
         } catch (IllegalArgumentException e) {
-            MessageManager.error(player, "Invalid gradient: %s", e.getMessage());
+            messages.error(player, "Invalid gradient: %s", e.getMessage());
         }
     }
 
     public void useGradient(Player player, String name, String directionString) {
         if (storageManager == null) {
-            MessageManager.error(player, "Storage manager not available.");
+            messages.error(player, "Storage manager not available.");
             return;
         }
 
         Optional<SavedGradient> found = storageManager.findByName(player.getUniqueId(), name);
         if (found.isEmpty()) {
-            MessageManager.error(player, "Gradient '%s' not found.", name);
-            MessageManager.info(player, "Use /gradient list to see available gradients.");
+            messages.error(player, "Gradient '%s' not found.", name);
+            messages.info(player, "Use /gradient list to see available gradients.");
             return;
         }
 
@@ -302,62 +323,62 @@ public class GradientCommand {
             Region region = getSelectionFromPlayer(player);
 
             if (region == null) {
-                MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
+                messages.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
 
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
-            MessageManager.info(player, "Applying saved gradient: %s", saved.getName());
+            messages.info(player, "Applying saved gradient: %s", saved.getName());
 
-            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyPreset(
+            GradientExecutor.GradientResult result = executor.applyPreset(
                     actor, region, preset, direction, false, null);
 
             if (result.isSuccess()) {
-                MessageManager.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
+                messages.success(player, "Gradient applied to %d blocks.", result.getBlocksAffected());
                 lastUsedGradients.put(player.getUniqueId(), new LastGradientInfo(
                         preset.getBlockIds(), direction.name(), "LINEAR"));
             } else {
-                MessageManager.error(player, "Failed: %s", result.getErrorMessage());
+                messages.error(player, "Failed: %s", result.getErrorMessage());
             }
 
         } catch (IllegalArgumentException e) {
-            MessageManager.error(player, "Invalid direction: %s", directionString);
-            MessageManager.send(player, Component.text("Valid directions: " +
+            messages.error(player, "Invalid direction: %s", directionString);
+            messages.send(player, Component.text("Valid directions: " +
                     String.join(", ", DIRECTION_SUGGESTIONS), NamedTextColor.GRAY));
         }
     }
 
     public void listGradients(Player player, boolean showGlobal) {
         if (storageManager == null) {
-            MessageManager.error(player, "Storage manager not available.");
+            messages.error(player, "Storage manager not available.");
             return;
         }
 
         if (showGlobal) {
             List<SavedGradient> globals = storageManager.getGlobalGradients();
             if (globals.isEmpty()) {
-                MessageManager.info(player, "No public gradients available.");
+                messages.info(player, "No public gradients available.");
                 return;
             }
 
-            MessageManager.info(player, "Public Gradients (%d):", globals.size());
+            messages.info(player, "Public Gradients (%d):", globals.size());
             for (SavedGradient sg : globals) {
-                MessageManager.send(player, Component.text("  • " + sg.getName())
+                messages.send(player, Component.text("  • " + sg.getName())
                         .color(NamedTextColor.YELLOW)
                         .append(Component.text(" by " + sg.getAuthorName()).color(NamedTextColor.GRAY)));
             }
         } else {
             List<SavedGradient> playerGradients = storageManager.getPlayerGradients(player.getUniqueId());
             if (playerGradients.isEmpty()) {
-                MessageManager.info(player, "You have no saved gradients.");
-                MessageManager.info(player, "Use /gradient save <name> after applying a gradient.");
+                messages.info(player, "You have no saved gradients.");
+                messages.info(player, "Use /gradient save <name> after applying a gradient.");
                 return;
             }
 
-            MessageManager.info(player, "Your Gradients (%d):", playerGradients.size());
+            messages.info(player, "Your Gradients (%d):", playerGradients.size());
             for (SavedGradient sg : playerGradients) {
                 String suffix = sg.isPublic() ? " (public)" : "";
-                MessageManager.send(player, Component.text("  • " + sg.getName() + suffix)
+                messages.send(player, Component.text("  • " + sg.getName() + suffix)
                         .color(NamedTextColor.YELLOW));
             }
         }
@@ -365,49 +386,49 @@ public class GradientCommand {
 
     public void deleteGradient(Player player, String name) {
         if (storageManager == null) {
-            MessageManager.error(player, "Storage manager not available.");
+            messages.error(player, "Storage manager not available.");
             return;
         }
 
         Optional<SavedGradient> found = storageManager.findByName(player.getUniqueId(), name);
         if (found.isEmpty()) {
-            MessageManager.error(player, "Gradient '%s' not found.", name);
+            messages.error(player, "Gradient '%s' not found.", name);
             return;
         }
 
         SavedGradient saved = found.get();
 
         if (!saved.getAuthorInfo().equals(player.getUniqueId())) {
-            MessageManager.error(player, "You can only delete your own gradients.");
+            messages.error(player, "You can only delete your own gradients.");
             return;
         }
 
         storageManager.deleteGradient(player.getUniqueId(), saved.getId());
-        MessageManager.success(player, "Gradient '%s' deleted.", name);
+        messages.success(player, "Gradient '%s' deleted.", name);
     }
 
     public void shareGradient(Player player, String name) {
         if (storageManager == null) {
-            MessageManager.error(player, "Storage manager not available.");
+            messages.error(player, "Storage manager not available.");
             return;
         }
 
         Optional<SavedGradient> found = storageManager.findByName(player.getUniqueId(), name);
         if (found.isEmpty()) {
-            MessageManager.error(player, "Gradient '%s' not found.", name);
+            messages.error(player, "Gradient '%s' not found.", name);
             return;
         }
 
         SavedGradient saved = found.get();
 
         if (!saved.getAuthorInfo().equals(player.getUniqueId())) {
-            MessageManager.error(player, "You can only share your own gradients.");
+            messages.error(player, "You can only share your own gradients.");
             return;
         }
 
         storageManager.togglePublic(player.getUniqueId(), saved.getId());
         boolean nowPublic = !saved.isPublic();
-        MessageManager.success(player, "Gradient '%s' is now %s.", name, nowPublic ? "public" : "private");
+        messages.success(player, "Gradient '%s' is now %s.", name, nowPublic ? "public" : "private");
     }
 
     public List<String> getSavedGradientSuggestions(Player player) {

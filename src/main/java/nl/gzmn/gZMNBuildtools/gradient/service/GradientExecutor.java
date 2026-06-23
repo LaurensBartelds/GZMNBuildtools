@@ -128,11 +128,4 @@ public class GradientExecutor {
             return applyLinear(actor, region, definition);
         }
     }
-
-
-    private static final GradientExecutor INSTANCE = new GradientExecutor();
-
-    public static GradientExecutor getInstance() {
-        return INSTANCE;
-    }
 }

@@ -5,7 +5,9 @@ import com.sk89q.worldedit.WorldEdit;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import nl.gzmn.gZMNBuildtools.GZMNBuildtools;
-import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
+import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import org.bukkit.entity.Player;
@@ -19,13 +21,20 @@ public class CommandRegistry {
     private final GradientCommand gradientCommand;
     private final TypeReplaceCommand typeReplaceCommand;
     private final TypeReplaceUIManager typeReplaceUIManager;
+    private final Messages messages;
+    private final PresetRegistry presetRegistry;
+    private final BlockFamilyRegistry blockFamilies;
 
     public CommandRegistry(GZMNBuildtools plugin, GradientCommand gradientCommand,
-                           TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager) {
+                           TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager,
+                           Messages messages, PresetRegistry presetRegistry, BlockFamilyRegistry blockFamilies) {
         this.plugin = plugin;
         this.gradientCommand = gradientCommand;
         this.typeReplaceCommand = typeReplaceCommand;
         this.typeReplaceUIManager = typeReplaceUIManager;
+        this.messages = messages;
+        this.presetRegistry = presetRegistry;
+        this.blockFamilies = blockFamilies;
     }
 
     public void register() {
@@ -33,7 +42,7 @@ public class CommandRegistry {
             Commands commands = event.registrar();
             registerTypeReplace(commands);
             registerGradient(commands);
-            registerDebug(commands);
+            registerAdmin(commands);
         });
     }
 
@@ -94,16 +103,16 @@ public class CommandRegistry {
                                         "gzmnbuildtools.gradient"))
                         .executes(ctx -> {
                             Player player = (Player) ctx.getSource().getSender();
-                            MessageManager.info(player,
+                            messages.info(player,
                                     "Usage: /gradient <blocks> <direction> [mode]");
-                            MessageManager.info(player, "Single block layer: [stone]");
-                            MessageManager.info(player,
+                            messages.info(player, "Single block layer: [stone]");
+                            messages.info(player,
                                     "Multi-block layer: [cobblestone,stone]");
-                            MessageManager.info(player,
+                            messages.info(player,
                                     "Example: /gradient [stone][cobblestone,stone] up blended");
 
                             // Show clickable block examples
-                            MessageManager.info(player,
+                            messages.info(player,
                                     "Click to start (then add more blocks):");
                             String[] examples = {"stone", "dirt", "cobblestone",
                                     "andesite", "deepslate"};
@@ -124,7 +133,7 @@ public class CommandRegistry {
                             }
 
                             // Show subcommands
-                            MessageManager.info(player,
+                            messages.info(player,
                                     "Subcommands: save, use, list, delete, share, preset");
                             return 1;
                         })
@@ -293,7 +302,7 @@ public class CommandRegistry {
                                             .getSender();
                                     String blocks = BracketBlocksArgumentType
                                             .getString(ctx, "blocks");
-                                    MessageManager.info(player,
+                                    messages.info(player,
                                             "Please specify a direction (click to use):");
 
                                     for (String dir : gradientCommand
@@ -315,7 +324,7 @@ public class CommandRegistry {
                                                                                 + dir))));
                                     }
 
-                                    MessageManager.info(player,
+                                    messages.info(player,
                                             "Optional modes (click to add):");
                                     for (String mode : gradientCommand
                                             .getModeSuggestions()) {
@@ -393,28 +402,38 @@ public class CommandRegistry {
                 List.of("grad", "grd"));
     }
 
-    private void registerDebug(Commands commands) {
-        commands.register(Commands.literal("gzmndebug")
+    private void registerAdmin(Commands commands) {
+        commands.register(Commands.literal("gzmnbuildtools")
                 .requires(source -> source.getSender().hasPermission("gzmnbuildtools.admin"))
-                .executes(ctx -> {
-                    plugin.getLogger().info("Manual registration triggered via /gzmndebug");
-                    registerWorldEditPatterns();
-                    ctx.getSource().getSender().sendMessage(
-                            net.kyori.adventure.text.Component
-                                    .text("Attempted to re-register patterns. Check console."));
-                    return 1;
-                }).build(), "Debug GZMNBuildtools", List.of());
+                .then(Commands.literal("reload")
+                        .executes(ctx -> {
+                            reloadPlugin(ctx.getSource().getSender());
+                            return 1;
+                        }))
+                .build(), "GZMNBuildtools admin commands", List.of("gzmnbt"));
+    }
+
+    private void reloadPlugin(org.bukkit.command.CommandSender sender) {
+        plugin.reloadConfig();
+        messages.setVerbose(plugin.getConfig().getBoolean("messages.verbose", false));
+        presetRegistry.reload();
+        blockFamilies.reload();
+        // The WorldEdit pattern parser reads presets live, so re-registering it
+        // on reload is unnecessary (and would duplicate the parser).
+        sender.sendMessage(net.kyori.adventure.text.Component.text(
+                "GZMNBuildtools reloaded: " + presetRegistry.count() + " preset(s).",
+                net.kyori.adventure.text.format.NamedTextColor.GREEN));
+        plugin.getLogger().info("Configuration and presets reloaded by " + sender.getName());
     }
 
     public void registerWorldEditPatterns() {
         try {
             WorldEdit worldEdit = WorldEdit.getInstance();
-            worldEdit.getPatternFactory().register(new GradientPatternParser(worldEdit));
+            worldEdit.getPatternFactory().register(new GradientPatternParser(worldEdit, presetRegistry));
             plugin.getLogger().info("Registered #gradient pattern with WorldEdit");
         } catch (Throwable e) {
-            plugin.getLogger().warning("Failed to register WorldEdit patterns: " + e.getMessage());
-            e.printStackTrace();
-            plugin.getLogger().warning("Gradient pattern syntax will not be available");
+            plugin.getLogger().log(java.util.logging.Level.WARNING,
+                    "Failed to register WorldEdit patterns; gradient pattern syntax will not be available", e);
         }
     }
 }

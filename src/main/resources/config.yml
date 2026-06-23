@@ -1,0 +1,8 @@
+# GZMNBuildtools configuration.
+#
+# After editing, run /gzmnbuildtools reload or restart the server.
+
+messages:
+  # When true, extra per-operation diagnostic messages are shown to players
+  # (e.g. per-variant block counts during /typereplace).
+  verbose: false

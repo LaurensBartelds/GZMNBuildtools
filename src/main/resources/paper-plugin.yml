@@ -1,5 +1,5 @@
 name: GZMNBuildtools
-version: '1.0-SNAPSHOT'
+version: '${project.version}'
 main: nl.gzmn.gZMNBuildtools.GZMNBuildtools
 api-version: '1.21'
 description: Advanced WorldEdit/FAWE extension for type replacement and gradient generation
@@ -24,6 +24,7 @@ permissions:
     children:
       gzmnbuildtools.typereplace: true
       gzmnbuildtools.gradient: true
+      gzmnbuildtools.admin: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -31,4 +32,8 @@ permissions:
 
   gzmnbuildtools.gradient:
     description: Allows use of /gradient command
+    default: op
+
+  gzmnbuildtools.admin:
+    description: Allows use of /gzmnbuildtools reload and other admin commands
     default: op
