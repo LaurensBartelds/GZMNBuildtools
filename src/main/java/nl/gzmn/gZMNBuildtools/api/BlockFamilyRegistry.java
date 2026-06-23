@@ -24,6 +24,9 @@ public interface BlockFamilyRegistry {
 
     List<String> group(String name);
 
+    /** Materials shown under a /typereplace GUI category tab (e.g. "stone"). */
+    List<String> categoryMaterials(String categoryKey);
+
     /** The variant role ("stairs", "slab", …, or "block") of a block. */
     String variantType(BlockType blockType);
 

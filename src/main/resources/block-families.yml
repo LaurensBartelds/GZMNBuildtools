@@ -105,3 +105,19 @@ families:
 
 # Material groups (currently unused; reserved for future "replace all copper" style aliases).
 groups: {}
+
+# Categories shown in the /typereplace GUI: which materials appear under each tab.
+# Keys match the GUI's category tabs; reorder or edit the lists to taste.
+categories:
+  stone: [stone, cobblestone, mossy_cobblestone, stone_brick, mossy_stone_brick, granite, polished_granite, diorite, polished_diorite, andesite, polished_andesite]
+  deepslate: [deepslate, cobbled_deepslate, polished_deepslate, deepslate_brick, deepslate_tile]
+  bricks: [brick, mud_brick]
+  sandstone: [sandstone, smooth_sandstone, cut_sandstone, red_sandstone, smooth_red_sandstone, cut_red_sandstone]
+  wood: [oak, spruce, birch, jungle, acacia, dark_oak, mangrove, cherry, bamboo, crimson, warped]
+  nether: [nether_brick, red_nether_brick, blackstone, polished_blackstone, polished_blackstone_brick]
+  copper: [copper, cut_copper, exposed_copper, exposed_cut_copper, weathered_copper, weathered_cut_copper, oxidized_copper, oxidized_cut_copper, waxed_copper, waxed_cut_copper, waxed_exposed_copper, waxed_exposed_cut_copper, waxed_weathered_copper, waxed_weathered_cut_copper, waxed_oxidized_copper, waxed_oxidized_cut_copper]
+  prismarine: [prismarine, prismarine_brick, dark_prismarine]
+  quartz: [quartz, smooth_quartz]
+  end: [end_stone_brick, purpur]
+  tuff: [tuff, polished_tuff, tuff_brick]
+  other: [iron]

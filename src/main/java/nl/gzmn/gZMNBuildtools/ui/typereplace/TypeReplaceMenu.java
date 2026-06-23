@@ -17,9 +17,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 /**
  * View component for the Type Replace GUI: builds the inventories and items.
@@ -53,62 +52,6 @@ public class TypeReplaceMenu {
         }
     }
 
-    private static final Map<MaterialCategory, List<String>> CATEGORY_MATERIALS = new EnumMap<>(MaterialCategory.class);
-
-    static {
-        CATEGORY_MATERIALS.put(MaterialCategory.STONE, Arrays.asList(
-                "stone", "cobblestone", "mossy_cobblestone",
-                "stone_brick", "mossy_stone_brick",
-                "granite", "polished_granite",
-                "diorite", "polished_diorite",
-                "andesite", "polished_andesite"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.DEEPSLATE, Arrays.asList(
-                "deepslate", "cobbled_deepslate", "polished_deepslate",
-                "deepslate_brick", "deepslate_tile"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.BRICKS, Arrays.asList(
-                "brick", "mud_brick"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.SANDSTONE, Arrays.asList(
-                "sandstone", "smooth_sandstone", "cut_sandstone",
-                "red_sandstone", "smooth_red_sandstone", "cut_red_sandstone"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.WOOD, Arrays.asList(
-                "oak", "spruce", "birch", "jungle", "acacia",
-                "dark_oak", "mangrove", "cherry", "bamboo",
-                "crimson", "warped"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.NETHER, Arrays.asList(
-                "nether_brick", "red_nether_brick",
-                "blackstone", "polished_blackstone", "polished_blackstone_brick"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.COPPER, Arrays.asList(
-                "copper", "cut_copper",
-                "exposed_copper", "exposed_cut_copper",
-                "weathered_copper", "weathered_cut_copper",
-                "oxidized_copper", "oxidized_cut_copper",
-                "waxed_copper", "waxed_cut_copper",
-                "waxed_exposed_copper", "waxed_exposed_cut_copper",
-                "waxed_weathered_copper", "waxed_weathered_cut_copper",
-                "waxed_oxidized_copper", "waxed_oxidized_cut_copper"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.PRISMARINE, Arrays.asList(
-                "prismarine", "prismarine_brick", "dark_prismarine"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.QUARTZ, Arrays.asList(
-                "quartz", "smooth_quartz"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.END, Arrays.asList(
-                "end_stone_brick", "purpur"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.TUFF, Arrays.asList(
-                "tuff", "polished_tuff", "tuff_brick"));
-
-        CATEGORY_MATERIALS.put(MaterialCategory.OTHER, Arrays.asList(
-                "iron"));
-    }
-
     private BlockFamilyRegistry blockFamilies = InMemoryBlockFamilyRegistry.bundled();
 
     public void setBlockFamilies(BlockFamilyRegistry blockFamilies) {
@@ -125,7 +68,7 @@ public class TypeReplaceMenu {
     }
 
     public List<String> materialsFor(MaterialCategory category) {
-        return CATEGORY_MATERIALS.getOrDefault(category, List.of());
+        return blockFamilies.categoryMaterials(category.name().toLowerCase(Locale.ROOT));
     }
 
     public Inventory mainMenu(Player player, TypeReplaceSessions.Session builder) {

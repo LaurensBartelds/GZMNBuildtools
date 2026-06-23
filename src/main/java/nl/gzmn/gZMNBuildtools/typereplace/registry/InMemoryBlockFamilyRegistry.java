@@ -32,6 +32,7 @@ public class InMemoryBlockFamilyRegistry implements BlockFamilyRegistry {
 
     protected final Map<String, MaterialDefinition> definitions = new LinkedHashMap<>();
     protected final Map<String, List<String>> groups = new LinkedHashMap<>();
+    protected final Map<String, List<String>> categories = new LinkedHashMap<>();
 
     /**
      * Build a registry from the bundled {@code block-families.yml} on the
@@ -78,6 +79,11 @@ public class InMemoryBlockFamilyRegistry implements BlockFamilyRegistry {
     @Override
     public List<String> group(String name) {
         return groups.getOrDefault(name.toLowerCase(Locale.ROOT), Collections.emptyList());
+    }
+
+    @Override
+    public List<String> categoryMaterials(String categoryKey) {
+        return categories.getOrDefault(categoryKey.toLowerCase(Locale.ROOT), Collections.emptyList());
     }
 
     @Override
@@ -140,6 +146,7 @@ public class InMemoryBlockFamilyRegistry implements BlockFamilyRegistry {
     public void loadFrom(ConfigurationSection root) {
         definitions.clear();
         groups.clear();
+        categories.clear();
 
         ConfigurationSection families = root.getConfigurationSection("families");
         if (families != null) {
@@ -167,6 +174,13 @@ public class InMemoryBlockFamilyRegistry implements BlockFamilyRegistry {
         if (groupSection != null) {
             for (String key : groupSection.getKeys(false)) {
                 groups.put(key.toLowerCase(Locale.ROOT), groupSection.getStringList(key));
+            }
+        }
+
+        ConfigurationSection categorySection = root.getConfigurationSection("categories");
+        if (categorySection != null) {
+            for (String key : categorySection.getKeys(false)) {
+                categories.put(key.toLowerCase(Locale.ROOT), categorySection.getStringList(key));
             }
         }
     }
