@@ -412,9 +412,8 @@ public class CommandRegistry {
             worldEdit.getPatternFactory().register(new GradientPatternParser(worldEdit));
             plugin.getLogger().info("Registered #gradient pattern with WorldEdit");
         } catch (Throwable e) {
-            plugin.getLogger().warning("Failed to register WorldEdit patterns: " + e.getMessage());
-            e.printStackTrace();
-            plugin.getLogger().warning("Gradient pattern syntax will not be available");
+            plugin.getLogger().log(java.util.logging.Level.WARNING,
+                    "Failed to register WorldEdit patterns; gradient pattern syntax will not be available", e);
         }
     }
 }

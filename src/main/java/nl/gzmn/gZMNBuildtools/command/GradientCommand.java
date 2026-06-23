@@ -18,9 +18,13 @@ import nl.gzmn.gZMNBuildtools.common.MessageManager;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class GradientCommand {
+
+    private static final Logger LOGGER = Logger.getLogger("GZMNBuildtools");
 
     private GradientStorageManager storageManager;
     private final Map<UUID, LastGradientInfo> lastUsedGradients = new HashMap<>();
@@ -122,7 +126,7 @@ public class GradientCommand {
                     String.join(", ", DIRECTION_SUGGESTIONS), NamedTextColor.GRAY));
         } catch (Exception e) {
             MessageManager.error(player, "An error occurred: %s", e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error in gradient command", e);
         }
     }
 
@@ -159,7 +163,7 @@ public class GradientCommand {
             MessageManager.error(player, "Error: %s", e.getMessage());
         } catch (Exception e) {
             MessageManager.error(player, "An error occurred: %s", e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error in gradient command", e);
         }
     }
 
@@ -202,7 +206,7 @@ public class GradientCommand {
             MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
         } catch (Exception e) {
             MessageManager.error(player, "An error occurred: %s", e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error in gradient command", e);
         }
     }
 

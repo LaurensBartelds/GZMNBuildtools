@@ -14,8 +14,12 @@ import nl.gzmn.gZMNBuildtools.common.MessageManager;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TypeReplaceCommand {
+
+    private static final Logger LOGGER = Logger.getLogger("GZMNBuildtools");
 
     public List<String> getSuggestions() {
         List<String> suggestions = new ArrayList<>(BlockTypeFamily.getAllMaterialNames());
@@ -83,7 +87,7 @@ public class TypeReplaceCommand {
             MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
         } catch (Exception e) {
             MessageManager.error(player, "An error occurred: %s", e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unexpected error during /typereplace " + fromMaterial + " -> " + toMaterial, e);
         }
     }
 
@@ -134,6 +138,9 @@ public class TypeReplaceCommand {
                             newState = preserveBlockProperties(currentBlock, newState, isCrossTypeConnectorConversion);
                         } catch (Exception e) {
                             newState = targetType.getDefaultState();
+                            LOGGER.log(Level.WARNING, "Failed to preserve block properties mapping "
+                                    + currentType.id() + " -> " + targetType.id()
+                                    + "; using default state", e);
                         }
 
                         if (!newState.getBlockType().id().equals("minecraft:air")) {
@@ -146,7 +153,7 @@ public class TypeReplaceCommand {
 
             localSession.remember(editSession);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error while applying type replacement", e);
         }
 
         return new ReplaceResult(count);
@@ -178,6 +185,10 @@ public class TypeReplaceCommand {
                     result = result.with(property, entry.getValue());
                 }
             } catch (Exception e) {
+                // A single incompatible property should not abort the whole block;
+                // skip it but record why at a fine level for diagnostics.
+                LOGGER.log(Level.FINE, "Skipped incompatible property '" + entry.getKey().getName()
+                        + "' when mapping to " + target.getBlockType().id(), e);
             }
         }
 
