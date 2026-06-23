@@ -3,7 +3,8 @@ package nl.gzmn.gZMNBuildtools;
 import nl.gzmn.gZMNBuildtools.command.CommandRegistry;
 import nl.gzmn.gZMNBuildtools.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
-import nl.gzmn.gZMNBuildtools.config.GradientPresets;
+import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
+import nl.gzmn.gZMNBuildtools.gradient.registry.YamlPresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import nl.gzmn.gZMNBuildtools.api.Messages;
@@ -33,7 +34,8 @@ public final class GZMNBuildtools extends JavaPlugin {
         }
 
         // Load externalized content (presets live in editable YAML now).
-        GradientPresets.load(this);
+        PresetRegistry presetRegistry = new YamlPresetRegistry(this);
+        presetRegistry.reload();
 
         // Construct services before anything that depends on them.
         storageManager = new GradientStorageManager(this);
@@ -44,6 +46,7 @@ public final class GZMNBuildtools extends JavaPlugin {
         gradientCommand = new GradientCommand();
         gradientCommand.setStorageManager(storageManager);
         gradientCommand.setMessages(messages);
+        gradientCommand.setPresetRegistry(presetRegistry);
 
         TypeReplaceCommand typeReplaceCommand = new TypeReplaceCommand();
         typeReplaceCommand.setMessages(messages);
@@ -51,7 +54,7 @@ public final class GZMNBuildtools extends JavaPlugin {
         typeReplaceUIManager.setMessages(messages);
 
         commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
-                typeReplaceUIManager, messages);
+                typeReplaceUIManager, messages, presetRegistry);
         commandRegistry.register();
 
         typeReplaceUIManager.registerEvents();

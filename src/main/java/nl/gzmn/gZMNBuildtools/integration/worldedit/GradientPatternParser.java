@@ -6,7 +6,7 @@ import com.sk89q.worldedit.extension.input.InputParseException;
 import com.sk89q.worldedit.extension.input.ParserContext;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import com.sk89q.worldedit.regions.Region;
-import nl.gzmn.gZMNBuildtools.config.GradientPresets;
+import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.model.*;
 import nl.gzmn.gZMNBuildtools.noise.NoiseSettings;
 
@@ -16,8 +16,11 @@ public class GradientPatternParser extends RichParser<Pattern> {
 
     private static final String PRESET_PREFIX = "preset:";
 
-    public GradientPatternParser(WorldEdit worldEdit) {
+    private final PresetRegistry presetRegistry;
+
+    public GradientPatternParser(WorldEdit worldEdit, PresetRegistry presetRegistry) {
         super(worldEdit, "#gradient");
+        this.presetRegistry = presetRegistry;
     }
 
     @Override
@@ -35,14 +38,14 @@ public class GradientPatternParser extends RichParser<Pattern> {
 
                 if (argumentInput.toLowerCase().startsWith("preset:")) {
                     String partialPreset = argumentInput.substring(7);
-                    return GradientPresets.getAllIds().stream()
+                    return presetRegistry.ids().stream()
                             .filter(id -> id.toLowerCase().startsWith(partialPreset.toLowerCase()))
                             .map(id -> "preset:" + id);
                 }
 
                 // Preset suggestions when starting fresh
                 if (argumentInput.isEmpty()) {
-                    Stream<String> presetSuggestions = GradientPresets.getAllIds().stream()
+                    Stream<String> presetSuggestions = presetRegistry.ids().stream()
                             .map(id -> "preset:" + id);
                     Stream<String> blockSuggestions = com.sk89q.worldedit.world.block.BlockType.REGISTRY
                             .values().stream()
@@ -144,10 +147,10 @@ public class GradientPatternParser extends RichParser<Pattern> {
                                         boolean useNoise, NoiseSettings noiseSettings) throws InputParseException {
         String presetId = blocksStr.substring(PRESET_PREFIX.length()).trim();
 
-        GradientPreset preset = GradientPresets.get(presetId);
+        GradientPreset preset = presetRegistry.get(presetId).orElse(null);
         if (preset == null) {
             throw new InputParseException("Unknown gradient preset: " + presetId +
-                    ". Available presets: " + String.join(", ", GradientPresets.getAllIds()));
+                    ". Available presets: " + String.join(", ", presetRegistry.ids()));
         }
 
         return GradientPattern.fromPreset(preset, direction, mode, region, useNoise, noiseSettings);

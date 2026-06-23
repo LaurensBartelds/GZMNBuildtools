@@ -7,7 +7,8 @@ import com.sk89q.worldedit.regions.Region;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import nl.gzmn.gZMNBuildtools.config.GradientPresets;
+import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
+import nl.gzmn.gZMNBuildtools.gradient.registry.InMemoryPresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.model.*;
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientDefinition.GradientDirection;
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientDefinition.InterpolationMode;
@@ -30,6 +31,7 @@ public class GradientCommand {
     private GradientStorageManager storageManager;
     private GradientExecutor executor = new GradientExecutor();
     private Messages messages = AdventureMessages.basic();
+    private PresetRegistry presetRegistry = new InMemoryPresetRegistry();
     private final Map<UUID, LastGradientInfo> lastUsedGradients = new HashMap<>();
 
     private static final List<String> DIRECTION_SUGGESTIONS = Arrays.asList(
@@ -79,6 +81,10 @@ public class GradientCommand {
         this.messages = messages;
     }
 
+    public void setPresetRegistry(PresetRegistry presetRegistry) {
+        this.presetRegistry = presetRegistry;
+    }
+
     public List<String> getDirectionSuggestions() {
         return DIRECTION_SUGGESTIONS;
     }
@@ -98,16 +104,16 @@ public class GradientCommand {
     }
 
     public List<String> getPresetSuggestions() {
-        return GradientPresets.getAllIds();
+        return presetRegistry.ids();
     }
 
     public void executePreset(Player player, String presetId, String directionString) {
         try {
-            GradientPreset preset = GradientPresets.get(presetId);
+            GradientPreset preset = presetRegistry.get(presetId).orElse(null);
             if (preset == null) {
                 messages.error(player, "Unknown preset: %s", presetId);
                 messages.send(player, Component.text("Available presets: " +
-                        String.join(", ", GradientPresets.getAllIds()), NamedTextColor.GRAY));
+                        String.join(", ", presetRegistry.ids()), NamedTextColor.GRAY));
                 return;
             }
 

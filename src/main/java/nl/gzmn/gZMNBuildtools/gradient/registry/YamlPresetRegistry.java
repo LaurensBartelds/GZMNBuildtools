@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.config;
+package nl.gzmn.gZMNBuildtools.gradient.registry;
 
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientPreset;
 import org.bukkit.Material;
@@ -12,34 +12,28 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 /**
- * Registry of gradient presets, loaded from {@code presets.yml}.
- *
- * <p>Presets used to be hardcoded in a static initializer. They now live in an
- * editable YAML file so server owners can add or change them without
- * recompiling; the bundled {@code presets.yml} resource provides the defaults
- * and is copied to the data folder on first run.</p>
+ * {@link nl.gzmn.gZMNBuildtools.api.PresetRegistry} backed by an editable
+ * {@code presets.yml} file. The bundled defaults are copied to the data folder
+ * on first run; {@link #reload()} re-reads the file.
  */
-public final class GradientPresets {
+public class YamlPresetRegistry extends InMemoryPresetRegistry {
 
     private static final String RESOURCE_NAME = "presets.yml";
 
-    private static final Map<String, GradientPreset> PRESETS = new LinkedHashMap<>();
+    private final Plugin plugin;
 
-    private GradientPresets() {
+    public YamlPresetRegistry(Plugin plugin) {
+        this.plugin = plugin;
     }
 
-    /**
-     * (Re)load presets from the data folder's {@code presets.yml}, copying the
-     * bundled defaults out first if the file does not yet exist. Safe to call
-     * more than once (e.g. for a /reload command).
-     */
-    public static void load(Plugin plugin) {
-        PRESETS.clear();
+    @Override
+    public void reload() {
+        presets.clear();
 
         File file = new File(plugin.getDataFolder(), RESOURCE_NAME);
         if (!file.exists()) {
@@ -51,18 +45,15 @@ public final class GradientPresets {
             }
         }
 
-        YamlConfiguration config;
-        if (file.exists()) {
-            config = YamlConfiguration.loadConfiguration(file);
-        } else {
-            config = loadBundled(plugin);
-        }
+        YamlConfiguration config = file.exists()
+                ? YamlConfiguration.loadConfiguration(file)
+                : loadBundled();
 
-        int loaded = parse(config, plugin);
+        int loaded = parse(config);
         plugin.getLogger().info("Loaded " + loaded + " gradient preset(s) from " + RESOURCE_NAME);
     }
 
-    private static YamlConfiguration loadBundled(Plugin plugin) {
+    private YamlConfiguration loadBundled() {
         try (InputStream in = plugin.getResource(RESOURCE_NAME)) {
             if (in == null) {
                 return new YamlConfiguration();
@@ -76,7 +67,7 @@ public final class GradientPresets {
         }
     }
 
-    private static int parse(YamlConfiguration config, Plugin plugin) {
+    private int parse(YamlConfiguration config) {
         ConfigurationSection root = config.getConfigurationSection("presets");
         if (root == null) {
             return 0;
@@ -89,8 +80,7 @@ public final class GradientPresets {
                 continue;
             }
             try {
-                GradientPreset preset = readPreset(id, section);
-                register(preset);
+                register(readPreset(id, section));
                 count++;
             } catch (Exception e) {
                 plugin.getLogger().log(Level.WARNING,
@@ -132,35 +122,5 @@ public final class GradientPresets {
             }
         }
         return category.getIcon();
-    }
-
-    private static void register(GradientPreset preset) {
-        PRESETS.put(preset.getId(), preset);
-    }
-
-    public static GradientPreset get(String id) {
-        return PRESETS.get(id);
-    }
-
-    public static List<GradientPreset> getByCategory(GradientPreset.PresetCategory category) {
-        return PRESETS.values().stream()
-                .filter(p -> p.getCategory() == category)
-                .collect(Collectors.toList());
-    }
-
-    public static List<GradientPreset> getAll() {
-        return new ArrayList<>(PRESETS.values());
-    }
-
-    public static List<String> getAllIds() {
-        return new ArrayList<>(PRESETS.keySet());
-    }
-
-    public static boolean exists(String id) {
-        return PRESETS.containsKey(id);
-    }
-
-    public static int count() {
-        return PRESETS.size();
     }
 }
