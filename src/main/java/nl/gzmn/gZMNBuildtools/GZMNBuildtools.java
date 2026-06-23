@@ -1,32 +1,27 @@
 package nl.gzmn.gZMNBuildtools;
 
+import nl.gzmn.gZMNBuildtools.api.GzmnBuildtoolsApi;
 import nl.gzmn.gZMNBuildtools.command.CommandRegistry;
 import nl.gzmn.gZMNBuildtools.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
-import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
-import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
-import nl.gzmn.gZMNBuildtools.gradient.registry.YamlPresetRegistry;
-import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
-import nl.gzmn.gZMNBuildtools.typereplace.registry.YamlBlockFamilyRegistry;
+import nl.gzmn.gZMNBuildtools.core.PluginContext;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
-import nl.gzmn.gZMNBuildtools.api.Messages;
-import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 @SuppressWarnings("UnstableApiUsage")
 public final class GZMNBuildtools extends JavaPlugin {
 
+    private PluginContext context;
     private TypeReplaceUIManager typeReplaceUIManager;
-    private GradientStorageManager storageManager;
     private GradientCommand gradientCommand;
     private CommandRegistry commandRegistry;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        Messages messages = new AdventureMessages(getConfig().getBoolean("messages.verbose", false));
 
         if (getServer().getPluginManager().getPlugin("FastAsyncWorldEdit") == null &&
                 getServer().getPluginManager().getPlugin("WorldEdit") == null) {
@@ -35,36 +30,36 @@ public final class GZMNBuildtools extends JavaPlugin {
             return;
         }
 
-        // Load externalized content (presets and block families live in editable YAML now).
-        PresetRegistry presetRegistry = new YamlPresetRegistry(this);
-        presetRegistry.reload();
-        BlockFamilyRegistry blockFamilies = new YamlBlockFamilyRegistry(this);
-        blockFamilies.reload();
+        // Composition root: construct and load all services (messages, registries,
+        // executor, storage) in one place.
+        context = new PluginContext(this);
+        context.load();
 
-        // Construct services before anything that depends on them.
-        storageManager = new GradientStorageManager(this);
-        storageManager.load();
-
-        // Construct commands/managers, wiring their dependencies up front so no
-        // command can ever execute against a half-initialised plugin.
+        // Construct commands/managers, wiring their dependencies from the context
+        // up front so no command can ever execute against a half-initialised plugin.
         gradientCommand = new GradientCommand();
-        gradientCommand.setStorageManager(storageManager);
-        gradientCommand.setMessages(messages);
-        gradientCommand.setPresetRegistry(presetRegistry);
+        gradientCommand.setStorageManager(context.storage());
+        gradientCommand.setMessages(context.messages());
+        gradientCommand.setPresetRegistry(context.presets());
+        gradientCommand.setExecutor(context.executor());
 
         TypeReplaceCommand typeReplaceCommand = new TypeReplaceCommand();
-        typeReplaceCommand.setMessages(messages);
-        typeReplaceCommand.setBlockFamilies(blockFamilies);
+        typeReplaceCommand.setMessages(context.messages());
+        typeReplaceCommand.setBlockFamilies(context.blockFamilies());
+
         typeReplaceUIManager = new TypeReplaceUIManager(this, typeReplaceCommand);
-        typeReplaceUIManager.setMessages(messages);
-        typeReplaceUIManager.setBlockFamilies(blockFamilies);
+        typeReplaceUIManager.setMessages(context.messages());
+        typeReplaceUIManager.setBlockFamilies(context.blockFamilies());
 
         commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
-                typeReplaceUIManager, messages, presetRegistry, blockFamilies);
+                typeReplaceUIManager, context.messages(), context.presets(), context.blockFamilies());
         commandRegistry.register();
 
         typeReplaceUIManager.registerEvents();
         commandRegistry.registerWorldEditPatterns();
+
+        // Expose the public extension API so other plugins can register presets / families.
+        getServer().getServicesManager().register(GzmnBuildtoolsApi.class, context, this, ServicePriority.Normal);
 
         String[] logo = {
                 "   ______ ______  __  __ _   _ ",
@@ -83,8 +78,8 @@ public final class GZMNBuildtools extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (storageManager != null) {
-            storageManager.save();
+        if (context != null) {
+            context.storage().save();
         }
         getLogger().info("GZMNBuildtools disabled.");
     }
