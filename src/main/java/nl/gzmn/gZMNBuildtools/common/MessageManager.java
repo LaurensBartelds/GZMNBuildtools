@@ -22,13 +22,25 @@ public final class MessageManager {
     public static void init(JavaPlugin plugin) {
         if (initialized)
             return;
+        apply(plugin);
+        initialized = true;
+    }
+
+    /**
+     * Re-read settings from the (already reloaded) plugin config. Used by the
+     * /gzmnbuildtools reload command so changes take effect without a restart.
+     */
+    public static void reload(JavaPlugin plugin) {
+        apply(plugin);
+    }
+
+    private static void apply(JavaPlugin plugin) {
         MessageManager.plugin = plugin;
         try {
             verbose = plugin.getConfig().getBoolean("messages.verbose", false);
         } catch (Exception ignored) {
             verbose = false;
         }
-        initialized = true;
     }
 
     public static boolean isVerbose() {

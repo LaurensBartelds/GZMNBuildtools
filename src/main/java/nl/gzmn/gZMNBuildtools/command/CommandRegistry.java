@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import nl.gzmn.gZMNBuildtools.GZMNBuildtools;
 import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import nl.gzmn.gZMNBuildtools.config.GradientPresets;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import org.bukkit.entity.Player;
@@ -33,7 +34,7 @@ public class CommandRegistry {
             Commands commands = event.registrar();
             registerTypeReplace(commands);
             registerGradient(commands);
-            registerDebug(commands);
+            registerAdmin(commands);
         });
     }
 
@@ -393,17 +394,27 @@ public class CommandRegistry {
                 List.of("grad", "grd"));
     }
 
-    private void registerDebug(Commands commands) {
-        commands.register(Commands.literal("gzmndebug")
+    private void registerAdmin(Commands commands) {
+        commands.register(Commands.literal("gzmnbuildtools")
                 .requires(source -> source.getSender().hasPermission("gzmnbuildtools.admin"))
-                .executes(ctx -> {
-                    plugin.getLogger().info("Manual registration triggered via /gzmndebug");
-                    registerWorldEditPatterns();
-                    ctx.getSource().getSender().sendMessage(
-                            net.kyori.adventure.text.Component
-                                    .text("Attempted to re-register patterns. Check console."));
-                    return 1;
-                }).build(), "Debug GZMNBuildtools", List.of());
+                .then(Commands.literal("reload")
+                        .executes(ctx -> {
+                            reloadPlugin(ctx.getSource().getSender());
+                            return 1;
+                        }))
+                .build(), "GZMNBuildtools admin commands", List.of("gzmnbt"));
+    }
+
+    private void reloadPlugin(org.bukkit.command.CommandSender sender) {
+        plugin.reloadConfig();
+        MessageManager.reload(plugin);
+        GradientPresets.load(plugin);
+        // The WorldEdit pattern parser reads presets live, so re-registering it
+        // on reload is unnecessary (and would duplicate the parser).
+        sender.sendMessage(net.kyori.adventure.text.Component.text(
+                "GZMNBuildtools reloaded: " + GradientPresets.count() + " preset(s).",
+                net.kyori.adventure.text.format.NamedTextColor.GREEN));
+        plugin.getLogger().info("Configuration and presets reloaded by " + sender.getName());
     }
 
     public void registerWorldEditPatterns() {

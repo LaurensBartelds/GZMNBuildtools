@@ -221,7 +221,10 @@ public class GradientPatternParser extends RichParser<Pattern> {
                 return context.getSession().getSelection(context.getWorld());
             }
         } catch (Exception e) {
-
+            // No usable selection in the parser context; fall through to the
+            // clear user-facing error below.
+            java.util.logging.Logger.getLogger("GZMNBuildtools")
+                    .log(java.util.logging.Level.FINE, "No selection available in pattern parser context", e);
         }
         throw new InputParseException("No WorldEdit selection found. Make a selection with //wand first.");
     }
