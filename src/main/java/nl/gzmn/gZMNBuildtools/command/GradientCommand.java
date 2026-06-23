@@ -27,6 +27,7 @@ public class GradientCommand {
     private static final Logger LOGGER = Logger.getLogger("GZMNBuildtools");
 
     private GradientStorageManager storageManager;
+    private GradientExecutor executor = new GradientExecutor();
     private final Map<UUID, LastGradientInfo> lastUsedGradients = new HashMap<>();
 
     private static final List<String> DIRECTION_SUGGESTIONS = Arrays.asList(
@@ -66,6 +67,10 @@ public class GradientCommand {
 
     public void setStorageManager(GradientStorageManager storageManager) {
         this.storageManager = storageManager;
+    }
+
+    public void setExecutor(GradientExecutor executor) {
+        this.executor = executor;
     }
 
     public List<String> getDirectionSuggestions() {
@@ -111,7 +116,7 @@ public class GradientCommand {
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
             MessageManager.info(player, "Applying preset: %s", preset.getDisplayName());
 
-            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyPreset(
+            GradientExecutor.GradientResult result = executor.applyPreset(
                     actor, region, preset, direction, false, null);
 
             if (result.isSuccess()) {
@@ -150,7 +155,7 @@ public class GradientCommand {
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
             MessageManager.info(player, "Applying noise gradient (scale=%.2f, strength=%.2f)", scale, strength);
 
-            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyNoise(
+            GradientExecutor.GradientResult result = executor.applyNoise(
                     actor, region, gradient, noiseSettings);
 
             if (result.isSuccess()) {
@@ -185,7 +190,7 @@ public class GradientCommand {
 
             MessageManager.info(player, "Applying %s", "gradient");
 
-            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyLinear(actor, region,
+            GradientExecutor.GradientResult result = executor.applyLinear(actor, region,
                     gradient);
 
             if (result.isSuccess()) {
@@ -313,7 +318,7 @@ public class GradientCommand {
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
             MessageManager.info(player, "Applying saved gradient: %s", saved.getName());
 
-            GradientExecutor.GradientResult result = GradientExecutor.getInstance().applyPreset(
+            GradientExecutor.GradientResult result = executor.applyPreset(
                     actor, region, preset, direction, false, null);
 
             if (result.isSuccess()) {
