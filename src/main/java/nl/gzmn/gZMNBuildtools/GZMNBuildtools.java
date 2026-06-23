@@ -3,6 +3,7 @@ package nl.gzmn.gZMNBuildtools;
 import nl.gzmn.gZMNBuildtools.command.CommandRegistry;
 import nl.gzmn.gZMNBuildtools.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
+import nl.gzmn.gZMNBuildtools.config.GradientPresets;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import nl.gzmn.gZMNBuildtools.common.MessageManager;
@@ -20,6 +21,7 @@ public final class GZMNBuildtools extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
         MessageManager.init(this);
 
         if (getServer().getPluginManager().getPlugin("FastAsyncWorldEdit") == null &&
@@ -28,6 +30,9 @@ public final class GZMNBuildtools extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+
+        // Load externalized content (presets live in editable YAML now).
+        GradientPresets.load(this);
 
         // Construct services before anything that depends on them.
         storageManager = new GradientStorageManager(this);

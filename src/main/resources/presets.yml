@@ -1,0 +1,142 @@
+# Gradient presets for GZMNBuildtools.
+#
+# Each entry under "presets" defines a named gradient that can be applied with:
+#   /gradient preset <id> <direction>
+#
+# Fields:
+#   display-name : Friendly name shown to players.
+#   description  : Short description.
+#   icon         : Bukkit Material name used as the menu icon.
+#   category     : One of GRAYSCALE, WARM, COOL, NATURE, EARTH, STONE, CUSTOM.
+#   blocks       : Ordered list of block ids (minecraft: prefix optional).
+#                  At least two blocks are required.
+#
+# Add your own presets by copying an entry and editing it, then run
+# /gzmnbuildtools reload (or restart) to apply.
+
+presets:
+  grayscale_light:
+    display-name: "Light Grayscale"
+    description: "White to gray gradient"
+    icon: WHITE_CONCRETE
+    category: GRAYSCALE
+    blocks: [white_concrete, light_gray_concrete, gray_concrete]
+
+  grayscale_full:
+    display-name: "Full Grayscale"
+    description: "White to black gradient"
+    icon: GRAY_CONCRETE
+    category: GRAYSCALE
+    blocks: [white_concrete, light_gray_concrete, gray_concrete, black_concrete]
+
+  grayscale_wool:
+    display-name: "Wool Grayscale"
+    description: "Soft wool gradient"
+    icon: GRAY_WOOL
+    category: GRAYSCALE
+    blocks: [white_wool, light_gray_wool, gray_wool, black_wool]
+
+  warm_sunset:
+    display-name: "Sunset"
+    description: "Yellow to red sunset colors"
+    icon: ORANGE_CONCRETE
+    category: WARM
+    blocks: [yellow_concrete, orange_concrete, red_concrete]
+
+  warm_fire:
+    display-name: "Fire"
+    description: "Fire-like gradient with embers"
+    icon: ORANGE_WOOL
+    category: WARM
+    blocks: [yellow_concrete, orange_concrete, red_concrete, black_concrete]
+
+  warm_autumn:
+    display-name: "Autumn"
+    description: "Fall foliage colors"
+    icon: ORANGE_TERRACOTTA
+    category: WARM
+    blocks: [yellow_terracotta, orange_terracotta, red_terracotta, brown_terracotta]
+
+  cool_ocean:
+    display-name: "Ocean"
+    description: "Light to deep ocean blues"
+    icon: BLUE_CONCRETE
+    category: COOL
+    blocks: [light_blue_concrete, cyan_concrete, blue_concrete]
+
+  cool_ice:
+    display-name: "Ice"
+    description: "Frozen ice gradient"
+    icon: PACKED_ICE
+    category: COOL
+    blocks: [snow_block, packed_ice, blue_ice]
+
+  cool_twilight:
+    display-name: "Twilight"
+    description: "Blue to purple evening sky"
+    icon: PURPLE_CONCRETE
+    category: COOL
+    blocks: [light_blue_concrete, blue_concrete, purple_concrete, black_concrete]
+
+  nature_forest:
+    display-name: "Forest"
+    description: "Green forest canopy"
+    icon: GREEN_CONCRETE
+    category: NATURE
+    blocks: [lime_concrete, green_concrete, brown_concrete]
+
+  nature_grass:
+    display-name: "Grass Blend"
+    description: "Natural terrain gradient"
+    icon: GRASS_BLOCK
+    category: NATURE
+    blocks: [grass_block, dirt, coarse_dirt]
+
+  nature_moss:
+    display-name: "Mossy"
+    description: "Moss and vegetation"
+    icon: MOSS_BLOCK
+    category: NATURE
+    blocks: [moss_block, moss_carpet, grass_block, dirt]
+
+  earth_desert:
+    display-name: "Desert Sand"
+    description: "Sandy desert colors"
+    icon: SAND
+    category: EARTH
+    blocks: [sandstone, sand, red_sand, red_sandstone]
+
+  earth_terrain:
+    display-name: "Terrain"
+    description: "Natural terrain blend"
+    icon: DIRT
+    category: EARTH
+    blocks: [grass_block, dirt, coarse_dirt, gravel, stone]
+
+  earth_clay:
+    display-name: "Clay & Terracotta"
+    description: "Natural clay colors"
+    icon: TERRACOTTA
+    category: EARTH
+    blocks: [white_terracotta, light_gray_terracotta, terracotta, brown_terracotta]
+
+  stone_weathered:
+    display-name: "Weathered Stone"
+    description: "Stone to mossy cobblestone"
+    icon: COBBLESTONE
+    category: STONE
+    blocks: [stone, cobblestone, mossy_cobblestone]
+
+  stone_depth:
+    display-name: "Depth Stone"
+    description: "Surface to deep stone"
+    icon: DEEPSLATE
+    category: STONE
+    blocks: [stone, andesite, deepslate, cobbled_deepslate]
+
+  stone_brick:
+    display-name: "Brick Weathering"
+    description: "Stone brick deterioration"
+    icon: STONE_BRICKS
+    category: STONE
+    blocks: [stone_bricks, cracked_stone_bricks, mossy_stone_bricks]

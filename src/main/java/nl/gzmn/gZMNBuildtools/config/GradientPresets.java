@@ -2,176 +2,145 @@ package nl.gzmn.gZMNBuildtools.config;
 
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientPreset;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-
+/**
+ * Registry of gradient presets, loaded from {@code presets.yml}.
+ *
+ * <p>Presets used to be hardcoded in a static initializer. They now live in an
+ * editable YAML file so server owners can add or change them without
+ * recompiling; the bundled {@code presets.yml} resource provides the defaults
+ * and is copied to the data folder on first run.</p>
+ */
 public final class GradientPresets {
+
+    private static final String RESOURCE_NAME = "presets.yml";
 
     private static final Map<String, GradientPreset> PRESETS = new LinkedHashMap<>();
 
-    static {
+    private GradientPresets() {
+    }
 
-        register(GradientPreset.builder("grayscale_light")
-                .displayName("Light Grayscale")
-                .description("White to gray gradient")
-                .icon(Material.WHITE_CONCRETE)
-                .category(GradientPreset.PresetCategory.GRAYSCALE)
-                .blocks("white_concrete", "light_gray_concrete", "gray_concrete")
-                .build());
+    /**
+     * (Re)load presets from the data folder's {@code presets.yml}, copying the
+     * bundled defaults out first if the file does not yet exist. Safe to call
+     * more than once (e.g. for a /reload command).
+     */
+    public static void load(Plugin plugin) {
+        PRESETS.clear();
 
-        register(GradientPreset.builder("grayscale_full")
-                .displayName("Full Grayscale")
-                .description("White to black gradient")
-                .icon(Material.GRAY_CONCRETE)
-                .category(GradientPreset.PresetCategory.GRAYSCALE)
-                .blocks("white_concrete", "light_gray_concrete", "gray_concrete", "black_concrete")
-                .build());
+        File file = new File(plugin.getDataFolder(), RESOURCE_NAME);
+        if (!file.exists()) {
+            try {
+                plugin.saveResource(RESOURCE_NAME, false);
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().log(Level.WARNING,
+                        "Bundled " + RESOURCE_NAME + " is missing; loading defaults from the jar", e);
+            }
+        }
 
-        register(GradientPreset.builder("grayscale_wool")
-                .displayName("Wool Grayscale")
-                .description("Soft wool gradient")
-                .icon(Material.GRAY_WOOL)
-                .category(GradientPreset.PresetCategory.GRAYSCALE)
-                .blocks("white_wool", "light_gray_wool", "gray_wool", "black_wool")
-                .build());
+        YamlConfiguration config;
+        if (file.exists()) {
+            config = YamlConfiguration.loadConfiguration(file);
+        } else {
+            config = loadBundled(plugin);
+        }
 
+        int loaded = parse(config, plugin);
+        plugin.getLogger().info("Loaded " + loaded + " gradient preset(s) from " + RESOURCE_NAME);
+    }
 
-        register(GradientPreset.builder("warm_sunset")
-                .displayName("Sunset")
-                .description("Yellow to red sunset colors")
-                .icon(Material.ORANGE_CONCRETE)
-                .category(GradientPreset.PresetCategory.WARM)
-                .blocks("yellow_concrete", "orange_concrete", "red_concrete")
-                .build());
+    private static YamlConfiguration loadBundled(Plugin plugin) {
+        try (InputStream in = plugin.getResource(RESOURCE_NAME)) {
+            if (in == null) {
+                return new YamlConfiguration();
+            }
+            try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
+                return YamlConfiguration.loadConfiguration(reader);
+            }
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to read bundled " + RESOURCE_NAME, e);
+            return new YamlConfiguration();
+        }
+    }
 
-        register(GradientPreset.builder("warm_fire")
-                .displayName("Fire")
-                .description("Fire-like gradient with embers")
-                .icon(Material.ORANGE_WOOL)
-                .category(GradientPreset.PresetCategory.WARM)
-                .blocks("yellow_concrete", "orange_concrete", "red_concrete", "black_concrete")
-                .build());
+    private static int parse(YamlConfiguration config, Plugin plugin) {
+        ConfigurationSection root = config.getConfigurationSection("presets");
+        if (root == null) {
+            return 0;
+        }
 
-        register(GradientPreset.builder("warm_autumn")
-                .displayName("Autumn")
-                .description("Fall foliage colors")
-                .icon(Material.ORANGE_TERRACOTTA)
-                .category(GradientPreset.PresetCategory.WARM)
-                .blocks("yellow_terracotta", "orange_terracotta", "red_terracotta", "brown_terracotta")
-                .build());
+        int count = 0;
+        for (String id : root.getKeys(false)) {
+            ConfigurationSection section = root.getConfigurationSection(id);
+            if (section == null) {
+                continue;
+            }
+            try {
+                GradientPreset preset = readPreset(id, section);
+                register(preset);
+                count++;
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING,
+                        "Skipping invalid preset '" + id + "' in " + RESOURCE_NAME + ": " + e.getMessage());
+            }
+        }
+        return count;
+    }
 
+    private static GradientPreset readPreset(String id, ConfigurationSection section) {
+        List<String> blocks = section.getStringList("blocks");
+        GradientPreset.PresetCategory category = parseCategory(section.getString("category"));
 
-        register(GradientPreset.builder("cool_ocean")
-                .displayName("Ocean")
-                .description("Light to deep ocean blues")
-                .icon(Material.BLUE_CONCRETE)
-                .category(GradientPreset.PresetCategory.COOL)
-                .blocks("light_blue_concrete", "cyan_concrete", "blue_concrete")
-                .build());
+        return GradientPreset.builder(id)
+                .displayName(section.getString("display-name", id))
+                .description(section.getString("description", ""))
+                .icon(parseIcon(section.getString("icon"), category))
+                .category(category)
+                .blocks(blocks)
+                .build();
+    }
 
-        register(GradientPreset.builder("cool_ice")
-                .displayName("Ice")
-                .description("Frozen ice gradient")
-                .icon(Material.PACKED_ICE)
-                .category(GradientPreset.PresetCategory.COOL)
-                .blocks("snow_block", "packed_ice", "blue_ice")
-                .build());
+    private static GradientPreset.PresetCategory parseCategory(String raw) {
+        if (raw == null) {
+            return GradientPreset.PresetCategory.STONE;
+        }
+        try {
+            return GradientPreset.PresetCategory.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return GradientPreset.PresetCategory.STONE;
+        }
+    }
 
-        register(GradientPreset.builder("cool_twilight")
-                .displayName("Twilight")
-                .description("Blue to purple evening sky")
-                .icon(Material.PURPLE_CONCRETE)
-                .category(GradientPreset.PresetCategory.COOL)
-                .blocks("light_blue_concrete", "blue_concrete", "purple_concrete", "black_concrete")
-                .build());
-
-
-        register(GradientPreset.builder("nature_forest")
-                .displayName("Forest")
-                .description("Green forest canopy")
-                .icon(Material.GREEN_CONCRETE)
-                .category(GradientPreset.PresetCategory.NATURE)
-                .blocks("lime_concrete", "green_concrete", "brown_concrete")
-                .build());
-
-        register(GradientPreset.builder("nature_grass")
-                .displayName("Grass Blend")
-                .description("Natural terrain gradient")
-                .icon(Material.GRASS_BLOCK)
-                .category(GradientPreset.PresetCategory.NATURE)
-                .blocks("grass_block", "dirt", "coarse_dirt")
-                .build());
-
-        register(GradientPreset.builder("nature_moss")
-                .displayName("Mossy")
-                .description("Moss and vegetation")
-                .icon(Material.MOSS_BLOCK)
-                .category(GradientPreset.PresetCategory.NATURE)
-                .blocks("moss_block", "moss_carpet", "grass_block", "dirt")
-                .build());
-
-
-        register(GradientPreset.builder("earth_desert")
-                .displayName("Desert Sand")
-                .description("Sandy desert colors")
-                .icon(Material.SAND)
-                .category(GradientPreset.PresetCategory.EARTH)
-                .blocks("sandstone", "sand", "red_sand", "red_sandstone")
-                .build());
-
-        register(GradientPreset.builder("earth_terrain")
-                .displayName("Terrain")
-                .description("Natural terrain blend")
-                .icon(Material.DIRT)
-                .category(GradientPreset.PresetCategory.EARTH)
-                .blocks("grass_block", "dirt", "coarse_dirt", "gravel", "stone")
-                .build());
-
-        register(GradientPreset.builder("earth_clay")
-                .displayName("Clay & Terracotta")
-                .description("Natural clay colors")
-                .icon(Material.TERRACOTTA)
-                .category(GradientPreset.PresetCategory.EARTH)
-                .blocks("white_terracotta", "light_gray_terracotta", "terracotta", "brown_terracotta")
-                .build());
-
-
-        register(GradientPreset.builder("stone_weathered")
-                .displayName("Weathered Stone")
-                .description("Stone to mossy cobblestone")
-                .icon(Material.COBBLESTONE)
-                .category(GradientPreset.PresetCategory.STONE)
-                .blocks("stone", "cobblestone", "mossy_cobblestone")
-                .build());
-
-        register(GradientPreset.builder("stone_depth")
-                .displayName("Depth Stone")
-                .description("Surface to deep stone")
-                .icon(Material.DEEPSLATE)
-                .category(GradientPreset.PresetCategory.STONE)
-                .blocks("stone", "andesite", "deepslate", "cobbled_deepslate")
-                .build());
-
-        register(GradientPreset.builder("stone_brick")
-                .displayName("Brick Weathering")
-                .description("Stone brick deterioration")
-                .icon(Material.STONE_BRICKS)
-                .category(GradientPreset.PresetCategory.STONE)
-                .blocks("stone_bricks", "cracked_stone_bricks", "mossy_stone_bricks")
-                .build());
+    private static Material parseIcon(String raw, GradientPreset.PresetCategory category) {
+        if (raw != null) {
+            Material material = Material.matchMaterial(raw.trim());
+            if (material != null) {
+                return material;
+            }
+        }
+        return category.getIcon();
     }
 
     private static void register(GradientPreset preset) {
         PRESETS.put(preset.getId(), preset);
     }
 
-
     public static GradientPreset get(String id) {
         return PRESETS.get(id);
     }
-
 
     public static List<GradientPreset> getByCategory(GradientPreset.PresetCategory category) {
         return PRESETS.values().stream()
@@ -179,26 +148,19 @@ public final class GradientPresets {
                 .collect(Collectors.toList());
     }
 
-
     public static List<GradientPreset> getAll() {
         return new ArrayList<>(PRESETS.values());
     }
-
 
     public static List<String> getAllIds() {
         return new ArrayList<>(PRESETS.keySet());
     }
 
-
     public static boolean exists(String id) {
         return PRESETS.containsKey(id);
     }
 
-
     public static int count() {
         return PRESETS.size();
-    }
-
-    private GradientPresets() {
     }
 }
