@@ -28,6 +28,9 @@ import java.util.*;
 
 public class TypeReplaceUIManager implements Listener {
 
+    /** A full double-chest inventory (6 rows of 9). */
+    private static final int INVENTORY_SIZE = 54;
+
     private final Plugin plugin;
     private final TypeReplaceCommand typeReplaceCommand;
     private final Map<UUID, TypeReplaceBuilder> activeBuilders;
@@ -126,6 +129,17 @@ public class TypeReplaceUIManager implements Listener {
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
+    /** Fill every slot of an inventory with a blank background pane. */
+    private void fillBackground(Inventory inv) {
+        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        fillerMeta.displayName(Component.text(" "));
+        filler.setItemMeta(fillerMeta);
+        for (int i = 0; i < INVENTORY_SIZE; i++) {
+            inv.setItem(i, filler);
+        }
+    }
+
     public void openTypeReplaceUI(Player player) {
         TypeReplaceBuilder builder = activeBuilders.computeIfAbsent(player.getUniqueId(),
                 k -> new TypeReplaceBuilder());
@@ -135,17 +149,11 @@ public class TypeReplaceUIManager implements Listener {
     }
 
     private Inventory createMainInventory(Player player, TypeReplaceBuilder builder) {
-        Inventory inv = Bukkit.createInventory(null, 54,
+        Inventory inv = Bukkit.createInventory(null, INVENTORY_SIZE,
                 Component.text("Type Replace").color(NamedTextColor.DARK_AQUA)
                         .decorate(TextDecoration.BOLD));
 
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta fillerMeta = filler.getItemMeta();
-        fillerMeta.displayName(Component.text(" "));
-        filler.setItemMeta(fillerMeta);
-        for (int i = 0; i < 54; i++) {
-            inv.setItem(i, filler);
-        }
+        fillBackground(inv);
 
         inv.setItem(0, createInfoItem());
 
@@ -241,17 +249,11 @@ public class TypeReplaceUIManager implements Listener {
         player.getPersistentDataContainer().set(selectingKey, PersistentDataType.STRING, selecting);
 
         String title = selecting.equals("source") ? "Select Source Category" : "Select Target Category";
-        Inventory inv = Bukkit.createInventory(null, 54,
+        Inventory inv = Bukkit.createInventory(null, INVENTORY_SIZE,
                 Component.text(title).color(NamedTextColor.BLUE)
                         .decorate(TextDecoration.BOLD));
 
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta fillerMeta = filler.getItemMeta();
-        fillerMeta.displayName(Component.text(" "));
-        filler.setItemMeta(fillerMeta);
-        for (int i = 0; i < 54; i++) {
-            inv.setItem(i, filler);
-        }
+        fillBackground(inv);
 
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
@@ -282,17 +284,11 @@ public class TypeReplaceUIManager implements Listener {
         String title = selecting != null && selecting.equals("source") ? "Select Source Material"
                 : "Select Target Material";
 
-        Inventory inv = Bukkit.createInventory(null, 54,
+        Inventory inv = Bukkit.createInventory(null, INVENTORY_SIZE,
                 Component.text(title).color(NamedTextColor.DARK_GREEN)
                         .decorate(TextDecoration.BOLD));
 
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta fillerMeta = filler.getItemMeta();
-        fillerMeta.displayName(Component.text(" "));
-        filler.setItemMeta(fillerMeta);
-        for (int i = 0; i < 54; i++) {
-            inv.setItem(i, filler);
-        }
+        fillBackground(inv);
 
         ItemStack back = new ItemStack(Material.ARROW);
         ItemMeta backMeta = back.getItemMeta();
