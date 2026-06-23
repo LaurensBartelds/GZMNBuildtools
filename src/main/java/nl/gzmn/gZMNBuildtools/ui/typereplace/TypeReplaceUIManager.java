@@ -15,16 +15,15 @@ import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.util.*;
@@ -38,10 +37,7 @@ public class TypeReplaceUIManager implements Listener {
     private final TypeReplaceCommand typeReplaceCommand;
     private Messages messages = AdventureMessages.basic();
     private BlockFamilyRegistry blockFamilies = InMemoryBlockFamilyRegistry.bundled();
-    private final Map<UUID, TypeReplaceBuilder> activeBuilders;
-
-    private final NamespacedKey selectingKey;
-    private final NamespacedKey categoryKey;
+    private final TypeReplaceSessions sessions = new TypeReplaceSessions();
 
     public enum MaterialCategory {
         STONE("Stone & Cobblestone", Material.STONE),
@@ -125,9 +121,6 @@ public class TypeReplaceUIManager implements Listener {
     public TypeReplaceUIManager(Plugin plugin, TypeReplaceCommand typeReplaceCommand) {
         this.plugin = plugin;
         this.typeReplaceCommand = typeReplaceCommand;
-        this.activeBuilders = new HashMap<>();
-        this.selectingKey = new NamespacedKey(plugin, "typereplace_selecting");
-        this.categoryKey = new NamespacedKey(plugin, "typereplace_category");
     }
 
     public void setMessages(Messages messages) {
@@ -154,14 +147,13 @@ public class TypeReplaceUIManager implements Listener {
     }
 
     public void openTypeReplaceUI(Player player) {
-        TypeReplaceBuilder builder = activeBuilders.computeIfAbsent(player.getUniqueId(),
-                k -> new TypeReplaceBuilder());
+        TypeReplaceSessions.Session builder = sessions.getOrCreate(player.getUniqueId());
 
         Inventory inventory = createMainInventory(player, builder);
         player.openInventory(inventory);
     }
 
-    private Inventory createMainInventory(Player player, TypeReplaceBuilder builder) {
+    private Inventory createMainInventory(Player player, TypeReplaceSessions.Session builder) {
         Inventory inv = Bukkit.createInventory(null, INVENTORY_SIZE,
                 Component.text("Type Replace").color(NamedTextColor.DARK_AQUA)
                         .decorate(TextDecoration.BOLD));
@@ -259,7 +251,7 @@ public class TypeReplaceUIManager implements Listener {
     }
 
     private void openCategorySelector(Player player, String selecting) {
-        player.getPersistentDataContainer().set(selectingKey, PersistentDataType.STRING, selecting);
+        sessions.getOrCreate(player.getUniqueId()).selecting = selecting;
 
         String title = selecting.equals("source") ? "Select Source Category" : "Select Target Category";
         Inventory inv = Bukkit.createInventory(null, INVENTORY_SIZE,
@@ -291,9 +283,10 @@ public class TypeReplaceUIManager implements Listener {
     }
 
     private void openMaterialSelector(Player player, MaterialCategory category) {
-        player.getPersistentDataContainer().set(categoryKey, PersistentDataType.INTEGER, category.ordinal());
+        TypeReplaceSessions.Session session = sessions.getOrCreate(player.getUniqueId());
+        session.categoryOrdinal = category.ordinal();
 
-        String selecting = player.getPersistentDataContainer().get(selectingKey, PersistentDataType.STRING);
+        String selecting = session.selecting;
         String title = selecting != null && selecting.equals("source") ? "Select Source Material"
                 : "Select Target Material";
 
@@ -350,7 +343,7 @@ public class TypeReplaceUIManager implements Listener {
         if (event.getCurrentItem() == null)
             return;
 
-        TypeReplaceBuilder builder = activeBuilders.get(player.getUniqueId());
+        TypeReplaceSessions.Session builder = sessions.get(player.getUniqueId());
         if (builder == null)
             return;
 
@@ -394,8 +387,10 @@ public class TypeReplaceUIManager implements Listener {
 
         int slot = event.getSlot();
 
+        TypeReplaceSessions.Session session = sessions.get(player.getUniqueId());
+
         if (slot == 0 || slot == 53) {
-            String selecting = player.getPersistentDataContainer().get(selectingKey, PersistentDataType.STRING);
+            String selecting = session != null ? session.selecting : null;
             if (selecting != null) {
                 openCategorySelector(player, selecting);
             } else {
@@ -405,7 +400,7 @@ public class TypeReplaceUIManager implements Listener {
         }
 
         if (slot >= 9 && slot <= 44) {
-            Integer categoryOrdinal = player.getPersistentDataContainer().get(categoryKey, PersistentDataType.INTEGER);
+            Integer categoryOrdinal = session != null ? session.categoryOrdinal : null;
             if (categoryOrdinal == null)
                 return;
 
@@ -423,35 +418,47 @@ public class TypeReplaceUIManager implements Listener {
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
-        if (title.contains("Type Replace") && !title.contains("Category") && !title.contains("Material")) {
-            Player player = (Player) event.getPlayer();
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (player.getOpenInventory().getTopInventory().getHolder() == null) {
-                    activeBuilders.remove(player.getUniqueId());
-                    cleanupPDC(player);
-                }
-            }, 6000L);
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
         }
+        String title = PlainTextComponentSerializer.plainText().serialize(event.getView().title());
+        if (!isOurMenu(title)) {
+            return;
+        }
+        UUID id = player.getUniqueId();
+        // A close also fires when navigating between our menus; only drop the
+        // session if, a tick later, the player is no longer in any of our menus.
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            String openTitle = PlainTextComponentSerializer.plainText().serialize(player.getOpenInventory().title());
+            if (!isOurMenu(openTitle)) {
+                sessions.remove(id);
+            }
+        }, 1L);
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        sessions.remove(event.getPlayer().getUniqueId());
+    }
+
+    private static boolean isOurMenu(String title) {
+        return title.contains("Type Replace") || title.contains("Category") || title.contains("Material");
     }
 
     private void setMaterialSelection(Player player, String material) {
-        TypeReplaceBuilder builder = activeBuilders.get(player.getUniqueId());
-        if (builder == null)
+        TypeReplaceSessions.Session session = sessions.get(player.getUniqueId());
+        if (session == null || session.selecting == null) {
             return;
+        }
 
-        String selecting = player.getPersistentDataContainer().get(selectingKey, PersistentDataType.STRING);
-        if (selecting == null)
-            return;
-
-        if (selecting.equals("source")) {
-            builder.sourceMaterial = material;
+        if (session.selecting.equals("source")) {
+            session.sourceMaterial = material;
         } else {
-            builder.targetMaterial = material;
+            session.targetMaterial = material;
         }
     }
 
-    private void executeReplacement(Player player, TypeReplaceBuilder builder) {
+    private void executeReplacement(Player player, TypeReplaceSessions.Session builder) {
         if (builder.sourceMaterial == null) {
             messages.error(player, "Please select a source material.");
             return;
@@ -465,13 +472,7 @@ public class TypeReplaceUIManager implements Listener {
 
         typeReplaceCommand.execute(player, builder.sourceMaterial, builder.targetMaterial);
 
-        activeBuilders.remove(player.getUniqueId());
-        cleanupPDC(player);
-    }
-
-    private void cleanupPDC(Player player) {
-        player.getPersistentDataContainer().remove(selectingKey);
-        player.getPersistentDataContainer().remove(categoryKey);
+        sessions.remove(player.getUniqueId());
     }
 
     private boolean hasWorldEditSelection(Player player) {
@@ -561,10 +562,5 @@ public class TypeReplaceUIManager implements Listener {
                 .map(word -> word.substring(0, 1).toUpperCase() + word.substring(1).toLowerCase())
                 .reduce((a, b) -> a + " " + b)
                 .orElse(materialName);
-    }
-
-    private static class TypeReplaceBuilder {
-        String sourceMaterial;
-        String targetMaterial;
     }
 }
