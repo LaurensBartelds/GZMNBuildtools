@@ -18,19 +18,10 @@ public final class GZMNBuildtools extends JavaPlugin {
     private GradientCommand gradientCommand;
     private CommandRegistry commandRegistry;
 
-    public GZMNBuildtools() {
-        this.gradientCommand = new GradientCommand();
-        TypeReplaceCommand typeReplaceCommand = new TypeReplaceCommand();
-        this.typeReplaceUIManager = new TypeReplaceUIManager(this, typeReplaceCommand);
-
-        this.commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
-                typeReplaceUIManager);
-        this.commandRegistry.register();
-    }
-
     @Override
     public void onEnable() {
         MessageManager.init(this);
+
         if (getServer().getPluginManager().getPlugin("FastAsyncWorldEdit") == null &&
                 getServer().getPluginManager().getPlugin("WorldEdit") == null) {
             getLogger().severe("WorldEdit or FastAsyncWorldEdit is required for this plugin!");
@@ -38,15 +29,23 @@ public final class GZMNBuildtools extends JavaPlugin {
             return;
         }
 
+        // Construct services before anything that depends on them.
         storageManager = new GradientStorageManager(this);
         storageManager.load();
 
+        // Construct commands/managers, wiring their dependencies up front so no
+        // command can ever execute against a half-initialised plugin.
+        gradientCommand = new GradientCommand();
         gradientCommand.setStorageManager(storageManager);
 
+        TypeReplaceCommand typeReplaceCommand = new TypeReplaceCommand();
+        typeReplaceUIManager = new TypeReplaceUIManager(this, typeReplaceCommand);
+
+        commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
+                typeReplaceUIManager);
+        commandRegistry.register();
+
         typeReplaceUIManager.registerEvents();
-
-        commandRegistry.registerWorldEditPatterns();
-
         commandRegistry.registerWorldEditPatterns();
 
         String[] logo = {
