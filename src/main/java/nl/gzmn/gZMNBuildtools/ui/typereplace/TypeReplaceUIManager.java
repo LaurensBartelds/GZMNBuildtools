@@ -8,7 +8,9 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
-import nl.gzmn.gZMNBuildtools.typereplace.BlockTypeFamily;
+import nl.gzmn.gZMNBuildtools.typereplace.BlockFamily;
+import nl.gzmn.gZMNBuildtools.typereplace.registry.InMemoryBlockFamilyRegistry;
+import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import org.bukkit.Bukkit;
@@ -35,6 +37,7 @@ public class TypeReplaceUIManager implements Listener {
     private final Plugin plugin;
     private final TypeReplaceCommand typeReplaceCommand;
     private Messages messages = AdventureMessages.basic();
+    private BlockFamilyRegistry blockFamilies = InMemoryBlockFamilyRegistry.bundled();
     private final Map<UUID, TypeReplaceBuilder> activeBuilders;
 
     private final NamespacedKey selectingKey;
@@ -129,6 +132,10 @@ public class TypeReplaceUIManager implements Listener {
 
     public void setMessages(Messages messages) {
         this.messages = messages;
+    }
+
+    public void setBlockFamilies(BlockFamilyRegistry blockFamilies) {
+        this.blockFamilies = blockFamilies;
     }
 
     public void registerEvents() {
@@ -525,7 +532,7 @@ public class TypeReplaceUIManager implements Listener {
     }
 
     private Material getMaterialIcon(String materialName) {
-        BlockTypeFamily family = new BlockTypeFamily(materialName);
+        BlockFamily family = blockFamilies.family(materialName);
         BlockType baseBlock = family.getVariant("block");
         if (baseBlock != null) {
             String id = baseBlock.id().replace("minecraft:", "").toUpperCase();

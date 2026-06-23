@@ -1,0 +1,107 @@
+# Block families for GZMNBuildtools' /typereplace.
+#
+# Each family describes a base material and which connecting variants it has, so
+# /typereplace can swap (for example) all oak stairs/slabs/fences for spruce.
+#
+# Fields per family:
+#   block    : the base block id (e.g. stone_bricks).
+#   prefix   : the stem used to build variant ids (e.g. stone_brick -> stone_brick_stairs).
+#   variants : any of [stairs, slab, wall, fence, fence_gate, bars].
+#   bars     : (optional) explicit id for the bars variant, when it differs from
+#              "<prefix>_bars" (e.g. copper). Implies the family has bars.
+#   grate    : (optional) explicit id for the grate variant (copper only).
+#
+# Run /gzmnbuildtools reload after editing.
+
+families:
+  # --- Stone ---
+  stone: { block: stone, prefix: stone, variants: [stairs, slab, wall] }
+  cobblestone: { block: cobblestone, prefix: cobblestone, variants: [stairs, slab, wall] }
+  mossy_cobblestone: { block: mossy_cobblestone, prefix: mossy_cobblestone, variants: [stairs, slab, wall] }
+  stone_brick: { block: stone_bricks, prefix: stone_brick, variants: [stairs, slab, wall] }
+  mossy_stone_brick: { block: mossy_stone_bricks, prefix: mossy_stone_brick, variants: [stairs, slab, wall] }
+  granite: { block: granite, prefix: granite, variants: [stairs, slab, wall] }
+  polished_granite: { block: polished_granite, prefix: polished_granite, variants: [stairs, slab, wall] }
+  diorite: { block: diorite, prefix: diorite, variants: [stairs, slab, wall] }
+  polished_diorite: { block: polished_diorite, prefix: polished_diorite, variants: [stairs, slab, wall] }
+  andesite: { block: andesite, prefix: andesite, variants: [stairs, slab, wall] }
+  polished_andesite: { block: polished_andesite, prefix: polished_andesite, variants: [stairs, slab, wall] }
+
+  # --- Deepslate ---
+  deepslate: { block: deepslate, prefix: deepslate, variants: [] }
+  cobbled_deepslate: { block: cobbled_deepslate, prefix: cobbled_deepslate, variants: [stairs, slab, wall] }
+  polished_deepslate: { block: polished_deepslate, prefix: polished_deepslate, variants: [stairs, slab, wall] }
+  deepslate_brick: { block: deepslate_bricks, prefix: deepslate_brick, variants: [stairs, slab, wall] }
+  deepslate_tile: { block: deepslate_tiles, prefix: deepslate_tile, variants: [stairs, slab, wall] }
+
+  # --- Bricks ---
+  brick: { block: bricks, prefix: brick, variants: [stairs, slab, wall] }
+  mud_brick: { block: mud_bricks, prefix: mud_brick, variants: [stairs, slab, wall] }
+
+  # --- Sandstone ---
+  sandstone: { block: sandstone, prefix: sandstone, variants: [stairs, slab, wall] }
+  smooth_sandstone: { block: smooth_sandstone, prefix: smooth_sandstone, variants: [stairs, slab] }
+  cut_sandstone: { block: cut_sandstone, prefix: cut_sandstone, variants: [slab] }
+  red_sandstone: { block: red_sandstone, prefix: red_sandstone, variants: [stairs, slab, wall] }
+  smooth_red_sandstone: { block: smooth_red_sandstone, prefix: smooth_red_sandstone, variants: [stairs, slab] }
+  cut_red_sandstone: { block: cut_red_sandstone, prefix: cut_red_sandstone, variants: [slab] }
+
+  # --- Prismarine ---
+  prismarine: { block: prismarine, prefix: prismarine, variants: [stairs, slab, wall] }
+  prismarine_brick: { block: prismarine_bricks, prefix: prismarine_brick, variants: [stairs, slab] }
+  dark_prismarine: { block: dark_prismarine, prefix: dark_prismarine, variants: [stairs, slab] }
+
+  # --- Nether ---
+  nether_brick: { block: nether_bricks, prefix: nether_brick, variants: [stairs, slab, wall, fence] }
+  red_nether_brick: { block: red_nether_bricks, prefix: red_nether_brick, variants: [stairs, slab, wall] }
+  blackstone: { block: blackstone, prefix: blackstone, variants: [stairs, slab, wall] }
+  polished_blackstone: { block: polished_blackstone, prefix: polished_blackstone, variants: [stairs, slab, wall] }
+  polished_blackstone_brick: { block: polished_blackstone_bricks, prefix: polished_blackstone_brick, variants: [stairs, slab, wall] }
+
+  # --- Quartz ---
+  quartz: { block: quartz_block, prefix: quartz, variants: [stairs, slab] }
+  smooth_quartz: { block: smooth_quartz, prefix: smooth_quartz, variants: [stairs, slab] }
+
+  # --- End & Purpur ---
+  end_stone_brick: { block: end_stone_bricks, prefix: end_stone_brick, variants: [stairs, slab, wall] }
+  purpur: { block: purpur_block, prefix: purpur, variants: [stairs, slab] }
+
+  # --- Wood (planks block, fence + fence gate) ---
+  oak: { block: oak_planks, prefix: oak, variants: [stairs, slab, fence, fence_gate] }
+  spruce: { block: spruce_planks, prefix: spruce, variants: [stairs, slab, fence, fence_gate] }
+  birch: { block: birch_planks, prefix: birch, variants: [stairs, slab, fence, fence_gate] }
+  jungle: { block: jungle_planks, prefix: jungle, variants: [stairs, slab, fence, fence_gate] }
+  acacia: { block: acacia_planks, prefix: acacia, variants: [stairs, slab, fence, fence_gate] }
+  dark_oak: { block: dark_oak_planks, prefix: dark_oak, variants: [stairs, slab, fence, fence_gate] }
+  mangrove: { block: mangrove_planks, prefix: mangrove, variants: [stairs, slab, fence, fence_gate] }
+  cherry: { block: cherry_planks, prefix: cherry, variants: [stairs, slab, fence, fence_gate] }
+  bamboo: { block: bamboo_planks, prefix: bamboo, variants: [stairs, slab, fence, fence_gate] }
+  crimson: { block: crimson_planks, prefix: crimson, variants: [stairs, slab, fence, fence_gate] }
+  warped: { block: warped_planks, prefix: warped, variants: [stairs, slab, fence, fence_gate] }
+
+  # --- Copper (named bars + grate) ---
+  copper: { block: copper_block, prefix: cut_copper, variants: [stairs, slab], bars: copper_bars, grate: copper_grate }
+  cut_copper: { block: cut_copper, prefix: cut_copper, variants: [stairs, slab], bars: copper_bars, grate: copper_grate }
+  exposed_copper: { block: exposed_copper, prefix: exposed_cut_copper, variants: [stairs, slab], bars: exposed_copper_bars, grate: exposed_copper_grate }
+  exposed_cut_copper: { block: exposed_cut_copper, prefix: exposed_cut_copper, variants: [stairs, slab], bars: exposed_copper_bars, grate: exposed_copper_grate }
+  weathered_copper: { block: weathered_copper, prefix: weathered_cut_copper, variants: [stairs, slab], bars: weathered_copper_bars, grate: weathered_copper_grate }
+  weathered_cut_copper: { block: weathered_cut_copper, prefix: weathered_cut_copper, variants: [stairs, slab], bars: weathered_copper_bars, grate: weathered_copper_grate }
+  oxidized_copper: { block: oxidized_copper, prefix: oxidized_cut_copper, variants: [stairs, slab], bars: oxidized_copper_bars, grate: oxidized_copper_grate }
+  oxidized_cut_copper: { block: oxidized_cut_copper, prefix: oxidized_cut_copper, variants: [stairs, slab], bars: oxidized_copper_bars, grate: oxidized_copper_grate }
+  waxed_copper: { block: waxed_copper_block, prefix: waxed_cut_copper, variants: [stairs, slab], bars: waxed_copper_bars, grate: waxed_copper_grate }
+  waxed_cut_copper: { block: waxed_cut_copper, prefix: waxed_cut_copper, variants: [stairs, slab], bars: waxed_cut_copper_bars, grate: waxed_cut_copper_grate }
+  waxed_exposed_copper: { block: waxed_exposed_copper, prefix: waxed_exposed_cut_copper, variants: [stairs, slab], bars: waxed_exposed_copper_bars, grate: waxed_exposed_copper_grate }
+  waxed_exposed_cut_copper: { block: waxed_exposed_cut_copper, prefix: waxed_exposed_cut_copper, variants: [stairs, slab], bars: waxed_exposed_copper_bars, grate: waxed_exposed_cut_copper_grate }
+  waxed_weathered_copper: { block: waxed_weathered_copper, prefix: waxed_weathered_cut_copper, variants: [stairs, slab], bars: waxed_weathered_copper_bars, grate: waxed_weathered_copper_grate }
+  waxed_weathered_cut_copper: { block: waxed_weathered_cut_copper, prefix: waxed_weathered_cut_copper, variants: [stairs, slab], bars: waxed_weathered_copper_bars, grate: waxed_weathered_copper_grate }
+  waxed_oxidized_copper: { block: waxed_oxidized_copper, prefix: waxed_oxidized_cut_copper, variants: [stairs, slab], bars: waxed_oxidized_copper_bars, grate: waxed_oxidized_copper_grate }
+  waxed_oxidized_cut_copper: { block: waxed_oxidized_cut_copper, prefix: waxed_oxidized_cut_copper, variants: [stairs, slab], bars: waxed_oxidized_copper_bars, grate: waxed_oxidized_copper_grate }
+
+  # --- Misc ---
+  iron: { block: iron_block, prefix: iron, variants: [bars] }
+  tuff: { block: tuff, prefix: tuff, variants: [stairs, slab, wall] }
+  polished_tuff: { block: polished_tuff, prefix: polished_tuff, variants: [stairs, slab, wall] }
+  tuff_brick: { block: tuff_bricks, prefix: tuff_brick, variants: [stairs, slab, wall] }
+
+# Material groups (currently unused; reserved for future "replace all copper" style aliases).
+groups: {}

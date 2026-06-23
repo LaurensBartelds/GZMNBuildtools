@@ -5,6 +5,7 @@ import com.sk89q.worldedit.WorldEdit;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import nl.gzmn.gZMNBuildtools.GZMNBuildtools;
+import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
@@ -22,16 +23,18 @@ public class CommandRegistry {
     private final TypeReplaceUIManager typeReplaceUIManager;
     private final Messages messages;
     private final PresetRegistry presetRegistry;
+    private final BlockFamilyRegistry blockFamilies;
 
     public CommandRegistry(GZMNBuildtools plugin, GradientCommand gradientCommand,
                            TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager,
-                           Messages messages, PresetRegistry presetRegistry) {
+                           Messages messages, PresetRegistry presetRegistry, BlockFamilyRegistry blockFamilies) {
         this.plugin = plugin;
         this.gradientCommand = gradientCommand;
         this.typeReplaceCommand = typeReplaceCommand;
         this.typeReplaceUIManager = typeReplaceUIManager;
         this.messages = messages;
         this.presetRegistry = presetRegistry;
+        this.blockFamilies = blockFamilies;
     }
 
     public void register() {
@@ -414,6 +417,7 @@ public class CommandRegistry {
         plugin.reloadConfig();
         messages.setVerbose(plugin.getConfig().getBoolean("messages.verbose", false));
         presetRegistry.reload();
+        blockFamilies.reload();
         // The WorldEdit pattern parser reads presets live, so re-registering it
         // on reload is unnecessary (and would duplicate the parser).
         sender.sendMessage(net.kyori.adventure.text.Component.text(

@@ -3,9 +3,11 @@ package nl.gzmn.gZMNBuildtools;
 import nl.gzmn.gZMNBuildtools.command.CommandRegistry;
 import nl.gzmn.gZMNBuildtools.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
+import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.registry.YamlPresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
+import nl.gzmn.gZMNBuildtools.typereplace.registry.YamlBlockFamilyRegistry;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
@@ -33,9 +35,11 @@ public final class GZMNBuildtools extends JavaPlugin {
             return;
         }
 
-        // Load externalized content (presets live in editable YAML now).
+        // Load externalized content (presets and block families live in editable YAML now).
         PresetRegistry presetRegistry = new YamlPresetRegistry(this);
         presetRegistry.reload();
+        BlockFamilyRegistry blockFamilies = new YamlBlockFamilyRegistry(this);
+        blockFamilies.reload();
 
         // Construct services before anything that depends on them.
         storageManager = new GradientStorageManager(this);
@@ -50,11 +54,13 @@ public final class GZMNBuildtools extends JavaPlugin {
 
         TypeReplaceCommand typeReplaceCommand = new TypeReplaceCommand();
         typeReplaceCommand.setMessages(messages);
+        typeReplaceCommand.setBlockFamilies(blockFamilies);
         typeReplaceUIManager = new TypeReplaceUIManager(this, typeReplaceCommand);
         typeReplaceUIManager.setMessages(messages);
+        typeReplaceUIManager.setBlockFamilies(blockFamilies);
 
         commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
-                typeReplaceUIManager, messages, presetRegistry);
+                typeReplaceUIManager, messages, presetRegistry, blockFamilies);
         commandRegistry.register();
 
         typeReplaceUIManager.registerEvents();

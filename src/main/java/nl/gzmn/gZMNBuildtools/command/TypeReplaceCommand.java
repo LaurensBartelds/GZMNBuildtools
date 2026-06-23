@@ -9,9 +9,11 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
-import nl.gzmn.gZMNBuildtools.typereplace.BlockTypeFamily;
+import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
+import nl.gzmn.gZMNBuildtools.typereplace.BlockFamily;
+import nl.gzmn.gZMNBuildtools.typereplace.registry.InMemoryBlockFamilyRegistry;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -23,13 +25,18 @@ public class TypeReplaceCommand {
     private static final Logger LOGGER = Logger.getLogger("GZMNBuildtools");
 
     private Messages messages = AdventureMessages.basic();
+    private BlockFamilyRegistry blockFamilies = InMemoryBlockFamilyRegistry.bundled();
 
     public void setMessages(Messages messages) {
         this.messages = messages;
     }
 
+    public void setBlockFamilies(BlockFamilyRegistry blockFamilies) {
+        this.blockFamilies = blockFamilies;
+    }
+
     public List<String> getSuggestions() {
-        List<String> suggestions = new ArrayList<>(BlockTypeFamily.getAllMaterialNames());
+        List<String> suggestions = new ArrayList<>(blockFamilies.materialNames());
         Collections.sort(suggestions);
         return suggestions;
     }
@@ -47,15 +54,15 @@ public class TypeReplaceCommand {
 
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
 
-            if (BlockTypeFamily.isMaterialGroup(fromMaterial)) {
-                List<String> sourceMaterials = BlockTypeFamily.getMaterialGroup(fromMaterial);
+            if (blockFamilies.isGroup(fromMaterial)) {
+                List<String> sourceMaterials = blockFamilies.group(fromMaterial);
                 messages.info(player, "Replacing %s → %s (%d materials)…", fromMaterial, toMaterial,
                         sourceMaterials.size());
 
                 int totalReplaced = 0;
                 for (String sourceMat : sourceMaterials) {
-                    BlockTypeFamily sourceFamily = new BlockTypeFamily(sourceMat);
-                    BlockTypeFamily targetFamily = new BlockTypeFamily(toMaterial);
+                    BlockFamily sourceFamily = blockFamilies.family(sourceMat);
+                    BlockFamily targetFamily = blockFamilies.family(toMaterial);
 
                     if (!sourceFamily.getVariants().isEmpty() && !targetFamily.getVariants().isEmpty()) {
                         ReplaceResult result = performTypeReplace(actor, region, sourceFamily, targetFamily);
@@ -70,8 +77,8 @@ public class TypeReplaceCommand {
                 return;
             }
 
-            BlockTypeFamily sourceFamily = new BlockTypeFamily(fromMaterial);
-            BlockTypeFamily targetFamily = new BlockTypeFamily(toMaterial);
+            BlockFamily sourceFamily = blockFamilies.family(fromMaterial);
+            BlockFamily targetFamily = blockFamilies.family(toMaterial);
 
             if (sourceFamily.getVariants().isEmpty()) {
                 messages.error(player, "Unknown material: %s", fromMaterial);
@@ -116,7 +123,7 @@ public class TypeReplaceCommand {
     }
 
     private ReplaceResult performTypeReplace(com.sk89q.worldedit.entity.Player actor, Region region,
-                                             BlockTypeFamily sourceFamily, BlockTypeFamily targetFamily) {
+                                             BlockFamily sourceFamily, BlockFamily targetFamily) {
         int count = 0;
 
         LocalSession localSession = WorldEdit.getInstance().getSessionManager().get(actor);
@@ -129,13 +136,13 @@ public class TypeReplaceCommand {
                 BlockType currentType = currentBlock.getBlockType();
 
                 if (sourceBlocks.contains(currentType)) {
-                    String sourceVariant = BlockTypeFamily.getVariantType(currentType);
-                    BlockType targetType = BlockTypeFamily.mapVariant(currentType, targetFamily);
+                    String sourceVariant = blockFamilies.variantType(currentType);
+                    BlockType targetType = blockFamilies.mapVariant(currentType, targetFamily);
 
                     if (targetType != null && !targetType.id().equals("minecraft:air")) {
                         BlockState newState = targetType.getDefaultState();
 
-                        String targetVariant = BlockTypeFamily.getVariantType(targetType);
+                        String targetVariant = blockFamilies.variantType(targetType);
 
                         boolean isCrossTypeConnectorConversion = isVerticalConnector(sourceVariant) &&
                                 isVerticalConnector(targetVariant) &&
