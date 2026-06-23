@@ -6,7 +6,8 @@ import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
 import nl.gzmn.gZMNBuildtools.config.GradientPresets;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
-import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,7 +23,7 @@ public final class GZMNBuildtools extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        MessageManager.init(this);
+        Messages messages = new AdventureMessages(getConfig().getBoolean("messages.verbose", false));
 
         if (getServer().getPluginManager().getPlugin("FastAsyncWorldEdit") == null &&
                 getServer().getPluginManager().getPlugin("WorldEdit") == null) {
@@ -42,12 +43,15 @@ public final class GZMNBuildtools extends JavaPlugin {
         // command can ever execute against a half-initialised plugin.
         gradientCommand = new GradientCommand();
         gradientCommand.setStorageManager(storageManager);
+        gradientCommand.setMessages(messages);
 
         TypeReplaceCommand typeReplaceCommand = new TypeReplaceCommand();
+        typeReplaceCommand.setMessages(messages);
         typeReplaceUIManager = new TypeReplaceUIManager(this, typeReplaceCommand);
+        typeReplaceUIManager.setMessages(messages);
 
         commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
-                typeReplaceUIManager);
+                typeReplaceUIManager, messages);
         commandRegistry.register();
 
         typeReplaceUIManager.registerEvents();

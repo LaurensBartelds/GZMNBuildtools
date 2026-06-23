@@ -5,7 +5,7 @@ import com.sk89q.worldedit.WorldEdit;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import nl.gzmn.gZMNBuildtools.GZMNBuildtools;
-import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.config.GradientPresets;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
@@ -20,13 +20,16 @@ public class CommandRegistry {
     private final GradientCommand gradientCommand;
     private final TypeReplaceCommand typeReplaceCommand;
     private final TypeReplaceUIManager typeReplaceUIManager;
+    private final Messages messages;
 
     public CommandRegistry(GZMNBuildtools plugin, GradientCommand gradientCommand,
-                           TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager) {
+                           TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager,
+                           Messages messages) {
         this.plugin = plugin;
         this.gradientCommand = gradientCommand;
         this.typeReplaceCommand = typeReplaceCommand;
         this.typeReplaceUIManager = typeReplaceUIManager;
+        this.messages = messages;
     }
 
     public void register() {
@@ -95,16 +98,16 @@ public class CommandRegistry {
                                         "gzmnbuildtools.gradient"))
                         .executes(ctx -> {
                             Player player = (Player) ctx.getSource().getSender();
-                            MessageManager.info(player,
+                            messages.info(player,
                                     "Usage: /gradient <blocks> <direction> [mode]");
-                            MessageManager.info(player, "Single block layer: [stone]");
-                            MessageManager.info(player,
+                            messages.info(player, "Single block layer: [stone]");
+                            messages.info(player,
                                     "Multi-block layer: [cobblestone,stone]");
-                            MessageManager.info(player,
+                            messages.info(player,
                                     "Example: /gradient [stone][cobblestone,stone] up blended");
 
                             // Show clickable block examples
-                            MessageManager.info(player,
+                            messages.info(player,
                                     "Click to start (then add more blocks):");
                             String[] examples = {"stone", "dirt", "cobblestone",
                                     "andesite", "deepslate"};
@@ -125,7 +128,7 @@ public class CommandRegistry {
                             }
 
                             // Show subcommands
-                            MessageManager.info(player,
+                            messages.info(player,
                                     "Subcommands: save, use, list, delete, share, preset");
                             return 1;
                         })
@@ -294,7 +297,7 @@ public class CommandRegistry {
                                             .getSender();
                                     String blocks = BracketBlocksArgumentType
                                             .getString(ctx, "blocks");
-                                    MessageManager.info(player,
+                                    messages.info(player,
                                             "Please specify a direction (click to use):");
 
                                     for (String dir : gradientCommand
@@ -316,7 +319,7 @@ public class CommandRegistry {
                                                                                 + dir))));
                                     }
 
-                                    MessageManager.info(player,
+                                    messages.info(player,
                                             "Optional modes (click to add):");
                                     for (String mode : gradientCommand
                                             .getModeSuggestions()) {
@@ -407,7 +410,7 @@ public class CommandRegistry {
 
     private void reloadPlugin(org.bukkit.command.CommandSender sender) {
         plugin.reloadConfig();
-        MessageManager.reload(plugin);
+        messages.setVerbose(plugin.getConfig().getBoolean("messages.verbose", false));
         GradientPresets.load(plugin);
         // The WorldEdit pattern parser reads presets live, so re-registering it
         // on reload is unnecessary (and would duplicate the parser).

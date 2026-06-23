@@ -9,7 +9,8 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
 import nl.gzmn.gZMNBuildtools.typereplace.BlockTypeFamily;
-import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -33,6 +34,7 @@ public class TypeReplaceUIManager implements Listener {
 
     private final Plugin plugin;
     private final TypeReplaceCommand typeReplaceCommand;
+    private Messages messages = AdventureMessages.basic();
     private final Map<UUID, TypeReplaceBuilder> activeBuilders;
 
     private final NamespacedKey selectingKey;
@@ -123,6 +125,10 @@ public class TypeReplaceUIManager implements Listener {
         this.activeBuilders = new HashMap<>();
         this.selectingKey = new NamespacedKey(plugin, "typereplace_selecting");
         this.categoryKey = new NamespacedKey(plugin, "typereplace_category");
+    }
+
+    public void setMessages(Messages messages) {
+        this.messages = messages;
     }
 
     public void registerEvents() {
@@ -440,11 +446,11 @@ public class TypeReplaceUIManager implements Listener {
 
     private void executeReplacement(Player player, TypeReplaceBuilder builder) {
         if (builder.sourceMaterial == null) {
-            MessageManager.error(player, "Please select a source material.");
+            messages.error(player, "Please select a source material.");
             return;
         }
         if (builder.targetMaterial == null) {
-            MessageManager.error(player, "Please select a target material.");
+            messages.error(player, "Please select a target material.");
             return;
         }
 

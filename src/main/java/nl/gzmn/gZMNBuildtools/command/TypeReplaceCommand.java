@@ -10,7 +10,8 @@ import com.sk89q.worldedit.regions.Region;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
 import nl.gzmn.gZMNBuildtools.typereplace.BlockTypeFamily;
-import nl.gzmn.gZMNBuildtools.common.MessageManager;
+import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -20,6 +21,12 @@ import java.util.logging.Logger;
 public class TypeReplaceCommand {
 
     private static final Logger LOGGER = Logger.getLogger("GZMNBuildtools");
+
+    private Messages messages = AdventureMessages.basic();
+
+    public void setMessages(Messages messages) {
+        this.messages = messages;
+    }
 
     public List<String> getSuggestions() {
         List<String> suggestions = new ArrayList<>(BlockTypeFamily.getAllMaterialNames());
@@ -34,7 +41,7 @@ public class TypeReplaceCommand {
         try {
             Region region = getSelectionFromPlayer(player);
             if (region == null) {
-                MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
+                messages.error(player, "Selection required. Use WorldEdit to select an area.");
                 return;
             }
 
@@ -42,7 +49,7 @@ public class TypeReplaceCommand {
 
             if (BlockTypeFamily.isMaterialGroup(fromMaterial)) {
                 List<String> sourceMaterials = BlockTypeFamily.getMaterialGroup(fromMaterial);
-                MessageManager.info(player, "Replacing %s → %s (%d materials)…", fromMaterial, toMaterial,
+                messages.info(player, "Replacing %s → %s (%d materials)…", fromMaterial, toMaterial,
                         sourceMaterials.size());
 
                 int totalReplaced = 0;
@@ -53,13 +60,13 @@ public class TypeReplaceCommand {
                     if (!sourceFamily.getVariants().isEmpty() && !targetFamily.getVariants().isEmpty()) {
                         ReplaceResult result = performTypeReplace(actor, region, sourceFamily, targetFamily);
                         if (result.count > 0) {
-                            MessageManager.verbose(player, "%s → %s: %d blocks", sourceMat, toMaterial, result.count);
+                            messages.verbose(player, "%s → %s: %d blocks", sourceMat, toMaterial, result.count);
                         }
                         totalReplaced += result.count;
                     }
                 }
 
-                MessageManager.success(player, "Replaced %d blocks.", totalReplaced);
+                messages.success(player, "Replaced %d blocks.", totalReplaced);
                 return;
             }
 
@@ -67,26 +74,26 @@ public class TypeReplaceCommand {
             BlockTypeFamily targetFamily = new BlockTypeFamily(toMaterial);
 
             if (sourceFamily.getVariants().isEmpty()) {
-                MessageManager.error(player, "Unknown material: %s", fromMaterial);
+                messages.error(player, "Unknown material: %s", fromMaterial);
                 return;
             }
             if (targetFamily.getVariants().isEmpty()) {
-                MessageManager.error(player, "Unknown material: %s", toMaterial);
+                messages.error(player, "Unknown material: %s", toMaterial);
                 return;
             }
 
-            MessageManager.info(player, "Replacing %s → %s…", fromMaterial, toMaterial);
-            MessageManager.verbose(player, "Source variants: %s", sourceFamily.getVariants().keySet());
-            MessageManager.verbose(player, "Target variants: %s", targetFamily.getVariants().keySet());
+            messages.info(player, "Replacing %s → %s…", fromMaterial, toMaterial);
+            messages.verbose(player, "Source variants: %s", sourceFamily.getVariants().keySet());
+            messages.verbose(player, "Target variants: %s", targetFamily.getVariants().keySet());
 
             ReplaceResult result = performTypeReplace(actor, region, sourceFamily, targetFamily);
 
-            MessageManager.success(player, "Replaced %d blocks.", result.count);
+            messages.success(player, "Replaced %d blocks.", result.count);
 
         } catch (IncompleteRegionException e) {
-            MessageManager.error(player, "Selection required. Use WorldEdit to select an area.");
+            messages.error(player, "Selection required. Use WorldEdit to select an area.");
         } catch (Exception e) {
-            MessageManager.error(player, "An error occurred: %s", e.getMessage());
+            messages.error(player, "An error occurred: %s", e.getMessage());
             LOGGER.log(Level.SEVERE, "Unexpected error during /typereplace " + fromMaterial + " -> " + toMaterial, e);
         }
     }
