@@ -4,8 +4,11 @@ import nl.gzmn.gZMNBuildtools.api.GzmnBuildtoolsApi;
 import nl.gzmn.gZMNBuildtools.command.CommandRegistry;
 import nl.gzmn.gZMNBuildtools.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
+import nl.gzmn.gZMNBuildtools.command.brush.BrushCommand;
+import nl.gzmn.gZMNBuildtools.command.brush.BrushUIManager;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
+import nl.gzmn.gZMNBuildtools.web.WebEditorServer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.ServicePriority;
@@ -18,6 +21,7 @@ public final class GZMNBuildtools extends JavaPlugin {
     private TypeReplaceUIManager typeReplaceUIManager;
     private GradientCommand gradientCommand;
     private CommandRegistry commandRegistry;
+    private WebEditorServer webEditorServer;
 
     @Override
     public void onEnable() {
@@ -51,8 +55,12 @@ public final class GZMNBuildtools extends JavaPlugin {
         typeReplaceUIManager.setMessages(context.messages());
         typeReplaceUIManager.setBlockFamilies(context.blockFamilies());
 
+        BrushUIManager brushUIManager = new BrushUIManager(this, context.messages());
+        BrushCommand brushCommand = new BrushCommand(this, context.messages(), brushUIManager);
+        brushUIManager.setBrushCommand(brushCommand);
+
         commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
-                typeReplaceUIManager, context.messages(), context.presets(), context.blockFamilies());
+                typeReplaceUIManager, context.messages(), context.presets(), context.blockFamilies(), brushCommand);
         commandRegistry.register();
 
         typeReplaceUIManager.registerEvents();
@@ -74,12 +82,18 @@ public final class GZMNBuildtools extends JavaPlugin {
             Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + line);
         }
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "GZMNBuildtools started up successfully!");
+
+        webEditorServer = new WebEditorServer(this);
+        webEditorServer.start();
     }
 
     @Override
     public void onDisable() {
         if (context != null) {
             context.storage().save();
+        }
+        if (webEditorServer != null) {
+            webEditorServer.stop();
         }
         getLogger().info("GZMNBuildtools disabled.");
     }
