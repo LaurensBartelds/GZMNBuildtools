@@ -6,3 +6,8 @@ messages:
   # When true, extra per-operation diagnostic messages are shown to players
   # (e.g. per-variant block counts during /typereplace).
   verbose: false
+
+web-editor:
+  enabled: true
+  port: 8080
+  host: 0.0.0.0

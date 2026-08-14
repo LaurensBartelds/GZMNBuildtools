@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GZMN BuildTools - Gradient Brush Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Gradient Brush Editor</h1>
+        <p>Design your custom gradient and generate a code to use in-game.</p>
+
+        <div class="editor-section">
+            <h2>1. Choose Blocks (Layers)</h2>
+            <div id="layers-container">
+                <!-- Layers will be dynamically added here -->
+            </div>
+            <button id="add-layer-btn">+ Add Layer</button>
+        </div>
+
+        <div class="editor-section">
+            <h2>2. Gradient Settings</h2>
+            <div class="setting">
+                <label for="direction">Direction:</label>
+                <select id="direction">
+                    <option value="up">Up</option>
+                    <option value="down">Down</option>
+                    <option value="x">X</option>
+                    <option value="z">Z</option>
+                    <option value="radial">Radial</option>
+                </select>
+            </div>
+
+            <div class="setting">
+                <label for="mode">Mode:</label>
+                <select id="mode">
+                    <option value="linear">Linear</option>
+                    <option value="smooth">Smooth</option>
+                    <option value="discrete">Discrete</option>
+                    <option value="blended">Blended</option>
+                    <option value="noise">Noise</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="editor-section result-section">
+            <h2>3. Generated Code</h2>
+            <p>Copy this code and paste it in Minecraft when prompted.</p>
+            <div class="code-box">
+                <input type="text" id="generated-code" readonly>
+                <button id="copy-btn">Copy</button>
+            </div>
+            <div class="preview" id="pattern-preview">
+                Preview: #gradient[up][linear][stone]
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

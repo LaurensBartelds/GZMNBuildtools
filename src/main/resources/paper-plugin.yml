@@ -37,3 +37,7 @@ permissions:
   gzmnbuildtools.admin:
     description: Allows use of /gzmnbuildtools reload and other admin commands
     default: op
+
+  gzmnbuildtools.brush:
+    description: Allows use of /gzmnbrush command
+    default: op

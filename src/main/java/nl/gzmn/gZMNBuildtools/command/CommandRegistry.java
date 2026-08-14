@@ -8,6 +8,7 @@ import nl.gzmn.gZMNBuildtools.GZMNBuildtools;
 import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
+import nl.gzmn.gZMNBuildtools.command.brush.BrushCommand;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import org.bukkit.entity.Player;
@@ -24,10 +25,12 @@ public class CommandRegistry {
     private final Messages messages;
     private final PresetRegistry presetRegistry;
     private final BlockFamilyRegistry blockFamilies;
+    private final BrushCommand brushCommand;
 
     public CommandRegistry(GZMNBuildtools plugin, GradientCommand gradientCommand,
                            TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager,
-                           Messages messages, PresetRegistry presetRegistry, BlockFamilyRegistry blockFamilies) {
+                           Messages messages, PresetRegistry presetRegistry, BlockFamilyRegistry blockFamilies,
+                           BrushCommand brushCommand) {
         this.plugin = plugin;
         this.gradientCommand = gradientCommand;
         this.typeReplaceCommand = typeReplaceCommand;
@@ -35,6 +38,7 @@ public class CommandRegistry {
         this.messages = messages;
         this.presetRegistry = presetRegistry;
         this.blockFamilies = blockFamilies;
+        this.brushCommand = brushCommand;
     }
 
     public void register() {
@@ -43,7 +47,36 @@ public class CommandRegistry {
             registerTypeReplace(commands);
             registerGradient(commands);
             registerAdmin(commands);
+            registerBrush(commands);
         });
+    }
+
+    private void registerBrush(Commands commands) {
+        commands.register(Commands.literal("gzmnbrush")
+                .requires(source -> source.getSender().hasPermission("gzmnbuildtools.brush")
+                        && source.getSender() instanceof Player)
+                .executes(ctx -> {
+                    brushCommand.executeGui((Player) ctx.getSource().getSender());
+                    return 1;
+                })
+                .then(Commands.argument("shape", StringArgumentType.word())
+                        .suggests((ctx, builder) -> {
+                            List.of("sphere", "cyl").forEach(s -> {
+                                if (s.startsWith(builder.getRemainingLowerCase())) builder.suggest(s);
+                            });
+                            return builder.buildFuture();
+                        })
+                        .then(Commands.argument("radius", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100))
+                                .then(Commands.argument("code", StringArgumentType.greedyString())
+                                        .executes(ctx -> {
+                                            Player player = (Player) ctx.getSource().getSender();
+                                            String shape = StringArgumentType.getString(ctx, "shape");
+                                            int radius = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "radius");
+                                            String code = StringArgumentType.getString(ctx, "code");
+                                            brushCommand.executeCommand(player, shape, radius, code);
+                                            return 1;
+                                        }))))
+                .build(), "Opens the gradient brush GUI or applies a brush from a web code.", List.of("gbrush"));
     }
 
     private void registerTypeReplace(Commands commands) {
