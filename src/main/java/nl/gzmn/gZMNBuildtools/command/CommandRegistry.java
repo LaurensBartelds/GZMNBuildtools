@@ -9,6 +9,7 @@ import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.command.brush.BrushCommand;
+import nl.gzmn.gZMNBuildtools.command.brush.TerrainBrushCommand;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.parser.GzmnMaskParsers;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.parser.GzmnPatternParsers;
@@ -28,6 +29,7 @@ public class CommandRegistry {
     private final PresetRegistry presetRegistry;
     private final BlockFamilyRegistry blockFamilies;
     private final BrushCommand brushCommand;
+    private final TerrainBrushCommand terrainBrushCommand;
 
     public CommandRegistry(GZMNBuildtools plugin, GradientCommand gradientCommand,
                            TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager,
@@ -41,6 +43,7 @@ public class CommandRegistry {
         this.presetRegistry = presetRegistry;
         this.blockFamilies = blockFamilies;
         this.brushCommand = brushCommand;
+        this.terrainBrushCommand = new TerrainBrushCommand(plugin, messages);
     }
 
     public void register() {
@@ -50,7 +53,55 @@ public class CommandRegistry {
             registerGradient(commands);
             registerAdmin(commands);
             registerBrush(commands);
+            registerTerrainBrush(commands);
         });
+    }
+
+    private void registerTerrainBrush(Commands commands) {
+        commands.register(Commands.literal("terrainbrush")
+                .requires(source -> source.getSender() instanceof Player
+                        && source.getSender().hasPermission(TerrainBrushCommand.PERMISSION))
+                .executes(ctx -> {
+                    terrainBrushCommand.list((Player) ctx.getSource().getSender());
+                    return 1;
+                })
+                .then(Commands.argument("type", StringArgumentType.word())
+                        .suggests((ctx, builder) -> {
+                            terrainBrushCommand.typeSuggestions().stream()
+                                    .filter(s -> s.startsWith(builder.getRemainingLowerCase()))
+                                    .forEach(builder::suggest);
+                            return builder.buildFuture();
+                        })
+                        .executes(ctx -> {
+                            terrainBrushCommand.help((Player) ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "type"));
+                            return 1;
+                        })
+                        .then(Commands.argument("radius", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 256))
+                                .executes(ctx -> {
+                                    terrainBrushCommand.bind((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "type"),
+                                            com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "radius"),
+                                            "");
+                                    return 1;
+                                })
+                                .then(Commands.argument("args", StringArgumentType.greedyString())
+                                        .suggests((ctx, builder) -> {
+                                            terrainBrushCommand.argumentSuggestions(
+                                                            StringArgumentType.getString(ctx, "type"),
+                                                            builder.getRemaining())
+                                                    .forEach(builder::suggest);
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(ctx -> {
+                                            terrainBrushCommand.bind((Player) ctx.getSource().getSender(),
+                                                    StringArgumentType.getString(ctx, "type"),
+                                                    com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "radius"),
+                                                    StringArgumentType.getString(ctx, "args"));
+                                            return 1;
+                                        }))))
+                .build(), "Bind a GZMN terrain brush (raise, smooth, overlay, blob, ...) to your held item.",
+                List.of("tbrush", "tb"));
     }
 
     private void registerBrush(Commands commands) {

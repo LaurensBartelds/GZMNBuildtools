@@ -87,6 +87,36 @@ skin, combine them with a surface mask: `//replace #slope[35][90]&#facing[up] st
 Every `pattern` slot accepts any FAWE pattern, including random mixes and other GZMN patterns, e.g.
 `#bydepth[0:#byslope[0:grass_block][40:stone]][1:50%dirt,50%coarse_dirt][4:stone]`.
 
+### Terrain brushes
+
+`/terrainbrush <type> <radius> [pattern] [parameters]` (aliases `/tbrush`, `/tb`) binds a terrain brush to the item in
+your hand. It is a normal FAWE brush, so `//size`, `//mask`, `//mat`, scroll actions, `/none` and visualisation all
+work. Parameters can be given in order or as `name=value`. Run `/tb` for the list or `/tb <type>` for the details of
+one brush.
+
+| Brush | Does | Parameters (defaults) |
+|-------|------|-----------------------|
+| `raise` | Raises terrain with a smooth falloff | `height=3`, `hardness=0` |
+| `lower` | Lowers terrain with a smooth falloff | `depth=3`, `hardness=0` |
+| `flatten` | Pulls terrain to the height of the clicked column | `strength=1`, `hardness=0.5` |
+| `smooth` | Gaussian heightmap smoothing | `kernel=2`, `iterations=2`, `strength=1` |
+| `terrace` | Cuts terrain into flat steps | `step=3`, `offset=0`, `hardness=0.4` |
+| `roughen` | Adds natural noise to the terrain height | `amplitude=2`, `scale=6` |
+| `overlay` | Paints the top layers of every upward-facing surface | pattern, `depth=1` |
+| `blob` | Places an organic, noisy blob | pattern, `roughness=0.4`, `frequency=1` |
+| `spike` | Places a tapering spike or stalactite | pattern, `height=12`, `sharpness=1.5`, `tilt=0`, `down=0` |
+
+The reshaping brushes (`raise` … `roughen`) move whole columns: the top four surface layers and any plants on top
+travel with the surface, so grass stays on top and dirt stays below it.
+
+Examples:
+
+- `/tb smooth 8 3 iterations=4`
+- `/tb overlay 6 #byslope[0:grass_block][35:coarse_dirt][55:stone] 2`
+- `/tb spike 2 dripstone_block height=10 down=1`
+
+The largest allowed radius is set by `terrain-brushes.max-radius` in `config.yml` (default 32).
+
 ## Configuration
 
 On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
@@ -105,6 +135,7 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.typereplace`: Grants access to the type replace command.
 - `gzmnbuildtools.gradient`: Grants access to the gradient command.
 - `gzmnbuildtools.admin`: Grants access to `/gzmnbuildtools reload`.
+- `gzmnbuildtools.terrainbrush`: Grants access to `/terrainbrush` and using its brushes.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.

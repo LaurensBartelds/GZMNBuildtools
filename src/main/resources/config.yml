@@ -11,3 +11,7 @@ web-editor:
   enabled: true
   port: 8080
   host: 0.0.0.0
+
+terrain-brushes:
+  # Largest radius /terrainbrush accepts. FAWE's own limits (worldedit.limit) still apply.
+  max-radius: 32
