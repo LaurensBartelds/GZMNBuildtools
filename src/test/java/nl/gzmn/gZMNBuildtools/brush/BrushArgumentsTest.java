@@ -8,14 +8,14 @@ class BrushArgumentsTest {
 
     @Test
     void defaultsApplyWhenNothingGiven() {
-        BrushArguments args = BrushArguments.parse(TerrainBrushType.RAISE, "");
+        BrushArguments<TerrainBrushType> args = BrushArguments.parse(TerrainBrushType.RAISE, "");
         assertEquals(3, args.get("height"));
         assertNull(args.pattern());
     }
 
     @Test
     void positionalAndNamedArgumentsMix() {
-        BrushArguments args = BrushArguments.parse(TerrainBrushType.SMOOTH, "3 iterations=5");
+        BrushArguments<TerrainBrushType> args = BrushArguments.parse(TerrainBrushType.SMOOTH, "3 iterations=5");
         assertEquals(3, args.getInt("kernel"));
         assertEquals(5, args.getInt("iterations"));
         assertEquals(1, args.get("strength"));
@@ -23,7 +23,7 @@ class BrushArgumentsTest {
 
     @Test
     void patternBrushesTakePatternFirst() {
-        BrushArguments args = BrushArguments.parse(TerrainBrushType.BLOB, "50%stone,50%andesite roughness=0.7");
+        BrushArguments<TerrainBrushType> args = BrushArguments.parse(TerrainBrushType.BLOB, "50%stone,50%andesite roughness=0.7");
         assertEquals("50%stone,50%andesite", args.pattern());
         assertEquals(0.7, args.get("roughness"), 1e-9);
     }

@@ -5,22 +5,22 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Parsed arguments of a terrain brush: an optional fill pattern followed by
- * parameters given as {@code name=value} or positionally in declaration order.
+ * Parsed arguments of a brush or generator: an optional fill pattern followed
+ * by parameters given as {@code name=value} or positionally in declaration order.
  */
-public final class BrushArguments {
+public final class BrushArguments<T extends ParamSpec> {
 
-    private final TerrainBrushType type;
+    private final T type;
     private final String pattern;
     private final Map<String, Double> values;
 
-    private BrushArguments(TerrainBrushType type, String pattern, Map<String, Double> values) {
+    private BrushArguments(T type, String pattern, Map<String, Double> values) {
         this.type = type;
         this.pattern = pattern;
         this.values = values;
     }
 
-    public static BrushArguments parse(TerrainBrushType type, String input) {
+    public static <T extends ParamSpec> BrushArguments<T> parse(T type, String input) {
         String[] tokens = input == null || input.isBlank() ? new String[0] : input.trim().split("\\s+");
         int index = 0;
         String pattern = null;
@@ -52,7 +52,7 @@ public final class BrushArguments {
             }
             values.put(param.name(), parseValue(param, raw));
         }
-        return new BrushArguments(type, pattern, values);
+        return new BrushArguments<>(type, pattern, values);
     }
 
     private static double parseValue(BrushParam param, String raw) {
@@ -64,12 +64,12 @@ public final class BrushArguments {
         }
         if (value < param.min() || value > param.max()) {
             throw new IllegalArgumentException(param.name() + " must be between "
-                    + TerrainBrushType.format(param.min()) + " and " + TerrainBrushType.format(param.max()));
+                    + ParamSpec.format(param.min()) + " and " + ParamSpec.format(param.max()));
         }
         return value;
     }
 
-    public TerrainBrushType type() {
+    public T type() {
         return type;
     }
 
@@ -99,7 +99,7 @@ public final class BrushArguments {
             if (!sb.isEmpty()) {
                 sb.append(", ");
             }
-            sb.append(p.name()).append('=').append(TerrainBrushType.format(get(p.name())));
+            sb.append(p.name()).append('=').append(ParamSpec.format(get(p.name())));
         }
         return sb.toString();
     }

@@ -15,3 +15,7 @@ web-editor:
 terrain-brushes:
   # Largest radius /terrainbrush accepts. FAWE's own limits (worldedit.limit) still apply.
   max-radius: 32
+
+generation:
+  # Largest number of blocks a single /gzgen shape may place.
+  max-blocks: 500000

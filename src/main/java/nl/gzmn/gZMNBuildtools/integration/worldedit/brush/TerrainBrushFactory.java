@@ -7,6 +7,7 @@ import com.sk89q.worldedit.function.pattern.Pattern;
 import com.sk89q.worldedit.math.BlockVector3;
 import nl.gzmn.gZMNBuildtools.brush.BrushArguments;
 import nl.gzmn.gZMNBuildtools.brush.HeightOperation;
+import nl.gzmn.gZMNBuildtools.brush.TerrainBrushType;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.LongFunction;
@@ -17,7 +18,7 @@ public final class TerrainBrushFactory {
     private TerrainBrushFactory() {
     }
 
-    public static Brush create(BrushArguments args) {
+    public static Brush create(BrushArguments<TerrainBrushType> args) {
         return switch (args.type()) {
             case RAISE -> new HeightmapBrush(HeightOperation.raise(args.get("height"), args.get("hardness")));
             case LOWER -> new HeightmapBrush(HeightOperation.raise(-args.get("depth"), args.get("hardness")));

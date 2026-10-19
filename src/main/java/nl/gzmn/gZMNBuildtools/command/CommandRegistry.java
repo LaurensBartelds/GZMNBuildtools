@@ -30,6 +30,7 @@ public class CommandRegistry {
     private final BlockFamilyRegistry blockFamilies;
     private final BrushCommand brushCommand;
     private final TerrainBrushCommand terrainBrushCommand;
+    private final GenerateCommand generateCommand;
 
     public CommandRegistry(GZMNBuildtools plugin, GradientCommand gradientCommand,
                            TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager,
@@ -44,6 +45,7 @@ public class CommandRegistry {
         this.blockFamilies = blockFamilies;
         this.brushCommand = brushCommand;
         this.terrainBrushCommand = new TerrainBrushCommand(plugin, messages);
+        this.generateCommand = new GenerateCommand(plugin, messages);
     }
 
     public void register() {
@@ -54,7 +56,44 @@ public class CommandRegistry {
             registerAdmin(commands);
             registerBrush(commands);
             registerTerrainBrush(commands);
+            registerGenerate(commands);
         });
+    }
+
+    private void registerGenerate(Commands commands) {
+        commands.register(Commands.literal("gzgen")
+                .requires(source -> source.getSender() instanceof Player
+                        && source.getSender().hasPermission(GenerateCommand.PERMISSION))
+                .executes(ctx -> {
+                    generateCommand.list((Player) ctx.getSource().getSender());
+                    return 1;
+                })
+                .then(Commands.argument("type", StringArgumentType.word())
+                        .suggests((ctx, builder) -> {
+                            generateCommand.typeSuggestions().stream()
+                                    .filter(s -> s.startsWith(builder.getRemainingLowerCase()))
+                                    .forEach(builder::suggest);
+                            return builder.buildFuture();
+                        })
+                        .executes(ctx -> {
+                            generateCommand.help((Player) ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "type"));
+                            return 1;
+                        })
+                        .then(Commands.argument("args", StringArgumentType.greedyString())
+                                .suggests((ctx, builder) -> {
+                                    generateCommand.argumentSuggestions(StringArgumentType.getString(ctx, "type"),
+                                                    builder.getRemaining())
+                                            .forEach(builder::suggest);
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> {
+                                    generateCommand.generate((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "type"),
+                                            StringArgumentType.getString(ctx, "args"));
+                                    return 1;
+                                })))
+                .build(), "Generate arches, cables, tori, cones, domes and spirals.", List.of("ggen"));
     }
 
     private void registerTerrainBrush(Commands commands) {

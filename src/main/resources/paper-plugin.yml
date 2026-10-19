@@ -2,7 +2,7 @@ name: GZMNBuildtools
 version: '${project.version}'
 main: nl.gzmn.gZMNBuildtools.GZMNBuildtools
 api-version: '26.2'
-description: Advanced WorldEdit/FAWE extension for type replacement and gradient generation
+description: FAWE extension with terrain masks, patterns, brushes, shape generators, gradients and type replacement
 author: GZMN
 load: POSTWORLD
 
@@ -27,6 +27,7 @@ permissions:
       gzmnbuildtools.admin: true
       gzmnbuildtools.brush: true
       gzmnbuildtools.terrainbrush: true
+      gzmnbuildtools.generate: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -46,4 +47,8 @@ permissions:
 
   gzmnbuildtools.terrainbrush:
     description: Allows binding and using /terrainbrush terrain brushes
+    default: op
+
+  gzmnbuildtools.generate:
+    description: Allows use of /gzgen shape generators
     default: op

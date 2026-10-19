@@ -16,6 +16,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.brush.BrushArguments;
 import nl.gzmn.gZMNBuildtools.brush.BrushParam;
+import nl.gzmn.gZMNBuildtools.brush.ParamSpec;
 import nl.gzmn.gZMNBuildtools.brush.TerrainBrushType;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.brush.TerrainBrushFactory;
 import org.bukkit.entity.Player;
@@ -68,7 +69,8 @@ public class TerrainBrushCommand {
         }
         messages.info(player, "%s", type.get().usage());
         for (BrushParam p : type.get().params()) {
-            messages.info(player, "  %s (default %s): %s", p.name(), format(p.defaultValue()), p.description());
+            messages.info(player, "  %s (default %s): %s", p.name(), ParamSpec.format(p.defaultValue()),
+                    p.description());
         }
     }
 
@@ -84,7 +86,7 @@ public class TerrainBrushCommand {
             return;
         }
 
-        BrushArguments args;
+        BrushArguments<TerrainBrushType> args;
         try {
             args = BrushArguments.parse(type.get(), rest);
         } catch (IllegalArgumentException e) {
@@ -172,9 +174,5 @@ public class TerrainBrushCommand {
             }
         }
         return out;
-    }
-
-    private static String format(double value) {
-        return value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value);
     }
 }

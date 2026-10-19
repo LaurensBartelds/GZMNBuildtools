@@ -1,6 +1,7 @@
 # GZMNBuildtools
 
-This is a WorldEdit/FastAsyncWorldEdit extension for type replacement and gradient generation.
+A FastAsyncWorldEdit extension for Minecraft 26.2: terrain masks and patterns, terrain sculpting brushes, shape
+generators, gradients and type replacement.
 
 ## Requirements
 
@@ -117,6 +118,29 @@ Examples:
 
 The largest allowed radius is set by `terrain-brushes.max-radius` in `config.yml` (default 32).
 
+### Shape generators
+
+`/gzgen <shape> <pattern> [parameters]` (alias `/ggen`) builds a shape with any FAWE pattern. Parameters can be given
+in order or as `name=value`; run `/gzgen` for the list or `/gzgen <shape>` for details. Every generation can be undone
+with `//undo`.
+
+| Shape | Placed at | Parameters (defaults) |
+|-------|-----------|-----------------------|
+| `arch` | From selection point 1 to point 2 | `height=8`, `thickness=1` |
+| `cable` | From selection point 1 to point 2, sagging | `sag=4`, `thickness=1` |
+| `torus` | Your position | `major=8`, `minor=2`, `hollow=0` |
+| `cone` | Your position | `radius=6`, `height=12`, `hollow=0` |
+| `dome` | Your position | `radius=8`, `hollow=0` |
+| `spiral` | Your position | `radius=6`, `height=16`, `turns=2`, `thickness=1` |
+
+Examples:
+
+- `//pos1` and `//pos2` on two pillars, then `/gzgen arch stone_bricks 10 2`
+- `/gzgen cable iron_chain sag=6` between two poles
+- `/gzgen dome glass 12 hollow=1`
+
+A single shape is limited to `generation.max-blocks` in `config.yml` (default 500000).
+
 ## Configuration
 
 On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
@@ -136,6 +160,7 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.gradient`: Grants access to the gradient command.
 - `gzmnbuildtools.admin`: Grants access to `/gzmnbuildtools reload`.
 - `gzmnbuildtools.terrainbrush`: Grants access to `/terrainbrush` and using its brushes.
+- `gzmnbuildtools.generate`: Grants access to `/gzgen`.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.

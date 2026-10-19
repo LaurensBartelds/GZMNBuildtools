@@ -6,7 +6,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 /** The terrain brushes offered by {@code /terrainbrush}, with their parameters. */
-public enum TerrainBrushType {
+public enum TerrainBrushType implements ParamSpec {
 
     RAISE("Raise terrain with a smooth falloff", false,
             new BrushParam("height", 3, 1, 64, "maximum blocks raised at the centre"),
@@ -49,6 +49,7 @@ public enum TerrainBrushType {
         this.params = List.of(params);
     }
 
+    @Override
     public String id() {
         return name().toLowerCase(Locale.ROOT);
     }
@@ -58,27 +59,26 @@ public enum TerrainBrushType {
     }
 
     /** Whether the brush places a fill pattern (as opposed to reshaping existing terrain). */
+    @Override
     public boolean usesPattern() {
         return usesPattern;
     }
 
+    @Override
     public List<BrushParam> params() {
         return params;
     }
 
+    @Override
     public String usage() {
         StringBuilder sb = new StringBuilder("/terrainbrush ").append(id()).append(" <radius>");
         if (usesPattern) {
             sb.append(" <pattern>");
         }
         for (BrushParam p : params) {
-            sb.append(" [").append(p.name()).append('=').append(format(p.defaultValue())).append(']');
+            sb.append(" [").append(p.name()).append('=').append(ParamSpec.format(p.defaultValue())).append(']');
         }
         return sb.toString();
-    }
-
-    static String format(double value) {
-        return value == Math.rint(value) ? String.valueOf((long) value) : String.valueOf(value);
     }
 
     public static Optional<TerrainBrushType> byId(String id) {
