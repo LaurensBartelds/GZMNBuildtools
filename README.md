@@ -53,6 +53,40 @@ publicly. Presets are listed with `/gradient preset <id> <direction>`.
 
 You can also use the gradient as a WorldEdit pattern: `#gradient[up][linear][stone,andesite,deepslate]`.
 
+### Masks
+
+These work anywhere FAWE accepts a mask (`//replace`, `//gmask`, `//mask`, brush masks, `//count`, ...). Arguments in
+`[]` are optional where a default is shown. Combine them with FAWE's `&` (and), `,` (or) and `!` (not).
+
+| Mask | Matches |
+|------|---------|
+| `#slope[min][max][radius=2]` | Solid blocks where the terrain slope is between `min` and `max` degrees |
+| `#curvature[min][max][radius=3]` | Solid blocks by terrain curvature (positive = concave/valley, negative = convex/ridge) |
+| `#concave[threshold=0.3][radius=3]` | Valleys, hollows and inner corners |
+| `#convex[threshold=0.3][radius=3]` | Ridges, peaks and outer edges |
+| `#depth[min][max]` | Solid blocks with `min`..`max` solid blocks directly above (0 = the surface block) |
+| `#height[minY][maxY]` | Any block with Y in the range |
+| `#sky` | Blocks with nothing solid above them |
+| `#facing[up,north,...]` | Solid blocks exposed to air on any of the given faces |
+| `#near[mask][radius]` | Blocks within `radius` of a block matching `mask` (e.g. `#near[water][4]` for shorelines) |
+| `#checker[size=1]` | A 3D checkerboard |
+
+Terrain masks look at the terrain around the column, so interior blocks of a slope also match. To affect only the
+skin, combine them with a surface mask: `//replace #slope[35][90]&#facing[up] stone`.
+
+### Patterns
+
+| Pattern | Places |
+|---------|--------|
+| `#byslope[0:grass_block][35:stone][60:andesite][radius=2]` | A pattern per slope band (degrees) |
+| `#bydepth[0:grass_block][1:dirt][4:stone]` | Layers by depth below the surface |
+| `#byheight[60:sand][66:grass_block][160:snow_block][jitter=4][seed=1]` | Bands by Y level, with optional noisy edges |
+| `#checker[size][pattern1][pattern2]...` | A 3D checkerboard cycling through the patterns |
+| `#stripes[x\|y\|z\|xz\|-xz][width][pattern1][pattern2]...` | Repeating stripes along an axis or diagonal |
+
+Every `pattern` slot accepts any FAWE pattern, including random mixes and other GZMN patterns, e.g.
+`#bydepth[0:#byslope[0:grass_block][40:stone]][1:50%dirt,50%coarse_dirt][4:stone]`.
+
 ## Configuration
 
 On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:

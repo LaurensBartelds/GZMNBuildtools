@@ -10,6 +10,8 @@ import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.command.brush.BrushCommand;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
+import nl.gzmn.gZMNBuildtools.integration.worldedit.parser.GzmnMaskParsers;
+import nl.gzmn.gZMNBuildtools.integration.worldedit.parser.GzmnPatternParsers;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import org.bukkit.entity.Player;
 
@@ -463,10 +465,12 @@ public class CommandRegistry {
         try {
             WorldEdit worldEdit = WorldEdit.getInstance();
             worldEdit.getPatternFactory().register(new GradientPatternParser(worldEdit, presetRegistry));
-            plugin.getLogger().info("Registered #gradient pattern with WorldEdit");
+            GzmnPatternParsers.create(worldEdit).forEach(worldEdit.getPatternFactory()::register);
+            GzmnMaskParsers.create(worldEdit).forEach(worldEdit.getMaskFactory()::register);
+            plugin.getLogger().info("Registered GZMN masks and patterns with WorldEdit");
         } catch (Throwable e) {
             plugin.getLogger().log(java.util.logging.Level.WARNING,
-                    "Failed to register WorldEdit patterns; gradient pattern syntax will not be available", e);
+                    "Failed to register WorldEdit masks/patterns; custom mask and pattern syntax will not be available", e);
         }
     }
 }
