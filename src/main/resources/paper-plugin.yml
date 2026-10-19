@@ -1,7 +1,7 @@
 name: GZMNBuildtools
 version: '${project.version}'
 main: nl.gzmn.gZMNBuildtools.GZMNBuildtools
-api-version: '1.21'
+api-version: '26.2'
 description: Advanced WorldEdit/FAWE extension for type replacement and gradient generation
 author: GZMN
 load: POSTWORLD

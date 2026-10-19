@@ -4,8 +4,9 @@ This is a WorldEdit/FastAsyncWorldEdit extension for type replacement and gradie
 
 ## Requirements
 
-- Paper 1.21+
-- WorldEdit or FastAsyncWorldEdit (FAWE)
+- Paper 26.2 (Minecraft 26.2)
+- Java 25
+- FastAsyncWorldEdit 2.15.3+ (recommended) or WorldEdit 7.4+
 
 ## Installation
 
