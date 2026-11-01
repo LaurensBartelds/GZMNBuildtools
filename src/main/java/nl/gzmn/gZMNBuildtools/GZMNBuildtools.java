@@ -6,6 +6,7 @@ import nl.gzmn.gZMNBuildtools.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
 import nl.gzmn.gZMNBuildtools.command.brush.GradientBrushCommand;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
+import nl.gzmn.gZMNBuildtools.ui.menu.MenuListener;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import nl.gzmn.gZMNBuildtools.web.WebEditorServer;
 import org.bukkit.Bukkit;
@@ -63,6 +64,7 @@ public final class GZMNBuildtools extends JavaPlugin {
         commandRegistry.register();
 
         typeReplaceUIManager.registerEvents();
+        getServer().getPluginManager().registerEvents(new MenuListener(), this);
         commandRegistry.registerWorldEditPatterns();
 
         // Expose the public extension API so other plugins can register presets / families.

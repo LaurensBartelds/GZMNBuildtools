@@ -108,7 +108,7 @@ public class GradientBrushCommand {
             }
         }
         player.sendMessage(Component.text("  /gb <palette> [options]", NamedTextColor.AQUA)
-                .append(Component.text(" binds it; /gb paint paints a whole build; /gb info inspects one.",
+                .append(Component.text(" binds it; /gb opens the menu; /gb paint paints a whole build.",
                         NamedTextColor.GRAY)));
     }
 

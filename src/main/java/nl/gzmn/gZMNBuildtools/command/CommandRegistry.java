@@ -10,6 +10,8 @@ import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.command.brush.GradientBrushCommand;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
+import nl.gzmn.gZMNBuildtools.ui.brush.GradientBrushMenu;
+import nl.gzmn.gZMNBuildtools.ui.brush.TerrainBrushMenu;
 import nl.gzmn.gZMNBuildtools.command.brush.TerrainBrushCommand;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.parser.GzmnMaskParsers;
@@ -119,9 +121,14 @@ public class CommandRegistry {
                 .requires(source -> source.getSender() instanceof Player
                         && source.getSender().hasPermission(TerrainBrushCommand.PERMISSION))
                 .executes(ctx -> {
-                    terrainBrushCommand.list((Player) ctx.getSource().getSender());
+                    Player player = (Player) ctx.getSource().getSender();
+                    new TerrainBrushMenu(player, terrainBrushCommand).open();
                     return 1;
                 })
+                .then(Commands.literal("list").executes(ctx -> {
+                    terrainBrushCommand.list((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
                 .then(Commands.argument("type", StringArgumentType.word())
                         .suggests((ctx, builder) -> {
                             terrainBrushCommand.typeSuggestions().stream()
@@ -166,9 +173,14 @@ public class CommandRegistry {
                 .requires(source -> source.getSender().hasPermission(GradientBrushCommand.PERMISSION)
                         && source.getSender() instanceof Player)
                 .executes(ctx -> {
-                    brushCommand.status((Player) ctx.getSource().getSender());
+                    Player player = (Player) ctx.getSource().getSender();
+                    new GradientBrushMenu(player, brushCommand, presetRegistry).open();
                     return 1;
                 })
+                .then(Commands.literal("status").executes(ctx -> {
+                    brushCommand.status((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
                 .then(gradientSub("set", brushCommand::set))
                 .then(gradientSub("paint", brushCommand::paint))
                 .then(gradientSub("preview", brushCommand::preview))

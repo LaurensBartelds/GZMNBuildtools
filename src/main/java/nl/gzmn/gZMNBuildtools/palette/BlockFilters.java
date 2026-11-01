@@ -25,7 +25,7 @@ public final class BlockFilters {
             "melon", "sponge", "wet_sponge", "slime_block", "honey_block", "*ice", "powder_snow",
             "*_leaves", "*froglight", "glowstone", "sea_lantern", "shroomlight", "crying_obsidian",
             "magma_block", "*copper_bulb", "*copper_grate", "grass_block", "podzol", "mycelium",
-            "trial_*", "*item_frame", "cactus", "comparator", "repeater", "*_head", "*_skull", "chiseled_*bookshelf",
+            "trial_*", "*item_frame", "cactus", "chiseled_*", "comparator", "repeater", "*_head", "*_skull", "chiseled_*bookshelf",
             // Live coral blocks die out of water.
             "brain_coral_block", "bubble_coral_block", "fire_coral_block", "horn_coral_block", "tube_coral_block");
 

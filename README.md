@@ -91,8 +91,10 @@ Every `pattern` slot accepts any FAWE pattern, including random mixes and other 
 ### Terrain brushes
 
 `/terrainbrush <type> <radius> [pattern] [parameters]` (aliases `/tbrush`, `/tb`) binds a terrain brush to the item in
-your hand. It is a normal FAWE brush, so `//size`, `//mask`, `//mat`, scroll actions, `/none` and visualisation all
-work. Parameters can be given in order or as `name=value`. Run `/tb` for the list or `/tb <type>` for the details of
+your hand. `/tb` on its own opens a menu: pick a brush, adjust its radius and parameters with left/right clicks
+(shift for bigger steps), click blocks in your inventory to choose its patterns, then press Bind. `/tb list` lists
+the brushes in chat. It is a normal FAWE brush, so `//size`, `//mask`, `//mat`, scroll actions, `/none` and visualisation all
+work. Parameters can be given in order or as `name=value`. Run `/tb list` for the list or `/tb <type>` for the details of
 one brush.
 
 | Brush | Does | Parameters (defaults) |
@@ -167,7 +169,11 @@ Options (`key=value`, after the palette or with `/gb set`):
 | `range` | `build`, or fixed world coordinates such as `60..120` |
 | `radius` | `4`; the brush radius (`//size` works too) |
 
-Other commands: `/gb` shows your settings, `/gb paint [palette] [options]` paints the whole build you look at,
+Run `/gb` without arguments to open the brush menu. It shows the palette and has a button for every option. To base
+a palette on a block, click it in your own inventory; shift-click blocks to build a palette in order, and the Steps
+button fills in blocks between them by colour. Bind, Paint, Preview, Inspect and Reset are buttons too.
+
+Other commands: `/gb status` shows your settings, `/gb paint [palette] [options]` paints the whole build you look at,
 `/gb preview [palette] [options]` shows that paint as ghost blocks first,
 `/gb info` inspects it (size, materials, direction, palette), `/gb suggest [block]` offers clickable palettes,
 `/gb code <gzmn@...>` imports a web editor code, `/gb rescan` forgets the remembered build and `/gb reset` restores
