@@ -35,3 +35,8 @@ palettes:
   # this out to use the built-in list of functional, light-emitting, falling
   # and patterned blocks.
   # exclude: ["*_ore", "sand", "gravel"]
+
+preview:
+  # Largest edit that can be previewed as ghost blocks, and how long a preview stays.
+  max-blocks: 60000
+  seconds: 60

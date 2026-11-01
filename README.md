@@ -161,6 +161,7 @@ Options (`key=value`, after the palette or with `/gb set`):
 | `radius` | `4`; the brush radius (`//size` works too) |
 
 Other commands: `/gb` shows your settings, `/gb paint [palette] [options]` paints the whole build you look at,
+`/gb preview [palette] [options]` shows that paint as ghost blocks first,
 `/gb info` inspects it (size, materials, direction, palette), `/gb suggest [block]` offers clickable palettes,
 `/gb code <gzmn@...>` imports a web editor code, `/gb rescan` forgets the remembered build and `/gb reset` restores
 the defaults. Settings changed with `/gb set` apply to the bound brush immediately.
@@ -186,7 +187,14 @@ Examples:
 - `/gzgen cable iron_chain sag=6` between two poles
 - `/gzgen dome glass 12 hollow=1`
 
-A single shape is limited to `generation.max-blocks` in `config.yml` (default 500000).
+A single shape is limited to `generation.max-blocks` in `config.yml` (default 500000). Add `-p` to any `/gzgen` command
+to preview it first.
+
+### Previews
+
+`/gb preview` and `/gzgen ... -p` show the result as client-side ghost blocks that only you can see. Click
+**[Apply]** (or `/gzpreview apply`) to place exactly what you see, or **[Cancel]** (`/gzpreview cancel`). A preview
+expires after `preview.seconds` (default 60) and is limited to `preview.max-blocks` (default 60000).
 
 ## Configuration
 

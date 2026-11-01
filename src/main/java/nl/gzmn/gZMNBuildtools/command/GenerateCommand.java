@@ -23,6 +23,12 @@ import nl.gzmn.gZMNBuildtools.brush.BrushParam;
 import nl.gzmn.gZMNBuildtools.brush.ParamSpec;
 import nl.gzmn.gZMNBuildtools.generate.GeneratorType;
 import nl.gzmn.gZMNBuildtools.generate.Generators;
+import nl.gzmn.gZMNBuildtools.preview.PreviewService;
+import io.papermc.paper.math.Position;
+import com.sk89q.worldedit.world.block.BaseBlock;
+import org.bukkit.block.data.BlockData;
+import java.util.HashMap;
+import java.util.Map;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -40,10 +46,12 @@ public class GenerateCommand {
 
     private final JavaPlugin plugin;
     private final Messages messages;
+    private final PreviewService previews;
 
-    public GenerateCommand(JavaPlugin plugin, Messages messages) {
+    public GenerateCommand(JavaPlugin plugin, Messages messages, PreviewService previews) {
         this.plugin = plugin;
         this.messages = messages;
+        this.previews = previews;
     }
 
     private int maxBlocks() {
@@ -74,7 +82,11 @@ public class GenerateCommand {
         }
     }
 
-    public void generate(Player player, String typeId, String rest) {
+    public void generate(Player player, String typeId, String rawRest) {
+        // "-p" (or "preview") anywhere in the arguments shows ghost blocks first.
+        List<String> tokens = new ArrayList<>(Arrays.asList(rawRest.trim().split("\\s+")));
+        boolean preview = tokens.removeIf(t -> t.equalsIgnoreCase("-p") || t.equalsIgnoreCase("preview"));
+        String rest = String.join(" ", tokens);
         Optional<GeneratorType> type = GeneratorType.byId(typeId);
         if (type.isEmpty()) {
             messages.error(player, "Unknown generator '%s'.", typeId);
@@ -131,6 +143,10 @@ public class GenerateCommand {
 
         final int[] fa = a;
         final int[] fb = b;
+        if (preview) {
+            showPreview(player, typeId, rest, args, origin, fa, fb, pattern, world);
+            return;
+        }
         Fawe.instance().getQueueHandler().async(() -> {
             try (EditSession editSession = session.createEditSession(actor)) {
                 int minY = world.getMinY();
@@ -147,6 +163,32 @@ public class GenerateCommand {
                 plugin.getLogger().log(Level.WARNING, "Generator " + typeId + " failed for " + player.getName(), e);
                 messages.error(player, "Generation failed: %s", e.getMessage());
             }
+        });
+    }
+
+    private void showPreview(Player player, String typeId, String rest, BrushArguments<GeneratorType> args,
+                             int[] origin, int[] a, int[] b, Pattern pattern, World world) {
+        int minY = world.getMinY();
+        int maxY = world.getMaxY();
+        Fawe.instance().getQueueHandler().async(() -> {
+            Map<Position, BlockData> ghost = new HashMap<>();
+            try {
+                Generators.generate(args, origin, a, b, (x, y, z) -> {
+                    if (y >= minY && y <= maxY) {
+                        BaseBlock block = pattern.applyBlock(BlockVector3.at(x, y, z));
+                        if (block != null) {
+                            ghost.put(Position.block(x, y, z), BukkitAdapter.adapt(block.toImmutableState()));
+                        }
+                    }
+                });
+            } catch (RuntimeException e) {
+                plugin.getLogger().log(Level.WARNING, "Generator preview failed for " + player.getName(), e);
+                messages.error(player, "Preview failed: %s", e.getMessage());
+                return;
+            }
+            plugin.getServer().getScheduler().runTask(plugin, () ->
+                    previews.show(player, ghost, "a " + typeId.toLowerCase(Locale.ROOT),
+                            () -> generate(player, typeId, rest)));
         });
     }
 

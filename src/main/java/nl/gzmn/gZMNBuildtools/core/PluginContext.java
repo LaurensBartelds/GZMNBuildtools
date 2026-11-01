@@ -9,6 +9,7 @@ import nl.gzmn.gZMNBuildtools.gradient.registry.YamlPresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.service.GradientExecutor;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.gradient.SmartGradientService;
+import nl.gzmn.gZMNBuildtools.preview.PreviewService;
 import nl.gzmn.gZMNBuildtools.typereplace.registry.YamlBlockFamilyRegistry;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +28,7 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     private final GradientStorageManager storage;
     private final JavaPlugin plugin;
     private volatile SmartGradientService smartGradients;
+    private volatile PreviewService previews;
 
     public PluginContext(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -51,6 +53,13 @@ public final class PluginContext implements GzmnBuildtoolsApi {
      * The smart gradient engine. Created on first use because it reads
      * WorldEdit's block registry, which only exists once WorldEdit/FAWE is enabled.
      */
+    public synchronized PreviewService previews() {
+        if (previews == null) {
+            previews = new PreviewService(plugin, messages);
+        }
+        return previews;
+    }
+
     public SmartGradientService smartGradients() {
         SmartGradientService service = smartGradients;
         if (service == null) {

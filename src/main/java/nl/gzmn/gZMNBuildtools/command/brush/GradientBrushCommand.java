@@ -23,6 +23,7 @@ import nl.gzmn.gZMNBuildtools.integration.worldedit.gradient.SmartGradientBrush;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.gradient.SmartGradientService;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.gradient.Swatches;
 import nl.gzmn.gZMNBuildtools.palette.BlockColors;
+import nl.gzmn.gZMNBuildtools.preview.PreviewService;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -50,13 +51,15 @@ public class GradientBrushCommand {
     private final Messages messages;
     private final SmartGradientService service;
     private final PresetRegistry presets;
+    private final PreviewService previews;
 
     public GradientBrushCommand(JavaPlugin plugin, Messages messages, SmartGradientService service,
-                                PresetRegistry presets) {
+                                PresetRegistry presets, PreviewService previews) {
         this.plugin = plugin;
         this.messages = messages;
         this.service = service;
         this.presets = presets;
+        this.previews = previews;
     }
 
     public SmartGradientService service() {
@@ -232,6 +235,60 @@ public class GradientBrushCommand {
         });
     }
 
+    /** Shows the whole-build paint as ghost blocks; [Apply] places exactly those blocks. */
+    public void preview(Player player, String input) {
+        if (input != null && !input.isBlank() && !apply(player, input)) {
+            return;
+        }
+        Optional<BlockVector3> target = target(player);
+        if (target.isEmpty()) {
+            return;
+        }
+        GradientSettings s = service.settings().get(player.getUniqueId());
+        com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
+        LocalSession session = WorldEdit.getInstance().getSessionManager().get(actor);
+        String world = player.getWorld().getName();
+        Fawe.instance().getQueueHandler().async(() -> {
+            Map<BlockVector3, com.sk89q.worldedit.world.block.BlockState> changes = new java.util.LinkedHashMap<>();
+            SmartGradientService.Outcome o;
+            try (EditSession editSession = session.createEditSession(actor)) {
+                o = service.paint(editSession, world, player.getUniqueId(), target.get(), null, s,
+                        (x, y, z, state) -> changes.put(BlockVector3.at(x, y, z), state));
+            } catch (RuntimeException e) {
+                plugin.getLogger().log(Level.WARNING, "Gradient preview failed for " + player.getName(), e);
+                messages.error(player, "Preview failed: %s", e.getMessage());
+                return;
+            }
+            if (!o.ok()) {
+                messages.error(player, "%s", o.problem());
+                return;
+            }
+            Map<io.papermc.paper.math.Position, org.bukkit.block.data.BlockData> ghost = new java.util.HashMap<>();
+            changes.forEach((pos, state) -> ghost.put(io.papermc.paper.math.Position.block(pos.x(), pos.y(), pos.z()),
+                    BukkitAdapter.adapt(state)));
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                player.sendMessage(summary(o));
+                previews.show(player, ghost, "the gradient on this " + o.scan().bounds() + " build",
+                        () -> applyChanges(player, changes));
+            });
+        });
+    }
+
+    private void applyChanges(Player player, Map<BlockVector3, com.sk89q.worldedit.world.block.BlockState> changes) {
+        com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
+        LocalSession session = WorldEdit.getInstance().getSessionManager().get(actor);
+        Fawe.instance().getQueueHandler().async(() -> {
+            try (EditSession editSession = session.createEditSession(actor)) {
+                changes.forEach((pos, state) -> editSession.setBlock(pos.x(), pos.y(), pos.z(), state));
+                session.remember(editSession);
+                messages.success(player, "Applied %d blocks. //undo reverts it.", changes.size());
+            } catch (RuntimeException e) {
+                plugin.getLogger().log(Level.WARNING, "Applying gradient preview failed for " + player.getName(), e);
+                messages.error(player, "Applying failed: %s", e.getMessage());
+            }
+        });
+    }
+
     public void info(Player player) {
         Optional<BlockVector3> target = target(player);
         if (target.isEmpty()) {
@@ -260,6 +317,9 @@ public class GradientBrushCommand {
                         .append(Component.text(" " + o.palette(), NamedTextColor.GRAY)));
                 player.sendMessage(Component.text("[Paint whole build]", NamedTextColor.GREEN)
                         .clickEvent(ClickEvent.runCommand("/gb paint"))
+                        .append(Component.text("  "))
+                        .append(Component.text("[Preview]", NamedTextColor.YELLOW)
+                                .clickEvent(ClickEvent.runCommand("/gb preview")))
                         .append(Component.text("  "))
                         .append(Component.text("[Suggest palettes]", NamedTextColor.AQUA)
                                 .clickEvent(ClickEvent.runCommand("/gb suggest " + o.scan().mainGroup()))));

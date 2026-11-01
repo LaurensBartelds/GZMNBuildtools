@@ -48,7 +48,7 @@ public class CommandRegistry {
         this.brushCommand = brushCommand;
         this.context = context;
         this.terrainBrushCommand = new TerrainBrushCommand(plugin, messages);
-        this.generateCommand = new GenerateCommand(plugin, messages);
+        this.generateCommand = new GenerateCommand(plugin, messages, context.previews());
     }
 
     public void register() {
@@ -60,7 +60,22 @@ public class CommandRegistry {
             registerBrush(commands);
             registerTerrainBrush(commands);
             registerGenerate(commands);
+            registerPreview(commands);
         });
+    }
+
+    private void registerPreview(Commands commands) {
+        commands.register(Commands.literal("gzpreview")
+                .requires(source -> source.getSender() instanceof Player)
+                .then(Commands.literal("apply").executes(ctx -> {
+                    context.previews().apply((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
+                .then(Commands.literal("cancel").executes(ctx -> {
+                    context.previews().cancel((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
+                .build(), "Apply or cancel a GZMN preview.", List.of("gzp"));
     }
 
     private void registerGenerate(Commands commands) {
@@ -156,6 +171,7 @@ public class CommandRegistry {
                 })
                 .then(gradientSub("set", brushCommand::set))
                 .then(gradientSub("paint", brushCommand::paint))
+                .then(gradientSub("preview", brushCommand::preview))
                 .then(Commands.literal("info").executes(ctx -> {
                     brushCommand.info((Player) ctx.getSource().getSender());
                     return 1;

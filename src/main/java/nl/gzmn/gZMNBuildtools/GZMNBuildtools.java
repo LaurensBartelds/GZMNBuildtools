@@ -55,7 +55,7 @@ public final class GZMNBuildtools extends JavaPlugin {
         typeReplaceUIManager.setBlockFamilies(context.blockFamilies());
 
         GradientBrushCommand gradientBrushCommand = new GradientBrushCommand(this, context.messages(),
-                context.smartGradients(), context.presets());
+                context.smartGradients(), context.presets(), context.previews());
 
         commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
                 typeReplaceUIManager, context.messages(), context.presets(), context.blockFamilies(),
