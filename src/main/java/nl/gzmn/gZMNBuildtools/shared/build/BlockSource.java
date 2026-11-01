@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
+package nl.gzmn.gZMNBuildtools.shared.build;
 
 /** Read-only access to block ids (without namespace) for scanning builds. */
 public interface BlockSource {

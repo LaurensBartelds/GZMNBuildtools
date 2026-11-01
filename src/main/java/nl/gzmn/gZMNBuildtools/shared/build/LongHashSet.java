@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
+package nl.gzmn.gZMNBuildtools.shared.build;
 
 import java.util.Arrays;
 import java.util.function.LongConsumer;

@@ -11,7 +11,7 @@ import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.GradientAxis;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.GradientSettings;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.Palette;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.PaletteSpec;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.TargetMode;
+import nl.gzmn.gZMNBuildtools.shared.build.TargetMode;
 import nl.gzmn.gZMNBuildtools.shared.menu.Items;
 import nl.gzmn.gZMNBuildtools.shared.menu.Menu;
 import org.bukkit.Material;

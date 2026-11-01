@@ -1,5 +1,12 @@
 package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
 
+import nl.gzmn.gZMNBuildtools.shared.build.Bounds;
+import nl.gzmn.gZMNBuildtools.shared.build.BuildPainter;
+import nl.gzmn.gZMNBuildtools.shared.build.BuildScan;
+import nl.gzmn.gZMNBuildtools.shared.build.BuildScanner;
+import nl.gzmn.gZMNBuildtools.shared.build.LongHashSet;
+import nl.gzmn.gZMNBuildtools.shared.build.TargetMode;
+import nl.gzmn.gZMNBuildtools.shared.build.TargetPolicy;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -8,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.SmartFixtures.*;
+import static nl.gzmn.gZMNBuildtools.shared.build.BuildFixtures.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SmartGradientTest {
@@ -94,8 +102,8 @@ class SmartGradientTest {
         BuildScan scan = BuildScanner.scan(w, 0, 64, 0, policy, RULES, 100_000, 64);
         GradientFrame frame = GradientFrame.of(scan.bounds(), settings.axis(), null);
         Map<Long, String> changes = new HashMap<>();
-        GradientPainter.Result result = painter.paint(w, scan, policy, palette, frame, settings,
-                GradientPainter.StrokeFilter.ALL, (x, y, z, from, to) -> {
+        BuildPainter.Result result = painter.paint(w, scan, policy, palette, frame, settings,
+                BuildPainter.StrokeFilter.ALL, (x, y, z, from, to) -> {
                     changes.put(LongHashSet.pack(x, y, z), to);
                     w.set(x, y, z, to);
                 });
@@ -117,7 +125,7 @@ class SmartGradientTest {
         TargetPolicy policy = painter.policy(TargetMode.CLICKED, "stone_bricks", palette, Set.of());
         BuildScan first = BuildScanner.scan(w, 0, 64, 0, policy, RULES, 100_000, 64);
         painter.paint(w, first, policy, palette, GradientFrame.of(first.bounds(), GradientAxis.AUTO, null),
-                settings, GradientPainter.StrokeFilter.ALL, (x, y, z, from, to) -> w.set(x, y, z, to));
+                settings, BuildPainter.StrokeFilter.ALL, (x, y, z, from, to) -> w.set(x, y, z, to));
         // Click a block that is now deepslate: the palette's groups keep it part of the build.
         TargetPolicy again = painter.policy(TargetMode.CLICKED, w.get(0, 64, 0), palette, Set.of("stone_bricks"));
         BuildScan second = BuildScanner.scan(w, 0, 64, 0, again, RULES, 100_000, 64);
@@ -132,7 +140,7 @@ class SmartGradientTest {
         TargetPolicy policy = painter.policy(TargetMode.CLICKED, "stone_bricks", palette, Set.of());
         BuildScan scan = BuildScanner.scan(w, 0, 64, 0, policy, RULES, 100_000, 64);
         painter.paint(w, scan, policy, palette, GradientFrame.of(scan.bounds(), GradientAxis.UP, null),
-                GradientSettings.defaults(), GradientPainter.StrokeFilter.sphere(0, 64, 0, 2),
+                GradientSettings.defaults(), BuildPainter.StrokeFilter.sphere(0, 64, 0, 2),
                 (x, y, z, from, to) -> w.set(x, y, z, to));
         assertEquals("deepslate_bricks", w.get(0, 64, 0));
         assertEquals("stone_bricks", w.get(0, 70, 0));
@@ -149,7 +157,7 @@ class SmartGradientTest {
         BuildScan scan = BuildScanner.scan(w, 0, 64, 0, policy, RULES, 100_000, 64);
         assertTrue(scan.contains(1, 64, 0), "the trim is part of the build");
         painter.paint(w, scan, policy, palette, GradientFrame.of(scan.bounds(), GradientAxis.UP, null),
-                GradientSettings.defaults(), GradientPainter.StrokeFilter.ALL, (x, y, z, f, t) -> w.set(x, y, z, t));
+                GradientSettings.defaults(), BuildPainter.StrokeFilter.ALL, (x, y, z, f, t) -> w.set(x, y, z, t));
         assertEquals("oak_planks", w.get(1, 64, 0));
         assertEquals("deepslate_bricks", w.get(0, 64, 0));
     }

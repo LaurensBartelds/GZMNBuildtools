@@ -1,8 +1,8 @@
-package nl.gzmn.gZMNBuildtools.modules.gradientbrush.fawe;
+package nl.gzmn.gZMNBuildtools.shared.worldedit;
 
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.world.block.BlockState;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.BlockSource;
+import nl.gzmn.gZMNBuildtools.shared.build.BlockSource;
 
 /** {@link BlockSource} over a WorldEdit/FAWE extent. */
 public final class ExtentBlockSource implements BlockSource {

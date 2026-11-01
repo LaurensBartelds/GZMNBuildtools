@@ -9,32 +9,30 @@ import com.sk89q.worldedit.command.tool.BrushTool;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
-import com.sk89q.worldedit.world.block.BlockTypes;
-import com.sk89q.worldedit.world.registry.BlockMaterial;
 import net.kyori.adventure.text.Component;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientPreset;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.command.Swatches;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.BlockCatalog;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.BlockRules;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.BuildScan;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.BuildScanner;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.GradientFrame;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.GradientPainter;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.GradientSettings;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.GradientSettingsStore;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.Palette;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.PaletteSpec;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.ShapeKind;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.TargetPolicy;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.VariantResolver;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.fawe.ExtentBlockSource;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.fawe.SmartGradientBrush;
-import nl.gzmn.gZMNBuildtools.modules.gradientbrush.fawe.StateMapper;
+import nl.gzmn.gZMNBuildtools.shared.build.BlockCatalog;
+import nl.gzmn.gZMNBuildtools.shared.build.BlockRules;
+import nl.gzmn.gZMNBuildtools.shared.build.BuildPainter;
+import nl.gzmn.gZMNBuildtools.shared.build.BuildScan;
+import nl.gzmn.gZMNBuildtools.shared.build.BuildScanner;
+import nl.gzmn.gZMNBuildtools.shared.build.ShapeKind;
+import nl.gzmn.gZMNBuildtools.shared.build.TargetPolicy;
 import nl.gzmn.gZMNBuildtools.shared.palette.BlockColors;
-import nl.gzmn.gZMNBuildtools.shared.palette.BlockFilters;
 import nl.gzmn.gZMNBuildtools.shared.palette.MaterialClass;
 import nl.gzmn.gZMNBuildtools.shared.palette.PaletteGenerator;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.BlockKnowledge;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.ExtentBlockSource;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.StateMapper;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -47,7 +45,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -80,77 +77,31 @@ public final class SmartGradientService {
                           GradientSettings settings, Set<String> groups, long time) {
     }
 
+    private final BlockKnowledge blocks;
     private final BlockColors colors;
     private final BlockCatalog catalog;
     private final BlockRules rules;
-    private final VariantResolver variants;
     private final GradientPainter painter;
     private final PresetRegistry presets;
     private final GradientSettingsStore settings = new GradientSettingsStore();
     private final Map<UUID, Memory> memory = new ConcurrentHashMap<>();
-    private final Map<String, BlockType> types = new ConcurrentHashMap<>();
 
-    private volatile PaletteGenerator generator;
-    private volatile int maxScanBlocks = 200_000;
-    private volatile int maxScanRadius = 128;
     private volatile long cacheMillis = 10 * 60_000L;
     private volatile int maxRadius = 32;
 
-    public SmartGradientService(PresetRegistry presets) {
+    public SmartGradientService(PresetRegistry presets, BlockKnowledge blocks) {
         this.presets = presets;
-        this.colors = BlockColors.bundled();
-        Set<String> ids = BlockType.REGISTRY.values().stream()
-                .map(t -> t.id().startsWith("minecraft:") ? t.id().substring(10) : t.id())
-                .collect(Collectors.toSet());
-        this.catalog = new BlockCatalog(ids, id -> material(id).map(BlockMaterial::isFullCube).orElse(false));
-        this.rules = new BlockRules(catalog, this::isDetail);
-        this.variants = new VariantResolver(catalog, colors);
-        this.painter = new GradientPainter(rules, variants);
-        this.generator = new PaletteGenerator(colors, eligible(BlockFilters.DEFAULT_PALETTE_EXCLUDES));
+        this.blocks = blocks;
+        this.colors = blocks.colors();
+        this.catalog = blocks.catalog();
+        this.rules = blocks.rules();
+        this.painter = new GradientPainter(rules, blocks.variants());
     }
 
     public void reload(FileConfiguration config) {
-        maxScanBlocks = Math.max(100, config.getInt("smart-gradient.max-scan-blocks", 200_000));
-        maxScanRadius = Math.max(8, config.getInt("smart-gradient.max-scan-radius", 128));
         cacheMillis = Math.max(1, config.getInt("smart-gradient.cache-minutes", 10)) * 60_000L;
         maxRadius = Math.max(1, config.getInt("smart-gradient.max-radius", 32));
-        List<String> excludes = config.isList("palettes.exclude")
-                ? config.getStringList("palettes.exclude") : BlockFilters.DEFAULT_PALETTE_EXCLUDES;
-        generator = new PaletteGenerator(colors, eligible(excludes));
         memory.clear();
-    }
-
-    private Optional<BlockMaterial> material(String id) {
-        return Optional.ofNullable(type(id)).map(BlockType::getMaterial);
-    }
-
-    BlockType type(String id) {
-        return types.computeIfAbsent(id, k -> BlockTypes.get("minecraft:" + k));
-    }
-
-    /** Full-cube blocks that are details rather than building material. */
-    private boolean isDetail(String id) {
-        Optional<BlockMaterial> m = material(id);
-        if (m.isEmpty()) {
-            return true;
-        }
-        BlockMaterial mat = m.get();
-        if (mat.getLightValue() > 0 || mat.isTile() || mat.hasContainer() || mat.isLiquid()) {
-            return true;
-        }
-        return catalog.classify(id).kind() == ShapeKind.FULL && !mat.isOpaque();
-    }
-
-    private Predicate<String> eligible(List<String> excludes) {
-        Predicate<String> excluded = BlockFilters.anyGlob(excludes);
-        return id -> {
-            if (excluded.test(id) || type(id) == null) {
-                return false;
-            }
-            BlockMaterial m = type(id).getMaterial();
-            return m.isFullCube() && m.isOpaque() && m.getLightValue() == 0 && !m.isTile() && !m.hasContainer()
-                    && !m.isPowerSource() && !m.isLiquid() && !m.isAir();
-        };
     }
 
     public GradientSettingsStore settings() {
@@ -158,7 +109,7 @@ public final class SmartGradientService {
     }
 
     public PaletteGenerator generator() {
-        return generator;
+        return blocks.generator();
     }
 
     public BlockCatalog catalog() {
@@ -194,7 +145,7 @@ public final class SmartGradientService {
     /** The blocks automatic palettes may use, with their colours and shape variants. */
     public List<PaletteBlock> paletteBlocks() {
         List<PaletteBlock> out = new ArrayList<>();
-        for (String id : generator.candidates()) {
+        for (String id : blocks.generator().candidates()) {
             BlockColors.Entry entry = colors.get(id).orElseThrow();
             out.add(new PaletteBlock(id, entry.sideRgb(), entry.topRgb(),
                     MaterialClass.of(id).name().toLowerCase(Locale.ROOT),
@@ -279,7 +230,7 @@ public final class SmartGradientService {
     }
 
     public PaletteSpec.Context context(String buildMaterial) {
-        PaletteGenerator gen = generator;
+        PaletteGenerator gen = blocks.generator();
         return new PaletteSpec.Context() {
             @Override
             public PaletteGenerator generator() {
@@ -343,11 +294,11 @@ public final class SmartGradientService {
                 current.groups, System.currentTimeMillis()));
 
         TargetPolicy policy = new TargetPolicy(s.target(), rules, current.groups);
-        GradientPainter.StrokeFilter stroke = radius == null ? GradientPainter.StrokeFilter.ALL
-                : GradientPainter.StrokeFilter.sphere(click.x(), click.y(), click.z(), radius);
-        GradientPainter.Result result = painter.paint(source, current.scan, policy, current.palette, current.frame,
+        BuildPainter.StrokeFilter stroke = radius == null ? BuildPainter.StrokeFilter.ALL
+                : BuildPainter.StrokeFilter.sphere(click.x(), click.y(), click.z(), radius);
+        BuildPainter.Result result = painter.paint(source, current.scan, policy, current.palette, current.frame,
                 s, stroke, (x, y, z, from, to) -> {
-                    BlockType target = type(to);
+                    BlockType target = blocks.type(to);
                     if (target == null) {
                         return;
                     }
@@ -375,7 +326,7 @@ public final class SmartGradientService {
         }
         TargetPolicy policy = painter.policy(s.target(), clicked, fixed, extra);
         BuildScan scan = BuildScanner.scan(source, click.x(), click.y(), click.z(), policy, rules,
-                maxScanBlocks, maxScanRadius);
+                blocks.maxScanBlocks(), blocks.maxScanRadius());
         Palette palette = fixed;
         if (palette == null) {
             boolean samePalette = previous != null && previous.palette != null

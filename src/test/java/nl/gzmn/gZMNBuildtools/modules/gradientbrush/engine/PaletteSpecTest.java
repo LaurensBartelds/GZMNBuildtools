@@ -1,10 +1,12 @@
 package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
 
+import nl.gzmn.gZMNBuildtools.shared.build.TargetMode;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.SmartFixtures.*;
+import static nl.gzmn.gZMNBuildtools.shared.build.BuildFixtures.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PaletteSpecTest {

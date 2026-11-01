@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.modules.gradientbrush.fawe;
+package nl.gzmn.gZMNBuildtools.shared.worldedit;
 
 import com.sk89q.worldedit.registry.state.Property;
 import com.sk89q.worldedit.world.block.BlockState;

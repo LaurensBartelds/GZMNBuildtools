@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
+package nl.gzmn.gZMNBuildtools.shared.build;
 
 /** An inclusive block bounding box. */
 public record Bounds(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {

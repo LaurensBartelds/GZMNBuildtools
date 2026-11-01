@@ -1,5 +1,7 @@
 package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
 
+import nl.gzmn.gZMNBuildtools.shared.build.Bounds;
+
 /**
  * Maps a block position to its place (0..1) along the gradient, measured
  * across a build's bounds so every stroke on the same build agrees.

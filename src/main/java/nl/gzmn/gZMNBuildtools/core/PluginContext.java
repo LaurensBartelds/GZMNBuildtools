@@ -7,13 +7,14 @@ import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import nl.gzmn.gZMNBuildtools.gradient.registry.YamlPresetRegistry;
 import nl.gzmn.gZMNBuildtools.shared.preview.PreviewService;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.BlockKnowledge;
 import nl.gzmn.gZMNBuildtools.typereplace.registry.YamlBlockFamilyRegistry;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * The always-on core services every module may use (messages, gradient
- * presets, block families and previews), exposed to other plugins as the
+ * presets, block families, previews and block knowledge), exposed to other plugins as the
  * public {@link GzmnBuildtoolsApi}.
  */
 public final class PluginContext implements GzmnBuildtoolsApi {
@@ -22,12 +23,15 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     private final PresetRegistry presetRegistry;
     private final BlockFamilyRegistry blockFamilies;
     private final PreviewService previews;
+    private final JavaPlugin plugin;
+    private volatile BlockKnowledge blocks;
 
     public PluginContext(JavaPlugin plugin) {
         this.messages = new AdventureMessages(plugin.getConfig().getBoolean("messages.verbose", false));
         this.presetRegistry = new YamlPresetRegistry(plugin);
         this.blockFamilies = new YamlBlockFamilyRegistry(plugin);
         this.previews = new PreviewService(plugin, messages);
+        this.plugin = plugin;
     }
 
     /** Load all externalized content. */
@@ -40,6 +44,21 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     public void reload(FileConfiguration config) {
         messages.setVerbose(config.getBoolean("messages.verbose", false));
         load();
+        if (blocks != null) {
+            blocks.reload(config);
+        }
+    }
+
+    /**
+     * Runtime block knowledge for build-aware tools. Created on first use because
+     * it reads WorldEdit's block registry, which exists once WorldEdit/FAWE is enabled.
+     */
+    public synchronized BlockKnowledge blocks() {
+        if (blocks == null) {
+            blocks = new BlockKnowledge();
+            blocks.reload(plugin.getConfig());
+        }
+        return blocks;
     }
 
     @Override

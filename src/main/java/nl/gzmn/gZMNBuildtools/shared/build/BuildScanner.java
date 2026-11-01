@@ -1,4 +1,4 @@
-package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
+package nl.gzmn.gZMNBuildtools.shared.build;
 
 import java.util.HashMap;
 import java.util.Map;

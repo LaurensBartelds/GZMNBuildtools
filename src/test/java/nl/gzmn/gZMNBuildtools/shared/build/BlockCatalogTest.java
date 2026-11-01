@@ -1,9 +1,8 @@
-package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
+package nl.gzmn.gZMNBuildtools.shared.build;
 
 import org.junit.jupiter.api.Test;
 
-import static nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.SmartFixtures.CATALOG;
-import static nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.SmartFixtures.VARIANTS;
+import static nl.gzmn.gZMNBuildtools.shared.build.BuildFixtures.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BlockCatalogTest {
