@@ -226,6 +226,23 @@ vines hanging from the walls. Click again for more wear. `/weathering paint` age
 Moss and cracks only appear on materials that have mossy or cracked forms (stone bricks, cobblestone, deepslate,
 nether and blackstone bricks); wear and vines work on any building block.
 
+### Pixel art
+
+`/gzpixelart <image> [options]` (alias `/pixelart`) builds a picture from blocks where you are looking. Put images
+(`.png`, `.jpg`, `.gif`, `.bmp`) in `plugins/GZMNBuildtools/images/`, or give a direct `https://` link.
+
+- By default the picture stands as a wall facing you, on top of the block you look at; `floor` lays it on the ground
+  stretching away from you.
+- `width=64` sets the size in blocks; the height follows the image's proportions unless you set `height=`.
+- `blocks=` picks the blocks: `all` (default), `wool`, `concrete`, `terracotta`, `flat` (those three), `stone`, `wood`;
+  combine with commas.
+- Colours are matched by eye (OKLab) with dithering to keep gradients; `dither=off` gives flat areas.
+- `map` builds flat map art: north-up on the floor, matched to the colours blocks show on a map (128 wide by default).
+- Transparent pixels are skipped. Add `-p` to preview. `//undo` reverts it.
+
+Web downloads are limited for safety: they only go to public addresses (never localhost or private networks), never
+follow redirects, and are capped in size (`pixel-art.*` in `config.yml`; `allow-urls: false` turns them off).
+
 ### Shape generators
 
 `/gzgen <shape> <pattern> [parameters]` (alias `/ggen`) builds a shape with any FAWE pattern. Parameters can be given
@@ -306,6 +323,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `build-select` | `/gzselect` | |
 | `material-swap` | `/gzswap` | |
 | `weathering` | `/weathering` (`/age`) | |
+| `pixel-art` | `/gzpixelart` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -333,6 +351,7 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.select`: Grants access to `/gzselect`.
 - `gzmnbuildtools.swap`: Grants access to `/gzswap`.
 - `gzmnbuildtools.weathering`: Grants access to `/weathering`.
+- `gzmnbuildtools.pixelart`: Grants access to `/gzpixelart`.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.

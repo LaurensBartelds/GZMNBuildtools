@@ -17,6 +17,7 @@ modules:
   build-select: true         # /gzselect
   material-swap: true        # /gzswap
   weathering: true           # /weathering (/age)
+  pixel-art: true            # /gzpixelart
 
 messages:
   # When true, extra per-operation diagnostic messages are shown to players
@@ -63,6 +64,18 @@ palettes:
 loadouts:
   # Most saved loadouts a player may keep per brush (/gb save, /tb save).
   max-per-player: 30
+
+pixel-art:
+  # Largest picture side in blocks.
+  max-size: 256
+  # Images can come from plugins/GZMNBuildtools/images, or from web addresses
+  # when allow-urls is true. Web downloads never go to localhost or private
+  # networks unless allow-private-addresses is true, and never follow redirects.
+  allow-urls: true
+  allow-private-addresses: false
+  max-download-kb: 8192
+  # Images wider or taller than this (in pixels) are refused before decoding.
+  max-image-dimension: 4096
 
 preview:
   # Largest edit that can be previewed as ghost blocks, and how long a preview stays.
