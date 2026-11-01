@@ -1,11 +1,9 @@
 package nl.gzmn.gZMNBuildtools.command.brush;
 
-import com.fastasyncworldedit.core.command.tool.brush.BrushSettings;
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.WorldEditException;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.command.tool.BrushTool;
 import com.sk89q.worldedit.extension.input.InputParseException;
 import com.sk89q.worldedit.extension.input.ParserContext;
 import com.sk89q.worldedit.function.pattern.Pattern;
@@ -18,6 +16,7 @@ import nl.gzmn.gZMNBuildtools.brush.BrushArguments;
 import nl.gzmn.gZMNBuildtools.brush.BrushParam;
 import nl.gzmn.gZMNBuildtools.brush.ParamSpec;
 import nl.gzmn.gZMNBuildtools.brush.TerrainBrushType;
+import nl.gzmn.gZMNBuildtools.integration.worldedit.brush.FaweBrushBinder;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.brush.TerrainBrushFactory;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -102,20 +101,8 @@ public class TerrainBrushCommand {
                 fill = parsePattern(actor, session, args.pattern());
             }
 
-            BrushSettings settings = new BrushSettings();
-            settings.setBrush(TerrainBrushFactory.create(args));
-            settings.addPermission(PERMISSION);
-            settings.addSetting(BrushSettings.SettingType.BRUSH,
-                    ("gzmn " + typeId + " " + radius + " " + (rest == null ? "" : rest)).trim());
-
-            session.setTool(actor, null);
-            BrushTool tool = session.getBrushTool(actor);
-            tool.setPrimary(settings);
-            tool.setSecondary(settings);
-            tool.setSize(radius);
-            if (fill != null) {
-                tool.setFill(fill);
-            }
+            FaweBrushBinder.bind(player, TerrainBrushFactory.create(args), PERMISSION, radius,
+                    ("gzmn " + typeId + " " + radius + " " + (rest == null ? "" : rest)).trim(), fill);
         } catch (InputParseException e) {
             messages.error(player, "Invalid pattern: %s", e.getMessage());
             return;

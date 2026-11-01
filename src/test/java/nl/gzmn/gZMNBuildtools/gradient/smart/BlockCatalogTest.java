@@ -45,5 +45,13 @@ class BlockCatalogTest {
         String white = VARIANTS.resolve("white_concrete", ShapeKind.STAIRS).orElseThrow();
         assertTrue(white.endsWith("_stairs"), white);
         assertTrue(VARIANTS.resolve("stone_bricks", ShapeKind.OTHER).isEmpty());
+        // Fallbacks prefer related, same-hue materials over any similar grey.
+        String smooth = VARIANTS.resolve("smooth_stone", ShapeKind.STAIRS).orElseThrow();
+        assertFalse(smooth.contains("prismarine"), smooth);
+        assertEquals(nl.gzmn.gZMNBuildtools.palette.MaterialClass.STONE,
+                nl.gzmn.gZMNBuildtools.palette.MaterialClass.of(smooth), smooth);
+        String planks = VARIANTS.resolve("stripped_oak_log", ShapeKind.STAIRS).orElseThrow();
+        assertTrue(planks.endsWith("_stairs") && nl.gzmn.gZMNBuildtools.palette.MaterialClass.of(planks)
+                == nl.gzmn.gZMNBuildtools.palette.MaterialClass.WOOD, planks);
     }
 }

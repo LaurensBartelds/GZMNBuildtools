@@ -7,10 +7,13 @@ package nl.gzmn.gZMNBuildtools.palette;
 public enum MaterialClass {
     WOOD, WOOL, CONCRETE, TERRACOTTA, METAL, EARTH, ORGANIC, STONE;
 
+    private static final java.util.List<String> WOOD_TYPES = java.util.List.of("oak", "spruce", "birch", "jungle",
+            "acacia", "dark_oak", "mangrove", "cherry", "pale_oak", "bamboo", "crimson", "warped");
+
     public static MaterialClass of(String id) {
         String n = BlockColors.normalize(id);
         if (n.endsWith("_log") || n.endsWith("_wood") || n.endsWith("planks") || n.endsWith("_stem")
-                || n.endsWith("_hyphae") || n.startsWith("bamboo")) {
+                || n.endsWith("_hyphae") || n.startsWith("bamboo") || isWoodVariant(n)) {
             return WOOD;
         }
         if (n.endsWith("wool")) {
@@ -37,5 +40,17 @@ public enum MaterialClass {
             return ORGANIC;
         }
         return STONE;
+    }
+
+    /** oak_stairs, spruce_fence_gate, stripped_birch_log, ... */
+    private static boolean isWoodVariant(String n) {
+        String plain = n.startsWith("stripped_") ? n.substring("stripped_".length()) : n;
+        for (String type : WOOD_TYPES) {
+            if (plain.startsWith(type + "_") && !plain.contains("leaves") && !plain.contains("sapling")
+                    && !plain.contains("fungus") && !plain.contains("nylium") && !plain.contains("roots")) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -8,7 +8,8 @@ import nl.gzmn.gZMNBuildtools.GZMNBuildtools;
 import nl.gzmn.gZMNBuildtools.api.BlockFamilyRegistry;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
-import nl.gzmn.gZMNBuildtools.command.brush.BrushCommand;
+import nl.gzmn.gZMNBuildtools.command.brush.GradientBrushCommand;
+import nl.gzmn.gZMNBuildtools.core.PluginContext;
 import nl.gzmn.gZMNBuildtools.command.brush.TerrainBrushCommand;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.GradientPatternParser;
 import nl.gzmn.gZMNBuildtools.integration.worldedit.parser.GzmnMaskParsers;
@@ -28,14 +29,15 @@ public class CommandRegistry {
     private final Messages messages;
     private final PresetRegistry presetRegistry;
     private final BlockFamilyRegistry blockFamilies;
-    private final BrushCommand brushCommand;
+    private final GradientBrushCommand brushCommand;
+    private final PluginContext context;
     private final TerrainBrushCommand terrainBrushCommand;
     private final GenerateCommand generateCommand;
 
     public CommandRegistry(GZMNBuildtools plugin, GradientCommand gradientCommand,
                            TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager,
                            Messages messages, PresetRegistry presetRegistry, BlockFamilyRegistry blockFamilies,
-                           BrushCommand brushCommand) {
+                           GradientBrushCommand brushCommand, PluginContext context) {
         this.plugin = plugin;
         this.gradientCommand = gradientCommand;
         this.typeReplaceCommand = typeReplaceCommand;
@@ -44,6 +46,7 @@ public class CommandRegistry {
         this.presetRegistry = presetRegistry;
         this.blockFamilies = blockFamilies;
         this.brushCommand = brushCommand;
+        this.context = context;
         this.terrainBrushCommand = new TerrainBrushCommand(plugin, messages);
         this.generateCommand = new GenerateCommand(plugin, messages);
     }
@@ -144,31 +147,76 @@ public class CommandRegistry {
     }
 
     private void registerBrush(Commands commands) {
-        commands.register(Commands.literal("gzmnbrush")
-                .requires(source -> source.getSender().hasPermission("gzmnbuildtools.brush")
+        commands.register(Commands.literal("gradientbrush")
+                .requires(source -> source.getSender().hasPermission(GradientBrushCommand.PERMISSION)
                         && source.getSender() instanceof Player)
                 .executes(ctx -> {
-                    brushCommand.executeGui((Player) ctx.getSource().getSender());
+                    brushCommand.status((Player) ctx.getSource().getSender());
                     return 1;
                 })
-                .then(Commands.argument("shape", StringArgumentType.word())
+                .then(gradientSub("set", brushCommand::set))
+                .then(gradientSub("paint", brushCommand::paint))
+                .then(Commands.literal("info").executes(ctx -> {
+                    brushCommand.info((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
+                .then(Commands.literal("suggest")
+                        .executes(ctx -> {
+                            brushCommand.suggest((Player) ctx.getSource().getSender(), null);
+                            return 1;
+                        })
+                        .then(Commands.argument("block", StringArgumentType.word())
+                                .executes(ctx -> {
+                                    brushCommand.suggest((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "block"));
+                                    return 1;
+                                })))
+                .then(Commands.literal("code")
+                        .then(Commands.argument("code", StringArgumentType.greedyString())
+                                .executes(ctx -> {
+                                    brushCommand.code((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "code"));
+                                    return 1;
+                                })))
+                .then(Commands.literal("reset").executes(ctx -> {
+                    brushCommand.reset((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
+                .then(Commands.literal("rescan").executes(ctx -> {
+                    brushCommand.rescan((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
+                .then(Commands.argument("palette", StringArgumentType.greedyString())
                         .suggests((ctx, builder) -> {
-                            List.of("sphere", "cyl").forEach(s -> {
-                                if (s.startsWith(builder.getRemainingLowerCase())) builder.suggest(s);
-                            });
+                            brushCommand.suggestions(builder.getRemaining()).forEach(builder::suggest);
                             return builder.buildFuture();
                         })
-                        .then(Commands.argument("radius", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100))
-                                .then(Commands.argument("code", StringArgumentType.greedyString())
-                                        .executes(ctx -> {
-                                            Player player = (Player) ctx.getSource().getSender();
-                                            String shape = StringArgumentType.getString(ctx, "shape");
-                                            int radius = com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "radius");
-                                            String code = StringArgumentType.getString(ctx, "code");
-                                            brushCommand.executeCommand(player, shape, radius, code);
-                                            return 1;
-                                        }))))
-                .build(), "Opens the gradient brush GUI or applies a brush from a web code.", List.of("gbrush"));
+                        .executes(ctx -> {
+                            brushCommand.bind((Player) ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "palette"));
+                            return 1;
+                        }))
+                .build(), "Smart, build-aware gradient brush. /gb <palette> [options] to bind it.",
+                List.of("gb", "gbrush", "gzmnbrush"));
+    }
+
+    private com.mojang.brigadier.builder.LiteralArgumentBuilder<io.papermc.paper.command.brigadier.CommandSourceStack>
+    gradientSub(String name, java.util.function.BiConsumer<Player, String> action) {
+        return Commands.literal(name)
+                .executes(ctx -> {
+                    action.accept((Player) ctx.getSource().getSender(), "");
+                    return 1;
+                })
+                .then(Commands.argument("options", StringArgumentType.greedyString())
+                        .suggests((ctx, builder) -> {
+                            brushCommand.suggestions(builder.getRemaining()).forEach(builder::suggest);
+                            return builder.buildFuture();
+                        })
+                        .executes(ctx -> {
+                            action.accept((Player) ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "options"));
+                            return 1;
+                        }));
     }
 
     private void registerTypeReplace(Commands commands) {
@@ -543,6 +591,7 @@ public class CommandRegistry {
         messages.setVerbose(plugin.getConfig().getBoolean("messages.verbose", false));
         presetRegistry.reload();
         blockFamilies.reload();
+        context.smartGradients().reload(plugin.getConfig());
         // The WorldEdit pattern parser reads presets live, so re-registering it
         // on reload is unnecessary (and would duplicate the parser).
         sender.sendMessage(net.kyori.adventure.text.Component.text(

@@ -1,8 +1,39 @@
 package nl.gzmn.gZMNBuildtools.command.brush;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
 
 public class CodeDecoder {
+
+    /** The parts of a web editor code: direction, mode and one entry per gradient layer. */
+    public record Decoded(String direction, String mode, List<String> layers) {
+    }
+
+    /** Decodes a 'gzmn@...' code into its parts, or empty if it is not a valid code. */
+    public static Optional<Decoded> decode(String code) {
+        if (code == null || !code.startsWith("gzmn@")) {
+            return Optional.empty();
+        }
+        try {
+            String decoded = new String(Base64.getDecoder().decode(code.substring(5)), StandardCharsets.UTF_8);
+            String[] parts = decoded.split("\\|");
+            if (parts.length < 3) {
+                return Optional.empty();
+            }
+            List<String> layers = new ArrayList<>();
+            for (int i = 2; i < parts.length; i++) {
+                if (!parts[i].trim().isEmpty()) {
+                    layers.add(parts[i].trim());
+                }
+            }
+            return layers.isEmpty() ? Optional.empty() : Optional.of(new Decoded(parts[0], parts[1], layers));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
 
     /**
      * Decodes a custom 'gzmn@...' code into a WorldEdit #gradient pattern string.

@@ -4,8 +4,7 @@ import nl.gzmn.gZMNBuildtools.api.GzmnBuildtoolsApi;
 import nl.gzmn.gZMNBuildtools.command.CommandRegistry;
 import nl.gzmn.gZMNBuildtools.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
-import nl.gzmn.gZMNBuildtools.command.brush.BrushCommand;
-import nl.gzmn.gZMNBuildtools.command.brush.BrushUIManager;
+import nl.gzmn.gZMNBuildtools.command.brush.GradientBrushCommand;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
 import nl.gzmn.gZMNBuildtools.web.WebEditorServer;
@@ -55,12 +54,12 @@ public final class GZMNBuildtools extends JavaPlugin {
         typeReplaceUIManager.setMessages(context.messages());
         typeReplaceUIManager.setBlockFamilies(context.blockFamilies());
 
-        BrushUIManager brushUIManager = new BrushUIManager(this, context.messages());
-        BrushCommand brushCommand = new BrushCommand(this, context.messages(), brushUIManager);
-        brushUIManager.setBrushCommand(brushCommand);
+        GradientBrushCommand gradientBrushCommand = new GradientBrushCommand(this, context.messages(),
+                context.smartGradients(), context.presets());
 
         commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
-                typeReplaceUIManager, context.messages(), context.presets(), context.blockFamilies(), brushCommand);
+                typeReplaceUIManager, context.messages(), context.presets(), context.blockFamilies(),
+                gradientBrushCommand, context);
         commandRegistry.register();
 
         typeReplaceUIManager.registerEvents();

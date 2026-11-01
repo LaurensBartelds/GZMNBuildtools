@@ -118,6 +118,53 @@ Examples:
 
 The largest allowed radius is set by `terrain-brushes.max-radius` in `config.yml` (default 32).
 
+### Smart gradient brush
+
+`/gradientbrush` (aliases `/gb`, `/gbrush`, `/gzmnbrush`) is a build-aware gradient brush. Bind it with
+`/gb <palette> [options]` and click any build:
+
+- **It fits the build you click.** The brush finds the connected structure you clicked and runs the gradient across
+  it (bottom to top for walls and towers, along the length for floors and paths), so every stroke on the same build
+  lines up, wherever you click.
+- **It keeps shapes and states.** Stairs stay stairs, slabs stay slabs, walls and fences stay walls and fences, with
+  their facing, half, shape and waterlogging. If a palette block has no stairs (say calcite), the closest matching
+  material that does is used (quartz stairs).
+- **It protects details.** Glass, lights, doors, containers, plants and natural terrain are never painted. With the
+  default `target=clicked` only the material you clicked changes (including its mossy/cracked/chiseled forms);
+  `target=main` repaints the build's main materials and leaves accents such as wood trim alone.
+- **It generates palettes.** `auto` builds an aged palette from the build's own material (mossy and cracked at the
+  base, lighter at the top). Colours come from the game's real block textures, and ramps stay in one material family.
+
+Palettes:
+
+| Palette | Means |
+|---------|-------|
+| `auto` | Aged ramp of the clicked build's main material |
+| `aged:stone_bricks` | Mossy/cracked forms at the bottom, then lighter shades |
+| `shades:oak_planks` | Darker to lighter blocks of the same hue |
+| `sandstone..deepslate_tiles` | An even colour ramp between two blocks |
+| `preset:<id>` | A gradient preset from `presets.yml` |
+| `stone,andesite,#3a3a3a` | Explicit blocks; `#RRGGBB` picks the closest block |
+| `[50%stone,50%andesite][deepslate]` | Weighted mixes per step |
+
+Options (`key=value`, after the palette or with `/gb set`):
+
+| Option | Values (default first) |
+|--------|------------------------|
+| `axis` | `auto`, `up`, `down`, `x`, `-x`, `z`, `-z`, `radial`, `inward` |
+| `target` | `clicked`, `main`, `structural`, `all` |
+| `dither` | `ordered` (even, grain-free), `noise`, `none` (clean bands) |
+| `softness` | `0.6`; 0 = hard bands, 1 = fully blended |
+| `steps` | `auto`; number of palette steps (fills in between explicit blocks) |
+| `shapes` | `keep`, `full` |
+| `range` | `build`, or fixed world coordinates such as `60..120` |
+| `radius` | `4`; the brush radius (`//size` works too) |
+
+Other commands: `/gb` shows your settings, `/gb paint [palette] [options]` paints the whole build you look at,
+`/gb info` inspects it (size, materials, direction, palette), `/gb suggest [block]` offers clickable palettes,
+`/gb code <gzmn@...>` imports a web editor code, `/gb rescan` forgets the remembered build and `/gb reset` restores
+the defaults. Settings changed with `/gb set` apply to the bound brush immediately.
+
 ### Shape generators
 
 `/gzgen <shape> <pattern> [parameters]` (alias `/ggen`) builds a shape with any FAWE pattern. Parameters can be given

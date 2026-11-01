@@ -8,6 +8,7 @@ import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import nl.gzmn.gZMNBuildtools.gradient.registry.YamlPresetRegistry;
 import nl.gzmn.gZMNBuildtools.gradient.service.GradientExecutor;
 import nl.gzmn.gZMNBuildtools.gradient.storage.GradientStorageManager;
+import nl.gzmn.gZMNBuildtools.integration.worldedit.gradient.SmartGradientService;
 import nl.gzmn.gZMNBuildtools.typereplace.registry.YamlBlockFamilyRegistry;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -24,8 +25,11 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     private final BlockFamilyRegistry blockFamilies;
     private final GradientExecutor executor;
     private final GradientStorageManager storage;
+    private final JavaPlugin plugin;
+    private volatile SmartGradientService smartGradients;
 
     public PluginContext(JavaPlugin plugin) {
+        this.plugin = plugin;
         this.messages = new AdventureMessages(plugin.getConfig().getBoolean("messages.verbose", false));
         this.presetRegistry = new YamlPresetRegistry(plugin);
         this.blockFamilies = new YamlBlockFamilyRegistry(plugin);
@@ -38,6 +42,27 @@ public final class PluginContext implements GzmnBuildtoolsApi {
         presetRegistry.reload();
         blockFamilies.reload();
         storage.load();
+        if (smartGradients != null) {
+            smartGradients.reload(plugin.getConfig());
+        }
+    }
+
+    /**
+     * The smart gradient engine. Created on first use because it reads
+     * WorldEdit's block registry, which only exists once WorldEdit/FAWE is enabled.
+     */
+    public SmartGradientService smartGradients() {
+        SmartGradientService service = smartGradients;
+        if (service == null) {
+            synchronized (this) {
+                if (smartGradients == null) {
+                    smartGradients = new SmartGradientService(presetRegistry);
+                    smartGradients.reload(plugin.getConfig());
+                }
+                service = smartGradients;
+            }
+        }
+        return service;
     }
 
     @Override

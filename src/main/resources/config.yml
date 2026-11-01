@@ -19,3 +19,19 @@ terrain-brushes:
 generation:
   # Largest number of blocks a single /gzgen shape may place.
   max-blocks: 500000
+
+smart-gradient:
+  # Largest connected build the gradient brush scans from a click, in blocks and
+  # in distance from the clicked block. Bigger areas use the scanned part.
+  max-scan-blocks: 200000
+  max-scan-radius: 128
+  # How long a scanned build is remembered so later strokes line up with it.
+  cache-minutes: 10
+  # Largest brush radius /gradientbrush accepts.
+  max-radius: 32
+
+palettes:
+  # Blocks automatic palettes never use (glob patterns, * = anything). Leave
+  # this out to use the built-in list of functional, light-emitting, falling
+  # and patterned blocks.
+  # exclude: ["*_ore", "sand", "gravel"]

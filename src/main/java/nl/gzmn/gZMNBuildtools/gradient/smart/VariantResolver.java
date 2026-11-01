@@ -1,11 +1,13 @@
 package nl.gzmn.gZMNBuildtools.gradient.smart;
 
 import nl.gzmn.gZMNBuildtools.palette.BlockColors;
+import nl.gzmn.gZMNBuildtools.palette.MaterialClass;
 import nl.gzmn.gZMNBuildtools.palette.OkLab;
 
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -36,14 +38,37 @@ public final class VariantResolver {
     }
 
     private Optional<String> closest(String base, ShapeKind kind) {
-        Optional<OkLab> colour = colors.side(base);
+        String id = BlockColors.normalize(base);
+        Optional<OkLab> colour = colors.side(id);
         if (colour.isEmpty()) {
             return Optional.empty();
         }
         OkLab target = colour.get();
+        MaterialClass material = MaterialClass.of(id);
+        Set<String> words = Set.of(id.split("_"));
         return catalog.basesWith(kind).stream()
                 .filter(b -> colors.side(b).isPresent())
-                .min(Comparator.comparingDouble(b -> colors.side(b).get().distance(target)))
+                .min(Comparator.comparingDouble(b -> fallbackCost(b, target, material, words)))
                 .flatMap(b -> catalog.variant(b, kind));
+    }
+
+    /**
+     * Colour distance with hue mismatches counted extra, a penalty for a
+     * different material class and a bonus for a related name (smooth_stone
+     * prefers stone_stairs over a same-grey block of another family).
+     */
+    private double fallbackCost(String candidate, OkLab target, MaterialClass material, Set<String> words) {
+        OkLab c = colors.side(candidate).orElseThrow();
+        double cost = c.distance(target) + 1.5 * c.chromaDistance(target);
+        if (MaterialClass.of(candidate) != material) {
+            cost += 0.05;
+        }
+        for (String word : candidate.split("_")) {
+            if (words.contains(word) && !word.equals("block")) {
+                cost -= 0.03;
+                break;
+            }
+        }
+        return cost;
     }
 }

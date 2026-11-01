@@ -42,7 +42,7 @@ permissions:
     default: op
 
   gzmnbuildtools.brush:
-    description: Allows use of /gzmnbrush command
+    description: Allows use of the smart gradient brush (/gradientbrush, /gb)
     default: op
 
   gzmnbuildtools.terrainbrush:
