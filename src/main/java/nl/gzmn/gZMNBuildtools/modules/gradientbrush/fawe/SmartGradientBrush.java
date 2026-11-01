@@ -1,10 +1,11 @@
 package nl.gzmn.gZMNBuildtools.modules.gradientbrush.fawe;
 
 import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.command.tool.brush.Brush;
 import com.sk89q.worldedit.function.pattern.Pattern;
 import com.sk89q.worldedit.math.BlockVector3;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.SmartGradientService;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.BuildEditor;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.PreviewableBrush;
 
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -14,7 +15,7 @@ import java.util.function.Consumer;
  * click, so changes made with commands, the GUI or the web editor apply
  * without rebinding.
  */
-public class SmartGradientBrush implements Brush {
+public class SmartGradientBrush implements PreviewableBrush {
 
     private final SmartGradientService service;
     private final UUID owner;
@@ -33,5 +34,16 @@ public class SmartGradientBrush implements Brush {
         SmartGradientService.Outcome outcome = service.paint(editSession, world, owner, position, size,
                 service.settings().get(owner), null);
         feedback.accept(outcome);
+    }
+
+    @Override
+    public void preview(EditSession editSession, BlockVector3 position, double size, BuildEditor.StateSink sink) {
+        String world = editSession.getWorld() == null ? "" : editSession.getWorld().getName();
+        service.peek(editSession, world, owner, position, size, service.settings().get(owner), sink::accept);
+    }
+
+    @Override
+    public Object previewState() {
+        return service.settings().get(owner);
     }
 }

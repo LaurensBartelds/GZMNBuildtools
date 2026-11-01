@@ -19,6 +19,7 @@ import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -84,6 +85,12 @@ public final class PreviewService implements Listener {
                 .append(Component.text("[Cancel]", NamedTextColor.RED)
                         .clickEvent(ClickEvent.runCommand("/gzpreview cancel")))
                 .append(Component.text("  expires in " + seconds() + "s", NamedTextColor.DARK_GRAY)));
+    }
+
+    /** The positions the player's pending preview shows (empty when there is none). */
+    public Set<Position> shown(Player player) {
+        Pending p = pending.get(player.getUniqueId());
+        return p == null ? Set.of() : Set.copyOf(p.shown().keySet());
     }
 
     public boolean has(Player player) {

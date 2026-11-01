@@ -76,6 +76,25 @@ public final class SmartGradientService {
     /** The build last painted by a player. */
     private record Memory(String world, BuildScan scan, Palette palette, GradientFrame frame,
                           GradientSettings settings, Set<String> groups, long time) {
+
+        boolean usableFor(String world, GradientSettings s, BlockVector3 click, long cacheMillis) {
+            return this.world.equals(world) && settings == s && System.currentTimeMillis() - time < cacheMillis
+                    && scan.contains(click.x(), click.y(), click.z());
+        }
+    }
+
+    /**
+     * A scan worked out by a preview. A click would scan the same build only
+     * while the player's real memory is still {@code basedOn}, the click is on
+     * the same material inside it, and the scan was not cut short by the limits.
+     */
+    private record Lookahead(Memory basedOn, String clicked, Memory memory) {
+
+        boolean usableFor(Memory remembered, String world, GradientSettings s, BlockVector3 click, String block,
+                          long cacheMillis) {
+            return basedOn == remembered && clicked.equals(block) && !memory.scan().truncated()
+                    && memory.usableFor(world, s, click, cacheMillis);
+        }
     }
 
     private final BlockKnowledge blocks;
@@ -87,6 +106,7 @@ public final class SmartGradientService {
     private final GradientSettingsStore settings;
     private final PlayerDataStore playerData;
     private final Map<UUID, Memory> memory = new ConcurrentHashMap<>();
+    private final Map<UUID, Lookahead> lookahead = new ConcurrentHashMap<>();
 
     private volatile long cacheMillis = 10 * 60_000L;
     private volatile int maxRadius = 32;
@@ -349,6 +369,7 @@ public final class SmartGradientService {
     /** Forget the remembered build so the next stroke rescans. */
     public void forget(UUID player) {
         memory.remove(player);
+        lookahead.remove(player);
     }
 
     /**
@@ -359,6 +380,20 @@ public final class SmartGradientService {
      */
     public Outcome paint(EditSession editSession, String world, UUID player, BlockVector3 click, Double radius,
                          GradientSettings s, ChangeSink sink) {
+        return run(editSession, world, player, click, radius, s, sink, true);
+    }
+
+    /**
+     * What {@link #paint} would do, sent to {@code sink}, without remembering
+     * the build: the next real click behaves exactly as if this never ran.
+     */
+    public Outcome peek(EditSession editSession, String world, UUID player, BlockVector3 click, Double radius,
+                        GradientSettings s, ChangeSink sink) {
+        return run(editSession, world, player, click, radius, s, sink, false);
+    }
+
+    private Outcome run(EditSession editSession, String world, UUID player, BlockVector3 click, Double radius,
+                        GradientSettings s, ChangeSink sink, boolean remember) {
         ExtentBlockSource source = new ExtentBlockSource(editSession);
         String clicked = source.blockAt(click.x(), click.y(), click.z());
         if (clicked == null) {
@@ -366,25 +401,33 @@ public final class SmartGradientService {
         }
 
         Memory remembered = memory.get(player);
-        boolean reuse = remembered != null && remembered.world.equals(world) && remembered.settings == s
-                && System.currentTimeMillis() - remembered.time < cacheMillis
-                && remembered.scan.contains(click.x(), click.y(), click.z());
+        boolean reuse = remembered != null && remembered.usableFor(world, s, click, cacheMillis);
         Memory current;
         if (reuse) {
             current = remembered;
         } else {
-            try {
-                current = scan(source, world, click, clicked, s, remembered);
-            } catch (IllegalArgumentException e) {
-                return Outcome.failed(e.getMessage());
-            }
-            if (current.scan.size() == 0) {
-                return Outcome.failed("That block is not part of a build this brush can paint ("
-                        + clicked + " is a detail or terrain block). Try target=all.");
+            Lookahead ahead = lookahead.get(player);
+            if (ahead != null && ahead.usableFor(remembered, world, s, click, clicked, cacheMillis)) {
+                current = ahead.memory();
+            } else {
+                try {
+                    current = scan(source, world, click, clicked, s, remembered);
+                } catch (IllegalArgumentException e) {
+                    return Outcome.failed(e.getMessage());
+                }
+                if (current.scan.size() == 0) {
+                    return Outcome.failed("That block is not part of a build this brush can paint ("
+                            + clicked + " is a detail or terrain block). Try target=all.");
+                }
+                if (!remember) {
+                    lookahead.put(player, new Lookahead(remembered, clicked, current));
+                }
             }
         }
-        memory.put(player, new Memory(current.world, current.scan, current.palette, current.frame, s,
-                current.groups, System.currentTimeMillis()));
+        if (remember) {
+            memory.put(player, new Memory(current.world, current.scan, current.palette, current.frame, s,
+                    current.groups, System.currentTimeMillis()));
+        }
 
         TargetPolicy policy = new TargetPolicy(s.target(), rules, current.groups);
         BuildPainter.StrokeFilter stroke = radius == null ? BuildPainter.StrokeFilter.ALL

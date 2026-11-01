@@ -19,6 +19,7 @@ modules:
   weathering: true           # /weathering (/age)
   pixel-art: true            # /gzpixelart
   terrain-texture: true      # /gztexture
+  hover-preview: true        # /gzhover
 
 messages:
   # When true, extra per-operation diagnostic messages are shown to players
@@ -83,6 +84,16 @@ terrain-texture:
   # and the largest texture brush radius. Presets live in terrain-presets.yml.
   max-volume: 8000000
   max-radius: 32
+
+hover:
+  # /gzhover shows a live ghost of what the held brush would change where you
+  # look. Players turn it on themselves unless this is true.
+  enabled-by-default: false
+  # How often to check where each player is looking (ticks), how far, and the
+  # largest stroke that is previewed.
+  interval-ticks: 4
+  range: 64
+  max-blocks: 4000
 
 preview:
   # Largest edit that can be previewed as ghost blocks, and how long a preview stays.

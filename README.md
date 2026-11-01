@@ -352,6 +352,17 @@ Rivers are made for clicking along the ground. For example, `/gzspline build riv
 **[Apply]** (or `/gzpreview apply`) to place exactly what you see, or **[Cancel]** (`/gzpreview cancel`). A preview
 expires after `preview.seconds` (default 60) and is limited to `preview.max-blocks` (default 60000).
 
+### Hover preview
+
+`/gzhover` (alias `/hover`) toggles a live preview: while you hold the gradient, swap, weathering or texture brush,
+ghost blocks show what a click would change wherever you look, and they follow your aim. A click places exactly what
+was shown. The preview respects the brush's `//size` and `//mask` and your global mask, and changes nothing until you
+click. The setting is remembered per player.
+
+Server owners can tune it under `hover:` in `config.yml`. `interval-ticks` sets how often aim is checked (default 4)
+and `range` how far you can look (default 64). Strokes changing more than `max-blocks` (default 4000) aren't previewed.
+`enabled-by-default` turns it on for everyone who hasn't chosen.
+
 ## Modules
 
 Every feature is a module that can be switched off under `modules:` in `config.yml`. A switched-off module doesn't
@@ -374,6 +385,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `weathering` | `/weathering` (`/age`) | |
 | `pixel-art` | `/gzpixelart` | |
 | `terrain-texture` | `/gztexture` and `terrain-presets.yml` | |
+| `hover-preview` | `/gzhover` live brush previews | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -404,6 +416,7 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.weathering`: Grants access to `/weathering`.
 - `gzmnbuildtools.pixelart`: Grants access to `/gzpixelart`.
 - `gzmnbuildtools.texture`: Grants access to `/gztexture`.
+- `gzmnbuildtools.hover`: Grants access to `/gzhover`.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.
@@ -430,6 +443,10 @@ that list it in `dependencies()` and `require` it. For example, `web-editor` req
 only uses modules it declares, and only through their top-level package, and modules have no cycles. To add a
 feature, create `modules/<name>/<Name>Module.java`, add it to `GZMNBuildtools.allModules()` and give it a switch in
 `config.yml`.
+
+Modules can also meet through shared interfaces instead of depending on each other. A brush that implements
+`shared.worldedit.PreviewableBrush` gets hover previews from the `hover-preview` module without either knowing about
+the other.
 
 ## Extending (for plugin developers)
 
