@@ -35,6 +35,7 @@ public class CommandRegistry {
     private final PluginContext context;
     private final TerrainBrushCommand terrainBrushCommand;
     private final GenerateCommand generateCommand;
+    private final SplineCommand splineCommand;
 
     public CommandRegistry(GZMNBuildtools plugin, GradientCommand gradientCommand,
                            TypeReplaceCommand typeReplaceCommand, TypeReplaceUIManager typeReplaceUIManager,
@@ -51,6 +52,7 @@ public class CommandRegistry {
         this.context = context;
         this.terrainBrushCommand = new TerrainBrushCommand(plugin, messages);
         this.generateCommand = new GenerateCommand(plugin, messages, context.previews());
+        this.splineCommand = new SplineCommand(plugin, messages, context.previews());
     }
 
     public void register() {
@@ -63,7 +65,65 @@ public class CommandRegistry {
             registerTerrainBrush(commands);
             registerGenerate(commands);
             registerPreview(commands);
+            registerSpline(commands);
         });
+    }
+
+    private void registerSpline(Commands commands) {
+        commands.register(Commands.literal("gzspline")
+                .requires(source -> source.getSender() instanceof Player
+                        && source.getSender().hasPermission(GenerateCommand.PERMISSION))
+                .executes(ctx -> {
+                    splineCommand.help((Player) ctx.getSource().getSender());
+                    return 1;
+                })
+                .then(Commands.literal("add").executes(ctx -> {
+                    splineCommand.add((Player) ctx.getSource().getSender(), false);
+                    return 1;
+                }))
+                .then(Commands.literal("here").executes(ctx -> {
+                    splineCommand.add((Player) ctx.getSource().getSender(), true);
+                    return 1;
+                }))
+                .then(Commands.literal("undo").executes(ctx -> {
+                    splineCommand.undo((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
+                .then(Commands.literal("clear").executes(ctx -> {
+                    splineCommand.clear((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
+                .then(Commands.literal("list").executes(ctx -> {
+                    splineCommand.list((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
+                .then(Commands.literal("show").executes(ctx -> {
+                    splineCommand.show((Player) ctx.getSource().getSender(), 10);
+                    return 1;
+                }))
+                .then(Commands.literal("build")
+                        .then(Commands.argument("shape", StringArgumentType.word())
+                                .suggests((ctx, builder) -> {
+                                    for (String s : List.of("tube", "wall", "road")) {
+                                        if (s.startsWith(builder.getRemainingLowerCase())) {
+                                            builder.suggest(s);
+                                        }
+                                    }
+                                    return builder.buildFuture();
+                                })
+                                .then(Commands.argument("args", StringArgumentType.greedyString())
+                                        .suggests((ctx, builder) -> {
+                                            splineCommand.argumentSuggestions(StringArgumentType.getString(ctx, "shape"),
+                                                    builder.getRemaining()).forEach(builder::suggest);
+                                            return builder.buildFuture();
+                                        })
+                                        .executes(ctx -> {
+                                            splineCommand.build((Player) ctx.getSource().getSender(),
+                                                    StringArgumentType.getString(ctx, "shape"),
+                                                    StringArgumentType.getString(ctx, "args"));
+                                            return 1;
+                                        }))))
+                .build(), "Build tubes, walls and roads along a curve through points you pick.", List.of("gsp"));
     }
 
     private void registerPreview(Commands commands) {

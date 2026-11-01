@@ -50,5 +50,5 @@ permissions:
     default: op
 
   gzmnbuildtools.generate:
-    description: Allows use of /gzgen shape generators
+    description: Allows use of /gzgen shape generators and /gzspline
     default: op

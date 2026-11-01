@@ -217,6 +217,22 @@ command to paste.
 The editor runs on `web-editor.port` (default 8080). When players reach the server through a domain or reverse
 proxy, set `web-editor.public-url` so the links point there. Set `web-editor.enabled: false` to turn it off.
 
+### Splines
+
+`/gzspline` (alias `/gsp`) builds along a smooth curve through points you pick. Look at a block and run
+`/gzspline add` (or `/gzspline here` for the block you stand on) to add points. Particles show the curve; `/gzspline
+show` draws it again, and `undo`, `clear` and `list` manage the points. Then build along it:
+
+| Shape | Parameters (defaults) |
+|-------|-----------------------|
+| `/gzspline build tube <pattern>` | `radius=1.5`, `hollow=0` (pipes, cables, tunnels) |
+| `/gzspline build wall <pattern>` | `height=4`, `thickness=1` |
+| `/gzspline build road <pattern>` | `width=3`, `clear=3` (air above), `fill=2` (support below) |
+
+The curve passes through every point without overshooting, and roads follow its height, so they climb hills, cut
+through them with `clear` and bridge dips with `fill`. Add `-p` to preview. Builds count towards
+`generation.max-blocks` and are undone with `//undo`.
+
 ### Previews
 
 `/gb preview` and `/gzgen ... -p` show the result as client-side ghost blocks that only you can see. Click
@@ -242,7 +258,7 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.gradient`: Grants access to the gradient command.
 - `gzmnbuildtools.admin`: Grants access to `/gzmnbuildtools reload`.
 - `gzmnbuildtools.terrainbrush`: Grants access to `/terrainbrush` and using its brushes.
-- `gzmnbuildtools.generate`: Grants access to `/gzgen`.
+- `gzmnbuildtools.generate`: Grants access to `/gzgen` and `/gzspline`.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.
