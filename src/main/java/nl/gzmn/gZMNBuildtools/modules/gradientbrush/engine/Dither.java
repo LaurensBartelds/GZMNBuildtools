@@ -1,5 +1,7 @@
 package nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine;
 
+import nl.gzmn.gZMNBuildtools.shared.build.PositionHash;
+
 import java.util.Locale;
 import java.util.Optional;
 
@@ -34,14 +36,7 @@ public enum Dither {
 
     /** A random-looking value in [0, 1) for a position. */
     public static double hash01(int x, int y, int z, long seed) {
-        long h = seed ^ 0x9E3779B97F4A7C15L;
-        h ^= x * 0xBF58476D1CE4E5B9L;
-        h = Long.rotateLeft(h, 31) ^ y * 0x94D049BB133111EBL;
-        h = Long.rotateLeft(h, 27) ^ z * 0xD6E8FEB86659FD93L;
-        h ^= h >>> 33;
-        h *= 0xFF51AFD7ED558CCDL;
-        h ^= h >>> 33;
-        return (h >>> 11) * 0x1.0p-53;
+        return PositionHash.hash01(x, y, z, seed);
     }
 
     public static Optional<Dither> parse(String s) {

@@ -32,7 +32,7 @@ public final class GradientBrushModule implements GzmnModule {
     @Override
     public void enable(ModuleContext context) throws Exception {
         presetRegistry = context.core().presets();
-        service = new SmartGradientService(presetRegistry, context.core().blocks());
+        service = new SmartGradientService(presetRegistry, context.core().blocks(), context.core().playerData());
         service.reload(context.plugin().getConfig());
         brushCommand = new GradientBrushCommand(context.plugin(), context.core().messages(), service,
                 presetRegistry, context.core().previews());
@@ -87,6 +87,38 @@ public final class GradientBrushModule implements GzmnModule {
                     brushCommand.web((Player) ctx.getSource().getSender());
                     return 1;
                 }))
+                .then(Commands.literal("save")
+                        .executes(ctx -> {
+                            brushCommand.saveLoadout((Player) ctx.getSource().getSender(), null);
+                            return 1;
+                        })
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests(this::suggestLoadouts)
+                                .executes(ctx -> {
+                                    brushCommand.saveLoadout((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "name"));
+                                    return 1;
+                                })))
+                .then(Commands.literal("load")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests(this::suggestLoadouts)
+                                .executes(ctx -> {
+                                    brushCommand.loadLoadout((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "name"));
+                                    return 1;
+                                })))
+                .then(Commands.literal("delete")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests(this::suggestLoadouts)
+                                .executes(ctx -> {
+                                    brushCommand.deleteLoadout((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "name"));
+                                    return 1;
+                                })))
+                .then(Commands.literal("loadouts").executes(ctx -> {
+                    brushCommand.loadouts((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
                 .then(Commands.literal("reset").executes(ctx -> {
                     brushCommand.reset((Player) ctx.getSource().getSender());
                     return 1;
@@ -107,6 +139,17 @@ public final class GradientBrushModule implements GzmnModule {
                         }))
                 .build(), "Smart, build-aware gradient brush. /gb <palette> [options] to bind it.",
                 List.of("gb", "gbrush", "gzmnbrush"));
+    }
+
+    private java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestLoadouts(
+            com.mojang.brigadier.context.CommandContext<io.papermc.paper.command.brigadier.CommandSourceStack> ctx,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder) {
+        if (ctx.getSource().getSender() instanceof Player player) {
+            brushCommand.loadoutNames(player).stream()
+                    .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
+                    .forEach(builder::suggest);
+        }
+        return builder.buildFuture();
     }
 
     private com.mojang.brigadier.builder.LiteralArgumentBuilder<io.papermc.paper.command.brigadier.CommandSourceStack>

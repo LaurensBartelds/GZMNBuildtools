@@ -5,6 +5,7 @@ import nl.gzmn.gZMNBuildtools.shared.build.BlockSource;
 import nl.gzmn.gZMNBuildtools.shared.build.Bounds;
 import nl.gzmn.gZMNBuildtools.shared.build.BuildPainter;
 import nl.gzmn.gZMNBuildtools.shared.build.BuildScan;
+import nl.gzmn.gZMNBuildtools.shared.build.PositionHash;
 import nl.gzmn.gZMNBuildtools.shared.build.ShapeKind;
 import nl.gzmn.gZMNBuildtools.shared.build.TargetMode;
 import nl.gzmn.gZMNBuildtools.shared.build.TargetPolicy;
@@ -34,7 +35,7 @@ public final class GradientPainter {
 
     /** Seed shared by every stroke on the same build, so dithering lines up. */
     public static long seedFor(Bounds bounds) {
-        return bounds.minX() * 73856093L ^ bounds.minY() * 19349663L ^ bounds.minZ() * 83492791L;
+        return PositionHash.seedFor(bounds);
     }
 
     /** The gradient as a {@link BuildPainter.Chooser}. */

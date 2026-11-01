@@ -29,6 +29,18 @@ class BlockCatalogTest {
     }
 
     @Test
+    void knowsTextureForms() {
+        assertEquals("mossy_", CATALOG.textureOf("mossy_stone_bricks"));
+        assertEquals("cracked_", CATALOG.textureOf("cracked_deepslate_tiles"));
+        assertEquals("", CATALOG.textureOf("stone_bricks"));
+        assertEquals("", CATALOG.textureOf("mossy_carpet"), "there is no plain carpet block");
+        assertEquals("mossy_cobblestone", CATALOG.withTexture("cobblestone", "mossy_").orElseThrow());
+        assertEquals("cracked_deepslate_bricks", CATALOG.withTexture("deepslate_bricks", "cracked_").orElseThrow());
+        assertTrue(CATALOG.withTexture("oak_planks", "mossy_").isEmpty());
+        assertEquals("oak_planks", CATALOG.withTexture("oak_planks", "").orElseThrow());
+    }
+
+    @Test
     void nonBuildingBlocksAreOther() {
         assertEquals(ShapeKind.OTHER, CATALOG.classify("oak_door").kind());
         assertEquals(ShapeKind.OTHER, CATALOG.classify("torch").kind());

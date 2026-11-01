@@ -14,6 +14,9 @@ modules:
   generators: true           # /gzgen
   splines: true              # /gzspline
   web-editor: true           # browser editor for /gb (needs gradient-brush)
+  build-select: true         # /gzselect
+  material-swap: true        # /gzswap
+  weathering: true           # /weathering (/age)
 
 messages:
   # When true, extra per-operation diagnostic messages are shown to players
@@ -38,14 +41,17 @@ generation:
   # Largest number of blocks a single /gzgen shape may place.
   max-blocks: 500000
 
+build-scan:
+  # Largest connected build the build-aware tools (gradient brush, /gzselect,
+  # /gzswap, /weathering) scan from a click, in blocks and in distance from the
+  # clicked block. Bigger areas use the scanned part.
+  max-blocks: 200000
+  max-radius: 128
+
 smart-gradient:
-  # Largest connected build the gradient brush scans from a click, in blocks and
-  # in distance from the clicked block. Bigger areas use the scanned part.
-  max-scan-blocks: 200000
-  max-scan-radius: 128
   # How long a scanned build is remembered so later strokes line up with it.
   cache-minutes: 10
-  # Largest brush radius /gradientbrush accepts.
+  # Largest brush radius /gradientbrush, /gzswap and /weathering accept.
   max-radius: 32
 
 palettes:
@@ -53,6 +59,10 @@ palettes:
   # this out to use the built-in list of functional, light-emitting, falling
   # and patterned blocks.
   # exclude: ["*_ore", "sand", "gravel"]
+
+loadouts:
+  # Most saved loadouts a player may keep per brush (/gb save, /tb save).
+  max-per-player: 30
 
 preview:
   # Largest edit that can be previewed as ghost blocks, and how long a preview stays.

@@ -4,6 +4,7 @@ import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
+import nl.gzmn.gZMNBuildtools.shared.build.BlockSource;
 import nl.gzmn.gZMNBuildtools.shared.build.BuildPainter;
 import nl.gzmn.gZMNBuildtools.shared.build.BuildScan;
 import nl.gzmn.gZMNBuildtools.shared.build.BuildScanner;
@@ -30,10 +31,10 @@ public final class BuildEditor {
         }
     }
 
-    /** Builds the per-block choice once the build is known (e.g. from its size or materials). */
+    /** Builds the per-block choice once the build is known (e.g. from its size, materials or neighbours). */
     @FunctionalInterface
     public interface Plan {
-        BuildPainter.Chooser chooserFor(BuildScan scan);
+        BuildPainter.Chooser chooserFor(BuildScan scan, BlockSource source);
     }
 
     /** A scanned build, or why there is none. */
@@ -99,7 +100,7 @@ public final class BuildEditor {
                 : BuildPainter.StrokeFilter.sphere(click.x(), click.y(), click.z(), radius);
         BuildPainter.Chooser chooser;
         try {
-            chooser = plan.chooserFor(found.scan());
+            chooser = plan.chooserFor(found.scan(), found.source());
         } catch (IllegalArgumentException e) {
             return new Outcome(0, 0, found.scan(), e.getMessage());
         }

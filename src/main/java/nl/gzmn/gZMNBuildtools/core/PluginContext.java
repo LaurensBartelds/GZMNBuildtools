@@ -12,9 +12,11 @@ import nl.gzmn.gZMNBuildtools.typereplace.registry.YamlBlockFamilyRegistry;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+
 /**
  * The always-on core services every module may use (messages, gradient
- * presets, block families, previews and block knowledge), exposed to other plugins as the
+ * presets, block families, previews, block knowledge and player data), exposed to other plugins as the
  * public {@link GzmnBuildtoolsApi}.
  */
 public final class PluginContext implements GzmnBuildtoolsApi {
@@ -23,6 +25,7 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     private final PresetRegistry presetRegistry;
     private final BlockFamilyRegistry blockFamilies;
     private final PreviewService previews;
+    private final PlayerDataStore playerData;
     private final JavaPlugin plugin;
     private volatile BlockKnowledge blocks;
 
@@ -31,6 +34,8 @@ public final class PluginContext implements GzmnBuildtoolsApi {
         this.presetRegistry = new YamlPresetRegistry(plugin);
         this.blockFamilies = new YamlBlockFamilyRegistry(plugin);
         this.previews = new PreviewService(plugin, messages);
+        this.playerData = new PlayerDataStore(new File(plugin.getDataFolder(), "players"),
+                task -> plugin.getServer().getScheduler().runTaskAsynchronously(plugin, task), plugin.getLogger());
         this.plugin = plugin;
     }
 
@@ -78,5 +83,10 @@ public final class PluginContext implements GzmnBuildtoolsApi {
 
     public PreviewService previews() {
         return previews;
+    }
+
+    /** Per-player saved data (settings, loadouts), one section per module. */
+    public PlayerDataStore playerData() {
+        return playerData;
     }
 }

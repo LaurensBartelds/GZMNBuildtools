@@ -28,7 +28,8 @@ public final class TerrainBrushModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
-        terrainBrushCommand = new TerrainBrushCommand(context.plugin(), context.core().messages());
+        terrainBrushCommand = new TerrainBrushCommand(context.plugin(), context.core().messages(),
+                context.core().playerData());
         context.commands(this::registerTerrainBrush);
     }
 
@@ -41,6 +42,34 @@ public final class TerrainBrushModule implements GzmnModule {
                     new TerrainBrushMenu(player, terrainBrushCommand).open();
                     return 1;
                 })
+                .then(Commands.literal("save")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests(this::suggestLoadouts)
+                                .executes(ctx -> {
+                                    terrainBrushCommand.saveLoadout((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "name"));
+                                    return 1;
+                                })))
+                .then(Commands.literal("load")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests(this::suggestLoadouts)
+                                .executes(ctx -> {
+                                    terrainBrushCommand.loadLoadout((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "name"));
+                                    return 1;
+                                })))
+                .then(Commands.literal("delete")
+                        .then(Commands.argument("name", StringArgumentType.word())
+                                .suggests(this::suggestLoadouts)
+                                .executes(ctx -> {
+                                    terrainBrushCommand.deleteLoadout((Player) ctx.getSource().getSender(),
+                                            StringArgumentType.getString(ctx, "name"));
+                                    return 1;
+                                })))
+                .then(Commands.literal("loadouts").executes(ctx -> {
+                    terrainBrushCommand.loadouts((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
                 .then(Commands.literal("list").executes(ctx -> {
                     terrainBrushCommand.list((Player) ctx.getSource().getSender());
                     return 1;
@@ -82,5 +111,16 @@ public final class TerrainBrushModule implements GzmnModule {
                                         }))))
                 .build(), "Bind a GZMN terrain brush (raise, smooth, overlay, blob, ...) to your held item.",
                 List.of("tbrush", "tb"));
+    }
+
+    private java.util.concurrent.CompletableFuture<com.mojang.brigadier.suggestion.Suggestions> suggestLoadouts(
+            com.mojang.brigadier.context.CommandContext<io.papermc.paper.command.brigadier.CommandSourceStack> ctx,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder) {
+        if (ctx.getSource().getSender() instanceof Player player) {
+            terrainBrushCommand.loadoutNames(player).stream()
+                    .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
+                    .forEach(builder::suggest);
+        }
+        return builder.buildFuture();
     }
 }

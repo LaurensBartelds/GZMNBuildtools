@@ -128,6 +128,34 @@ public record GradientSettings(String palette, int steps, GradientAxis axis, Tar
         }
     }
 
+    /**
+     * Rebuilds settings saved with {@link #describe()}. Values that no longer
+     * parse (say, a block removed in a game update) fall back to the default.
+     */
+    public static GradientSettings fromMap(Map<String, ?> saved, int maxRadius, java.util.function.Predicate<String> validPalette) {
+        GradientSettings s = defaults();
+        Object palette = saved.get("palette");
+        if (palette != null && validPalette.test(palette.toString())) {
+            s = s.withPalette(palette.toString());
+        }
+        for (String key : OPTIONS) {
+            Object value = saved.get(key);
+            if (value == null) {
+                continue;
+            }
+            String text = value.toString();
+            if (key.equals("steps") && text.equals("auto")) {
+                text = "0";
+            }
+            try {
+                s = s.with(key, text, maxRadius);
+            } catch (IllegalArgumentException ignored) {
+                // Keep the default for an option that no longer parses.
+            }
+        }
+        return s;
+    }
+
     /** Options in display order, as shown to players. */
     public Map<String, String> describe() {
         Map<String, String> out = new LinkedHashMap<>();

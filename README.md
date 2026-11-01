@@ -127,6 +127,10 @@ and leaves are placed persistent so they never decay.
 
 The largest allowed radius is set by `terrain-brushes.max-radius` in `config.yml` (default 32).
 
+After binding a terrain brush, `/tb save <name>` keeps it; `/tb load <name>` binds it to your held item again,
+`/tb loadouts` lists them and `/tb delete <name>` removes one. A player can keep up to `loadouts.max-per-player`
+(default 30) loadouts per brush.
+
 ### Smart gradient brush
 
 `/gradientbrush` (aliases `/gb`, `/gbrush`, `/gzmnbrush`) is a build-aware gradient brush. Bind it with
@@ -173,11 +177,54 @@ Run `/gb` without arguments to open the brush menu. It shows the palette and has
 a palette on a block, click it in your own inventory; shift-click blocks to build a palette in order, and the Steps
 button fills in blocks between them by colour. Bind, Paint, Preview, Inspect and Reset are buttons too.
 
+Your settings are saved, so the brush is set up the same way after a restart. Keep favourite setups as loadouts:
+`/gb save <name>` stores the current brush, `/gb load <name>` brings it back, `/gb loadouts` lists them (click to
+load) and `/gb delete <name>` removes one. The menu has a Loadouts page too.
+
 Other commands: `/gb status` shows your settings, `/gb paint [palette] [options]` paints the whole build you look at,
 `/gb preview [palette] [options]` shows that paint as ghost blocks first,
 `/gb info` inspects it (size, materials, direction, palette), `/gb suggest [block]` offers clickable palettes,
 `/gb code <gzmn@...>` imports a web editor code, `/gb rescan` forgets the remembered build and `/gb reset` restores
 the defaults. Settings changed with `/gb set` apply to the bound brush immediately.
+
+### Select a build
+
+`/gzselect` (alias `/gsel`) makes your WorldEdit selection the bounding box of the build you are looking at, so
+`//copy`, `//replace`, `//stack` and every other selection command work on "this build" without placing corners.
+Particles outline what was selected.
+
+- `/gzselect` or `/gzselect build`: the whole structure (building blocks, not the terrain it stands on)
+- `/gzselect material`: only the connected blocks of the material you look at
+- `/gzselect all`: everything connected, details included
+- `/gzselect build 2`: the same, padded by 2 blocks on every side
+
+### Material swap
+
+`/gzswap <block> [options]` (alias `/swap`) binds a brush that swaps the material of the build you click, keeping its
+shape: stone brick stairs become deepslate brick stairs with the same facing, and mossy or cracked blocks become the
+new material's mossy or cracked form when it has one. Glass, doors, lights, other materials and terrain are left alone.
+
+- `/gzswap paint <block>` swaps the whole build you look at; `/gzswap preview <block>` shows it first
+- `from=<block>`: replace only that material, anywhere in the build (e.g. `/gzswap paint spruce_planks from=oak_planks`)
+- `shapes=full` turns stairs and slabs into full blocks; `textures=plain` drops mossy/cracked forms
+- `radius=4` sets the brush size
+
+### Weathering
+
+`/weathering [options]` (alias `/age`) binds a brush that ages the build you click: moss creeping up from the ground
+in patches, cracks around the middle, corners and rims crumbling to slabs or wearing away (more near the top), and
+vines hanging from the walls. Click again for more wear. `/weathering paint` ages a whole build and
+`/weathering preview` shows it first.
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `strength` | 0.5 | Overall amount, 0 to 1 |
+| `moss`, `cracks`, `decay`, `vines` | 1 | Each effect from 0 (off) to 2 (double) |
+| `target` | `build` | `material` only ages the material you click |
+| `radius` | 5 | Brush size |
+
+Moss and cracks only appear on materials that have mossy or cracked forms (stone bricks, cobblestone, deepslate,
+nether and blackstone bricks); wear and vines work on any building block.
 
 ### Shape generators
 
@@ -256,6 +303,9 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `generators` | `/gzgen` | |
 | `splines` | `/gzspline` | |
 | `web-editor` | The browser editor and `/gb web` links | `gradient-brush` |
+| `build-select` | `/gzselect` | |
+| `material-swap` | `/gzswap` | |
+| `weathering` | `/weathering` (`/age`) | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -280,6 +330,9 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.admin`: Grants access to `/gzmnbuildtools reload`.
 - `gzmnbuildtools.terrainbrush`: Grants access to `/terrainbrush` and using its brushes.
 - `gzmnbuildtools.generate`: Grants access to `/gzgen` and `/gzspline`.
+- `gzmnbuildtools.select`: Grants access to `/gzselect`.
+- `gzmnbuildtools.swap`: Grants access to `/gzswap`.
+- `gzmnbuildtools.weathering`: Grants access to `/weathering`.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.
@@ -288,9 +341,11 @@ All permissions default to OP.
 
 The code is split like a Spring Modulith application, without Spring:
 
-- `core`: bootstrap services (`PluginContext`), the module system (`core.module`) and the always-on commands.
-- `shared`: libraries any module may use: palette and block colours, terrain maths, shape geometry, brush
-  parameters, menus, previews and WorldEdit helpers.
+- `core`: bootstrap services (`PluginContext`: messages, presets, block families, previews, block knowledge and
+  per-player data), the module system (`core.module`) and the always-on commands.
+- `shared`: libraries any module may use: build awareness (`shared.build`: finding the connected build, shapes,
+  protected details, the generic `BuildPainter`), palette and block colours, terrain maths, shape geometry, brush
+  parameters, menus, previews and WorldEdit helpers (`BuildEditor` runs a build-aware edit at a click).
 - `modules.<name>`: one package per feature. Its top-level package holds the `GzmnModule` class and the module's
   public API; sub-packages such as `command`, `menu`, `engine` and `fawe` are internal to the module.
 - `api`, plus the model types it exposes (`gradient.model.GradientPreset`, `typereplace`): the public API for

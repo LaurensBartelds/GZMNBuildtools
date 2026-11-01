@@ -168,6 +168,77 @@ public class GradientBrushCommand {
         messages.success(player, "The next stroke rescans the build.");
     }
 
+    // ---- loadouts ----------------------------------------------------------------------------------------------
+
+    private int maxLoadouts() {
+        return Math.max(1, plugin.getConfig().getInt("loadouts.max-per-player", 30));
+    }
+
+    public void saveLoadout(Player player, String name) {
+        String chosen = name == null || name.isBlank() ? service.nextLoadoutName(player.getUniqueId()) : name;
+        try {
+            service.saveLoadout(player.getUniqueId(), chosen, maxLoadouts());
+        } catch (IllegalArgumentException e) {
+            messages.error(player, "%s", e.getMessage());
+            return;
+        }
+        messages.success(player, "Saved your gradient brush as '%s'. /gb load %s brings it back.",
+                chosen.toLowerCase(Locale.ROOT), chosen.toLowerCase(Locale.ROOT));
+    }
+
+    public void loadLoadout(Player player, String name) {
+        if (!service.loadLoadout(player.getUniqueId(), name)) {
+            messages.error(player, "You have no loadout called '%s'.", name);
+            loadouts(player);
+            return;
+        }
+        syncBrushSize(player);
+        GradientSettings s = service.settings().get(player.getUniqueId());
+        messages.success(player, "Loaded '%s'; a bound gradient brush uses it right away.", name.toLowerCase(Locale.ROOT));
+        sendPaletteLine(player, s);
+        player.sendMessage(Component.text("  [Bind to held item]", NamedTextColor.GREEN)
+                .clickEvent(ClickEvent.runCommand("/gb " + s.palette())));
+    }
+
+    public void deleteLoadout(Player player, String name) {
+        if (service.deleteLoadout(player.getUniqueId(), name)) {
+            messages.success(player, "Deleted loadout '%s'.", name.toLowerCase(Locale.ROOT));
+        } else {
+            messages.error(player, "You have no loadout called '%s'.", name);
+        }
+    }
+
+    public void loadouts(Player player) {
+        List<String> names = service.loadoutNames(player.getUniqueId());
+        if (names.isEmpty()) {
+            messages.info(player, "No loadouts yet. /gb save <name> saves your current brush.");
+            return;
+        }
+        messages.info(player, "Your gradient loadouts (click to load):");
+        for (String name : names) {
+            Component line = Component.text("  " + name + " ", NamedTextColor.AQUA)
+                    .clickEvent(ClickEvent.runCommand("/gb load " + name));
+            Optional<GradientSettings> saved = service.loadout(player.getUniqueId(), name);
+            if (saved.isPresent()) {
+                try {
+                    PaletteSpec spec = service.parseSpec(saved.get().palette());
+                    line = line.append(spec.dependsOnBuild() ? Component.text("auto", NamedTextColor.GRAY)
+                            : Swatches.of(spec.resolve(service.context(null), saved.get().steps()), service.colors()));
+                } catch (IllegalArgumentException ignored) {
+                    // Shown without swatches.
+                }
+                line = line.hoverEvent(HoverEvent.showText(Component.text(String.join("\n",
+                        saved.get().describe().entrySet().stream().map(e -> e.getKey() + ": " + e.getValue()).toList()))));
+            }
+            player.sendMessage(line.append(Component.text("  [delete]", NamedTextColor.DARK_GRAY)
+                    .clickEvent(ClickEvent.suggestCommand("/gb delete " + name))));
+        }
+    }
+
+    public List<String> loadoutNames(Player player) {
+        return service.loadoutNames(player.getUniqueId());
+    }
+
     // ---- binding ----------------------------------------------------------------------------------------------
 
     public void bind(Player player, String input) {

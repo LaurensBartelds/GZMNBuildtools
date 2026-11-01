@@ -12,6 +12,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.PlayerDataStore;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.engine.TerrainBrushType;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.fawe.TerrainBrushFactory;
 import nl.gzmn.gZMNBuildtools.shared.params.BrushArguments;
@@ -24,7 +25,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
@@ -36,12 +40,23 @@ public class TerrainBrushCommand {
 
     public static final String PERMISSION = "gzmnbuildtools.terrainbrush";
 
+    /** Saved data section (in players/<uuid>.yml). */
+    private static final String DATA = "terrain-brushes";
+    private static final java.util.regex.Pattern LOADOUT_NAME = java.util.regex.Pattern.compile("[a-z0-9_-]{1,32}");
+
+    /** The brush a player bound most recently, so it can be saved as a loadout. */
+    private record Bound(String type, int radius, String args) {
+    }
+
     private final JavaPlugin plugin;
     private final Messages messages;
+    private final PlayerDataStore playerData;
+    private final Map<UUID, Bound> lastBound = new ConcurrentHashMap<>();
 
-    public TerrainBrushCommand(JavaPlugin plugin, Messages messages) {
+    public TerrainBrushCommand(JavaPlugin plugin, Messages messages, PlayerDataStore playerData) {
         this.plugin = plugin;
         this.messages = messages;
+        this.playerData = playerData;
     }
 
     public int maxRadius() {
@@ -115,10 +130,84 @@ public class TerrainBrushCommand {
             return;
         }
 
+        lastBound.put(player.getUniqueId(), new Bound(type.get().id(), radius, rest == null ? "" : rest.trim()));
         messages.success(player, "Bound %s brush (radius %d%s) to your held item. %s",
                 type.get().id(), radius, args.patterns().isEmpty() ? "" : ", " + String.join(" + ", args.patterns()),
                 args.describe());
-        messages.info(player, "Use //size, //mask and //mat to adjust it, or /none to unbind.");
+        messages.info(player, "Use //size, //mask and //mat to adjust it, /tb save <name> to keep it, or /none to unbind.");
+    }
+
+    // ---- loadouts ----------------------------------------------------------------------------------------------
+
+    public List<String> loadoutNames(Player player) {
+        return List.copyOf(playerData.keys(player.getUniqueId(), DATA, "loadouts"));
+    }
+
+    /** Saves the brush the player bound last under a name. */
+    public void saveLoadout(Player player, String rawName) {
+        Bound bound = lastBound.get(player.getUniqueId());
+        if (bound == null) {
+            messages.error(player, "Bind a terrain brush first (/tb), then save it.");
+            return;
+        }
+        String name = rawName.toLowerCase(Locale.ROOT);
+        if (!LOADOUT_NAME.matcher(name).matches()) {
+            messages.error(player, "Loadout names use letters, digits, - and _ (up to 32).");
+            return;
+        }
+        int max = Math.max(1, plugin.getConfig().getInt("loadouts.max-per-player", 30));
+        if (!loadoutNames(player).contains(name) && loadoutNames(player).size() >= max) {
+            messages.error(player, "You already have %d terrain loadouts; delete one first.", max);
+            return;
+        }
+        playerData.set(player.getUniqueId(), DATA, "loadouts." + name,
+                Map.of("type", bound.type(), "radius", bound.radius(), "args", bound.args()));
+        messages.success(player, "Saved your %s brush as '%s'. /tb load %s binds it again.", bound.type(), name, name);
+    }
+
+    /** Binds a saved terrain brush to the held item. */
+    public void loadLoadout(Player player, String rawName) {
+        String name = rawName.toLowerCase(Locale.ROOT);
+        Object type = playerData.get(player.getUniqueId(), DATA, "loadouts." + name + ".type");
+        if (type == null) {
+            messages.error(player, "You have no terrain loadout called '%s'.", rawName);
+            loadouts(player);
+            return;
+        }
+        Object radius = playerData.get(player.getUniqueId(), DATA, "loadouts." + name + ".radius");
+        Object args = playerData.get(player.getUniqueId(), DATA, "loadouts." + name + ".args");
+        int r = radius instanceof Number n ? n.intValue() : 5;
+        bind(player, type.toString(), Math.min(r, maxRadius()), args == null ? "" : args.toString());
+    }
+
+    public void deleteLoadout(Player player, String rawName) {
+        String name = rawName.toLowerCase(Locale.ROOT);
+        if (!loadoutNames(player).contains(name)) {
+            messages.error(player, "You have no terrain loadout called '%s'.", rawName);
+            return;
+        }
+        playerData.set(player.getUniqueId(), DATA, "loadouts." + name, null);
+        messages.success(player, "Deleted terrain loadout '%s'.", name);
+    }
+
+    public void loadouts(Player player) {
+        List<String> names = loadoutNames(player);
+        if (names.isEmpty()) {
+            messages.info(player, "No terrain loadouts yet. Bind a brush, then /tb save <name>.");
+            return;
+        }
+        messages.info(player, "Your terrain loadouts (click to bind to your held item):");
+        for (String name : names) {
+            String base = "loadouts." + name + ".";
+            String summary = playerData.get(player.getUniqueId(), DATA, base + "type") + " "
+                    + playerData.get(player.getUniqueId(), DATA, base + "radius") + " "
+                    + playerData.get(player.getUniqueId(), DATA, base + "args");
+            player.sendMessage(Component.text("  " + name, NamedTextColor.AQUA)
+                    .append(Component.text(" " + summary.trim(), NamedTextColor.GRAY))
+                    .clickEvent(ClickEvent.runCommand("/tb load " + name))
+                    .append(Component.text("  [delete]", NamedTextColor.DARK_GRAY)
+                            .clickEvent(ClickEvent.suggestCommand("/tb delete " + name))));
+        }
     }
 
     private Pattern parsePattern(com.sk89q.worldedit.entity.Player actor, LocalSession session, String input)

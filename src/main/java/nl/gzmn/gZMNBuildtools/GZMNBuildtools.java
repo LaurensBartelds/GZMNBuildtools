@@ -10,10 +10,13 @@ import nl.gzmn.gZMNBuildtools.core.module.ModuleManager;
 import nl.gzmn.gZMNBuildtools.modules.generators.GeneratorsModule;
 import nl.gzmn.gZMNBuildtools.modules.gradient.GradientModule;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.GradientBrushModule;
+import nl.gzmn.gZMNBuildtools.modules.materialswap.MaterialSwapModule;
 import nl.gzmn.gZMNBuildtools.modules.patterns.PatternsModule;
+import nl.gzmn.gZMNBuildtools.modules.selection.BuildSelectModule;
 import nl.gzmn.gZMNBuildtools.modules.splines.SplinesModule;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.TerrainBrushModule;
 import nl.gzmn.gZMNBuildtools.modules.typereplace.TypeReplaceModule;
+import nl.gzmn.gZMNBuildtools.modules.weathering.WeatheringModule;
 import nl.gzmn.gZMNBuildtools.modules.webeditor.WebEditorModule;
 import nl.gzmn.gZMNBuildtools.shared.menu.MenuListener;
 import org.bukkit.Bukkit;
@@ -33,6 +36,7 @@ import java.util.logging.Logger;
 public final class GZMNBuildtools extends JavaPlugin {
 
     private ModuleManager modules;
+    private PluginContext context;
 
     @Override
     public void onEnable() {
@@ -45,7 +49,7 @@ public final class GZMNBuildtools extends JavaPlugin {
             return;
         }
 
-        PluginContext context = new PluginContext(this);
+        context = new PluginContext(this);
         context.load();
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
 
@@ -88,7 +92,10 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new TerrainBrushModule(),
                 new GeneratorsModule(),
                 new SplinesModule(),
-                new WebEditorModule());
+                new WebEditorModule(),
+                new BuildSelectModule(),
+                new MaterialSwapModule(),
+                new WeatheringModule());
     }
 
     private ModuleHost host(PluginContext context) {
@@ -125,6 +132,9 @@ public final class GZMNBuildtools extends JavaPlugin {
     public void onDisable() {
         if (modules != null) {
             modules.disableAll();
+        }
+        if (context != null) {
+            context.playerData().flush();
         }
         getLogger().info("GZMNBuildtools disabled.");
     }

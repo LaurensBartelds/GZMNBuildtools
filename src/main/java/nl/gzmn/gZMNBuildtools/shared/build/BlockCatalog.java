@@ -102,6 +102,37 @@ public final class BlockCatalog {
         return base;
     }
 
+    /**
+     * The texture form of a base block relative to its plain material:
+     * "mossy_", "cracked_", "chiseled_" or "" (e.g. "mossy_" for mossy_stone_bricks).
+     */
+    public String textureOf(String base) {
+        String b = BlockColors.normalize(base);
+        for (String prefix : TEXTURE_PREFIXES) {
+            if (b.startsWith(prefix) && !group(b).equals(b)) {
+                return prefix;
+            }
+        }
+        return "";
+    }
+
+    /** The texture form of a plain material (mossy_ + stone_bricks), if the game has it. */
+    public Optional<String> withTexture(String plainBase, String prefix) {
+        if (prefix.isEmpty()) {
+            return Optional.of(BlockColors.normalize(plainBase));
+        }
+        String b = BlockColors.normalize(plainBase);
+        String candidate = prefix + b;
+        if (ids.contains(candidate)) {
+            return Optional.of(candidate);
+        }
+        // chiseled_ + stone_bricks -> chiseled_stone_bricks, but some only exist for the singular stem.
+        if (b.endsWith("s") && ids.contains(prefix + b.substring(0, b.length() - 1))) {
+            return Optional.of(prefix + b.substring(0, b.length() - 1));
+        }
+        return Optional.empty();
+    }
+
     /** The block of {@code kind} made of {@code base}, if the game has one. */
     public Optional<String> variant(String base, ShapeKind kind) {
         String b = BlockColors.normalize(base);

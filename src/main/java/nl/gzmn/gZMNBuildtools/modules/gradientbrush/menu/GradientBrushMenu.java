@@ -105,6 +105,8 @@ public class GradientBrushMenu extends Menu {
         button(48, Items.icon(Material.BOOK, "Inspect build", NamedTextColor.GREEN,
                 "Size, materials and direction of the", "build you are looking at."),
                 e -> run(() -> command.info(viewer)));
+        button(49, Items.icon(Material.CHEST, "Loadouts", NamedTextColor.GREEN,
+                "Save this brush or load a saved one."), e -> new LoadoutMenu(viewer, this, command).open());
         button(50, Items.icon(Material.WRITABLE_BOOK, "Web editor", NamedTextColor.GREEN,
                 "Get a personal link to design the", "gradient in your browser."),
                 e -> run(() -> viewer.performCommand("gb web")));

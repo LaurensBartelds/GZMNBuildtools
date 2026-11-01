@@ -11,6 +11,7 @@ import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
 import net.kyori.adventure.text.Component;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
+import nl.gzmn.gZMNBuildtools.core.PlayerDataStore;
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientPreset;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.command.Swatches;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.engine.GradientFrame;
@@ -83,15 +84,32 @@ public final class SmartGradientService {
     private final BlockRules rules;
     private final GradientPainter painter;
     private final PresetRegistry presets;
-    private final GradientSettingsStore settings = new GradientSettingsStore();
+    private final GradientSettingsStore settings;
+    private final PlayerDataStore playerData;
     private final Map<UUID, Memory> memory = new ConcurrentHashMap<>();
 
     private volatile long cacheMillis = 10 * 60_000L;
     private volatile int maxRadius = 32;
 
-    public SmartGradientService(PresetRegistry presets, BlockKnowledge blocks) {
+    /** Saved data section (in players/<uuid>.yml). */
+    private static final String DATA = "gradient-brush";
+    private static final java.util.regex.Pattern LOADOUT_NAME = java.util.regex.Pattern.compile("[a-z0-9_-]{1,32}");
+
+    public SmartGradientService(PresetRegistry presets, BlockKnowledge blocks, PlayerDataStore playerData) {
         this.presets = presets;
         this.blocks = blocks;
+        this.playerData = playerData;
+        this.settings = new GradientSettingsStore(new GradientSettingsStore.Persistence() {
+            @Override
+            public Optional<GradientSettings> load(UUID player) {
+                return readSettings(player, "current");
+            }
+
+            @Override
+            public void save(UUID player, GradientSettings value) {
+                playerData.set(player, DATA, "current", value == null ? null : value.describe());
+            }
+        });
         this.colors = blocks.colors();
         this.catalog = blocks.catalog();
         this.rules = blocks.rules();
@@ -102,6 +120,81 @@ public final class SmartGradientService {
         cacheMillis = Math.max(1, config.getInt("smart-gradient.cache-minutes", 10)) * 60_000L;
         maxRadius = Math.max(1, config.getInt("smart-gradient.max-radius", 32));
         memory.clear();
+    }
+
+    private Optional<GradientSettings> readSettings(UUID player, String path) {
+        if (playerData.keys(player, DATA, path).isEmpty()) {
+            return Optional.empty();
+        }
+        Map<String, Object> saved = new java.util.HashMap<>();
+        for (String key : playerData.keys(player, DATA, path)) {
+            saved.put(key, playerData.get(player, DATA, path + "." + key));
+        }
+        return Optional.of(GradientSettings.fromMap(saved, maxRadius, this::isValidPalette));
+    }
+
+    private boolean isValidPalette(String text) {
+        try {
+            parseSpec(text);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // ---- loadouts -------------------------------------------------------------------------------------------------------
+
+    public List<String> loadoutNames(UUID player) {
+        return List.copyOf(playerData.keys(player, DATA, "loadouts"));
+    }
+
+    public Optional<GradientSettings> loadout(UUID player, String name) {
+        return readSettings(player, "loadouts." + name.toLowerCase(Locale.ROOT));
+    }
+
+    /**
+     * Saves the player's current settings under a name (overwriting one with that name).
+     *
+     * @throws IllegalArgumentException for a bad name or too many loadouts
+     */
+    public void saveLoadout(UUID player, String rawName, int maxLoadouts) {
+        String name = rawName.toLowerCase(Locale.ROOT);
+        if (!LOADOUT_NAME.matcher(name).matches()) {
+            throw new IllegalArgumentException("Loadout names use letters, digits, - and _ (up to 32).");
+        }
+        if (!loadoutNames(player).contains(name) && loadoutNames(player).size() >= maxLoadouts) {
+            throw new IllegalArgumentException("You already have " + maxLoadouts + " loadouts; delete one first.");
+        }
+        playerData.set(player, DATA, "loadouts." + name, settings.get(player).describe());
+    }
+
+    /** The first free name of the form loadout-N. */
+    public String nextLoadoutName(UUID player) {
+        List<String> names = loadoutNames(player);
+        int n = 1;
+        while (names.contains("loadout-" + n)) {
+            n++;
+        }
+        return "loadout-" + n;
+    }
+
+    /** Makes a saved loadout the current settings; false if there is none by that name. */
+    public boolean loadLoadout(UUID player, String name) {
+        Optional<GradientSettings> saved = loadout(player, name);
+        saved.ifPresent(s -> {
+            settings.set(player, s);
+            forget(player);
+        });
+        return saved.isPresent();
+    }
+
+    public boolean deleteLoadout(UUID player, String name) {
+        String key = name.toLowerCase(Locale.ROOT);
+        if (!loadoutNames(player).contains(key)) {
+            return false;
+        }
+        playerData.set(player, DATA, "loadouts." + key, null);
+        return true;
     }
 
     public GradientSettingsStore settings() {

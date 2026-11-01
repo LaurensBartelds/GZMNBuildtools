@@ -28,6 +28,9 @@ permissions:
       gzmnbuildtools.brush: true
       gzmnbuildtools.terrainbrush: true
       gzmnbuildtools.generate: true
+      gzmnbuildtools.select: true
+      gzmnbuildtools.swap: true
+      gzmnbuildtools.weathering: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -51,4 +54,16 @@ permissions:
 
   gzmnbuildtools.generate:
     description: Allows use of /gzgen shape generators and /gzspline
+    default: op
+
+  gzmnbuildtools.select:
+    description: Allows use of /gzselect to select the build you are looking at
+    default: op
+
+  gzmnbuildtools.swap:
+    description: Allows use of the /gzswap material swap brush
+    default: op
+
+  gzmnbuildtools.weathering:
+    description: Allows use of the /weathering brush
     default: op
