@@ -14,10 +14,28 @@ import java.util.logging.Level;
 public class WebEditorServer {
 
     private final JavaPlugin plugin;
+    private final WebApi api;
     private HttpServer server;
+    private java.util.concurrent.ExecutorService executor;
 
-    public WebEditorServer(JavaPlugin plugin) {
+    public WebEditorServer(JavaPlugin plugin, WebApi api) {
         this.plugin = plugin;
+        this.api = api;
+    }
+
+    public boolean isRunning() {
+        return server != null;
+    }
+
+    /** The address players open, from web-editor.public-url or the server's own address. */
+    public String baseUrl() {
+        String configured = plugin.getConfig().getString("web-editor.public-url", "");
+        if (configured != null && !configured.isBlank()) {
+            return configured.endsWith("/") ? configured.substring(0, configured.length() - 1) : configured;
+        }
+        String ip = plugin.getServer().getIp();
+        String host = ip == null || ip.isBlank() || ip.equals("0.0.0.0") ? "localhost" : ip;
+        return "http://" + host + ":" + plugin.getConfig().getInt("web-editor.port", 8080);
     }
 
     public void start() {
@@ -31,11 +49,18 @@ public class WebEditorServer {
 
         try {
             server = HttpServer.create(new InetSocketAddress(host, port), 0);
+            server.createContext("/api/", api::handle);
             server.createContext("/", new StaticFileHandler());
-            server.setExecutor(null);
+            executor = java.util.concurrent.Executors.newFixedThreadPool(2, r -> {
+                Thread t = new Thread(r, "GZMN-WebEditor");
+                t.setDaemon(true);
+                return t;
+            });
+            server.setExecutor(executor);
             server.start();
             plugin.getLogger().info("Web Editor Server started on " + host + ":" + port);
         } catch (IOException e) {
+            server = null;
             plugin.getLogger().log(Level.SEVERE, "Failed to start Web Editor Server", e);
         }
     }
@@ -43,7 +68,12 @@ public class WebEditorServer {
     public void stop() {
         if (server != null) {
             server.stop(0);
+            server = null;
             plugin.getLogger().info("Web Editor Server stopped.");
+        }
+        if (executor != null) {
+            executor.shutdownNow();
+            executor = null;
         }
     }
 

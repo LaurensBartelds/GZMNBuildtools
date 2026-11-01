@@ -8,7 +8,9 @@ import nl.gzmn.gZMNBuildtools.command.brush.GradientBrushCommand;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
 import nl.gzmn.gZMNBuildtools.ui.menu.MenuListener;
 import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
+import nl.gzmn.gZMNBuildtools.web.WebApi;
 import nl.gzmn.gZMNBuildtools.web.WebEditorServer;
+import nl.gzmn.gZMNBuildtools.web.WebSessions;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.ServicePriority;
@@ -84,8 +86,11 @@ public final class GZMNBuildtools extends JavaPlugin {
         }
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "GZMNBuildtools started up successfully!");
 
-        webEditorServer = new WebEditorServer(this);
+        WebApi webApi = new WebApi(this, context.messages(), context.smartGradients(), context.presets(),
+                new WebSessions(Math.max(1, getConfig().getInt("web-editor.session-minutes", 30)) * 60_000L));
+        webEditorServer = new WebEditorServer(this, webApi);
         webEditorServer.start();
+        gradientBrushCommand.setWeb(webEditorServer, webApi.sessions());
     }
 
     @Override

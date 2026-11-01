@@ -11,6 +11,11 @@ web-editor:
   enabled: true
   port: 8080
   host: 0.0.0.0
+  # Address players open in their browser, e.g. "https://build.example.com" when the
+  # editor sits behind a proxy. Empty = http://<server-ip or localhost>:<port>.
+  public-url: ""
+  # How long a personal /gb web link keeps working.
+  session-minutes: 30
 
 terrain-brushes:
   # Largest radius /terrainbrush accepts. FAWE's own limits (worldedit.limit) still apply.

@@ -24,6 +24,8 @@ import nl.gzmn.gZMNBuildtools.integration.worldedit.gradient.SmartGradientServic
 import nl.gzmn.gZMNBuildtools.integration.worldedit.gradient.Swatches;
 import nl.gzmn.gZMNBuildtools.palette.BlockColors;
 import nl.gzmn.gZMNBuildtools.preview.PreviewService;
+import nl.gzmn.gZMNBuildtools.web.WebEditorServer;
+import nl.gzmn.gZMNBuildtools.web.WebSessions;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -62,8 +64,30 @@ public class GradientBrushCommand {
         this.previews = previews;
     }
 
+    private volatile WebEditorServer web;
+    private volatile WebSessions webSessions;
+
     public SmartGradientService service() {
         return service;
+    }
+
+    public void setWeb(WebEditorServer web, WebSessions sessions) {
+        this.web = web;
+        this.webSessions = sessions;
+    }
+
+    /** Sends a personal link that lets the browser edit this player's brush. */
+    public void web(Player player) {
+        if (web == null || !web.isRunning()) {
+            messages.error(player, "The web editor is not running on this server (web-editor.enabled).");
+            return;
+        }
+        String url = web.baseUrl() + "/?token=" + webSessions.create(player.getUniqueId());
+        messages.info(player, "Your personal gradient editor (valid for %d minutes):", webSessions.lifetimeMinutes());
+        player.sendMessage(Component.text("  [Open the web editor]", NamedTextColor.AQUA)
+                .clickEvent(ClickEvent.openUrl(url))
+                .hoverEvent(HoverEvent.showText(Component.text(url))));
+        messages.info(player, "Changes you apply there go straight to your brush. Don't share the link.");
     }
 
     // ---- settings -------------------------------------------------------------------------------------------

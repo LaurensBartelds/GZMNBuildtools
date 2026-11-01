@@ -54,9 +54,20 @@
             </plugin>
         </plugins>
         <resources>
+            <!-- Only the plugin descriptor needs ${project.version}; leave web files untouched. -->
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+                <includes>
+                    <include>paper-plugin.yml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>paper-plugin.yml</exclude>
+                </excludes>
             </resource>
         </resources>
     </build>

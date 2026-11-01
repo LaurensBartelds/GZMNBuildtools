@@ -206,6 +206,17 @@ Examples:
 A single shape is limited to `generation.max-blocks` in `config.yml` (default 500000). Add `-p` to any `/gzgen` command
 to preview it first.
 
+### Web editor
+
+`/gb web` sends you a personal link to a browser editor for your gradient brush. Design the palette (auto, from a
+block, a ramp, your own steps or a preset), pick the options and watch a live preview of a dithered tower. Then
+press **Apply to my brush**: your bound brush uses it straight away. The link only works for you and expires after
+`web-editor.session-minutes` (default 30). Without a link the page still works as a designer that gives you a `/gb`
+command to paste.
+
+The editor runs on `web-editor.port` (default 8080). When players reach the server through a domain or reverse
+proxy, set `web-editor.public-url` so the links point there. Set `web-editor.enabled: false` to turn it off.
+
 ### Previews
 
 `/gb preview` and `/gzgen ... -p` show the result as client-side ghost blocks that only you can see. Click

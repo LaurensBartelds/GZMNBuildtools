@@ -206,6 +206,10 @@ public class CommandRegistry {
                                             StringArgumentType.getString(ctx, "code"));
                                     return 1;
                                 })))
+                .then(Commands.literal("web").executes(ctx -> {
+                    brushCommand.web((Player) ctx.getSource().getSender());
+                    return 1;
+                }))
                 .then(Commands.literal("reset").executes(ctx -> {
                     brushCommand.reset((Player) ctx.getSource().getSender());
                     return 1;
