@@ -239,6 +239,27 @@ through them with `clear` and bridge dips with `fill`. Add `-p` to preview. Buil
 **[Apply]** (or `/gzpreview apply`) to place exactly what you see, or **[Cancel]** (`/gzpreview cancel`). A preview
 expires after `preview.seconds` (default 60) and is limited to `preview.max-blocks` (default 60000).
 
+## Modules
+
+Every feature is a module that can be switched off under `modules:` in `config.yml`. A switched-off module doesn't
+register its commands, listeners or (for the web editor) its network port. If a module fails to start, only that
+module, and modules that depend on it, are skipped; the rest keep working. Changes need a restart.
+`/gzmnbuildtools modules` shows what is running and why anything isn't.
+
+| Module | Adds | Needs |
+|--------|------|-------|
+| `masks-and-patterns` | `#slope`, `#depth`, `#byslope`, `#stripes` and the other masks and patterns | |
+| `gradient` | `/gradient`, saved gradients and the `#gradient` pattern | |
+| `type-replace` | `/typereplace` and its menu | |
+| `gradient-brush` | `/gradientbrush` (`/gb`) and its menus | |
+| `terrain-brushes` | `/terrainbrush` (`/tb`), including tree and rock brushes | |
+| `generators` | `/gzgen` | |
+| `splines` | `/gzspline` | |
+| `web-editor` | The browser editor and `/gb web` links | `gradient-brush` |
+
+Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
+and always available.
+
 ## Configuration
 
 On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
@@ -262,6 +283,27 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.
+
+## Architecture (for contributors)
+
+The code is split like a Spring Modulith application, without Spring:
+
+- `core`: bootstrap services (`PluginContext`), the module system (`core.module`) and the always-on commands.
+- `shared`: libraries any module may use: palette and block colours, terrain maths, shape geometry, brush
+  parameters, menus, previews and WorldEdit helpers.
+- `modules.<name>`: one package per feature. Its top-level package holds the `GzmnModule` class and the module's
+  public API; sub-packages such as `command`, `menu`, `engine` and `fawe` are internal to the module.
+- `api`, plus the model types it exposes (`gradient.model.GradientPreset`, `typereplace`): the public API for
+  other plugins.
+
+A module registers everything through its `ModuleContext`: commands, listeners, and services it `provide`s to modules
+that list it in `dependencies()` and `require` it. For example, `web-editor` requires the gradient brush's
+`SmartGradientService` and plugs its link generator into `/gb web`.
+
+`ModuleBoundariesTest` (ArchUnit) enforces the rules at build time: the kernel never depends on a module, a module
+only uses modules it declares, and only through their top-level package, and modules have no cycles. To add a
+feature, create `modules/<name>/<Name>Module.java`, add it to `GZMNBuildtools.allModules()` and give it a switch in
+`config.yml`.
 
 ## Extending (for plugin developers)
 

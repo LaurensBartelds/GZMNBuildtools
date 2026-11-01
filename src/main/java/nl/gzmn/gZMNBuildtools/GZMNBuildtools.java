@@ -1,29 +1,38 @@
 package nl.gzmn.gZMNBuildtools;
 
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import nl.gzmn.gZMNBuildtools.api.GzmnBuildtoolsApi;
-import nl.gzmn.gZMNBuildtools.command.CommandRegistry;
-import nl.gzmn.gZMNBuildtools.command.GradientCommand;
-import nl.gzmn.gZMNBuildtools.command.TypeReplaceCommand;
-import nl.gzmn.gZMNBuildtools.command.brush.GradientBrushCommand;
+import nl.gzmn.gZMNBuildtools.core.CoreCommands;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
-import nl.gzmn.gZMNBuildtools.ui.menu.MenuListener;
-import nl.gzmn.gZMNBuildtools.ui.typereplace.TypeReplaceUIManager;
-import nl.gzmn.gZMNBuildtools.web.WebApi;
-import nl.gzmn.gZMNBuildtools.web.WebEditorServer;
-import nl.gzmn.gZMNBuildtools.web.WebSessions;
+import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleHost;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleManager;
+import nl.gzmn.gZMNBuildtools.modules.generators.GeneratorsModule;
+import nl.gzmn.gZMNBuildtools.modules.gradient.GradientModule;
+import nl.gzmn.gZMNBuildtools.modules.gradientbrush.GradientBrushModule;
+import nl.gzmn.gZMNBuildtools.modules.patterns.PatternsModule;
+import nl.gzmn.gZMNBuildtools.modules.splines.SplinesModule;
+import nl.gzmn.gZMNBuildtools.modules.terrainbrush.TerrainBrushModule;
+import nl.gzmn.gZMNBuildtools.modules.typereplace.TypeReplaceModule;
+import nl.gzmn.gZMNBuildtools.modules.webeditor.WebEditorModule;
+import nl.gzmn.gZMNBuildtools.shared.menu.MenuListener;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.List;
+import java.util.logging.Logger;
+
+/**
+ * Bootstrap: starts the core services, then the feature modules (each can be
+ * switched off under {@code modules:} in config.yml).
+ */
 @SuppressWarnings("UnstableApiUsage")
 public final class GZMNBuildtools extends JavaPlugin {
 
-    private PluginContext context;
-    private TypeReplaceUIManager typeReplaceUIManager;
-    private GradientCommand gradientCommand;
-    private CommandRegistry commandRegistry;
-    private WebEditorServer webEditorServer;
+    private ModuleManager modules;
 
     @Override
     public void onEnable() {
@@ -36,38 +45,19 @@ public final class GZMNBuildtools extends JavaPlugin {
             return;
         }
 
-        // Composition root: construct and load all services (messages, registries,
-        // executor, storage) in one place.
-        context = new PluginContext(this);
+        PluginContext context = new PluginContext(this);
         context.load();
-
-        // Construct commands/managers, wiring their dependencies from the context
-        // up front so no command can ever execute against a half-initialised plugin.
-        gradientCommand = new GradientCommand();
-        gradientCommand.setStorageManager(context.storage());
-        gradientCommand.setMessages(context.messages());
-        gradientCommand.setPresetRegistry(context.presets());
-        gradientCommand.setExecutor(context.executor());
-
-        TypeReplaceCommand typeReplaceCommand = new TypeReplaceCommand();
-        typeReplaceCommand.setMessages(context.messages());
-        typeReplaceCommand.setBlockFamilies(context.blockFamilies());
-
-        typeReplaceUIManager = new TypeReplaceUIManager(this, typeReplaceCommand);
-        typeReplaceUIManager.setMessages(context.messages());
-        typeReplaceUIManager.setBlockFamilies(context.blockFamilies());
-
-        GradientBrushCommand gradientBrushCommand = new GradientBrushCommand(this, context.messages(),
-                context.smartGradients(), context.presets(), context.previews());
-
-        commandRegistry = new CommandRegistry(this, gradientCommand, typeReplaceCommand,
-                typeReplaceUIManager, context.messages(), context.presets(), context.blockFamilies(),
-                gradientBrushCommand, context);
-        commandRegistry.register();
-
-        typeReplaceUIManager.registerEvents();
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
-        commandRegistry.registerWorldEditPatterns();
+
+        modules = new ModuleManager(host(context));
+        allModules().forEach(modules::add);
+        modules.enableAll();
+
+        CoreCommands coreCommands = new CoreCommands(this, context, modules);
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            coreCommands.register(event.registrar());
+            modules.commandRegistrars().forEach(registrar -> registrar.accept(event.registrar()));
+        });
 
         // Expose the public extension API so other plugins can register presets / families.
         getServer().getServicesManager().register(GzmnBuildtoolsApi.class, context, this, ServicePriority.Normal);
@@ -85,27 +75,57 @@ public final class GZMNBuildtools extends JavaPlugin {
             Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + line);
         }
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "GZMNBuildtools started up successfully!");
+        getLogger().info("Modules: " + CoreCommands.summary(modules));
+    }
 
-        WebApi webApi = new WebApi(this, context.messages(), context.smartGradients(), context.presets(),
-                new WebSessions(Math.max(1, getConfig().getInt("web-editor.session-minutes", 30)) * 60_000L),
-                gradientBrushCommand::syncBrushSize);
-        webEditorServer = new WebEditorServer(this, webApi);
-        webEditorServer.start();
-        gradientBrushCommand.setWeb(webEditorServer, webApi.sessions());
+    /** Every feature module; the order only matters for display, dependencies decide the start order. */
+    public static List<GzmnModule> allModules() {
+        return List.of(
+                new PatternsModule(),
+                new GradientModule(),
+                new TypeReplaceModule(),
+                new GradientBrushModule(),
+                new TerrainBrushModule(),
+                new GeneratorsModule(),
+                new SplinesModule(),
+                new WebEditorModule());
+    }
+
+    private ModuleHost host(PluginContext context) {
+        JavaPlugin plugin = this;
+        return new ModuleHost() {
+            @Override
+            public JavaPlugin plugin() {
+                return plugin;
+            }
+
+            @Override
+            public PluginContext core() {
+                return context;
+            }
+
+            @Override
+            public Logger logger() {
+                return getLogger();
+            }
+
+            @Override
+            public boolean enabledInConfig(String moduleId) {
+                return getConfig().getBoolean("modules." + moduleId, true);
+            }
+
+            @Override
+            public void registerListener(Listener listener) {
+                getServer().getPluginManager().registerEvents(listener, plugin);
+            }
+        };
     }
 
     @Override
     public void onDisable() {
-        if (context != null) {
-            context.storage().save();
-        }
-        if (webEditorServer != null) {
-            webEditorServer.stop();
+        if (modules != null) {
+            modules.disableAll();
         }
         getLogger().info("GZMNBuildtools disabled.");
-    }
-
-    public TypeReplaceUIManager getTypeReplaceUIManager() {
-        return typeReplaceUIManager;
     }
 }

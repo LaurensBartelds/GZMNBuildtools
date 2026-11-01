@@ -2,6 +2,19 @@
 #
 # After editing, run /gzmnbuildtools reload or restart the server.
 
+# Features you can switch off. A switched-off module registers no commands,
+# listeners or web server. Changes here need a server restart; check the result
+# with /gzmnbuildtools modules.
+modules:
+  masks-and-patterns: true   # #slope, #depth, #byslope, #stripes, ...
+  gradient: true             # /gradient, saved gradients, #gradient
+  type-replace: true         # /typereplace
+  gradient-brush: true       # /gradientbrush (/gb)
+  terrain-brushes: true      # /terrainbrush (/tb)
+  generators: true           # /gzgen
+  splines: true              # /gzspline
+  web-editor: true           # browser editor for /gb (needs gradient-brush)
+
 messages:
   # When true, extra per-operation diagnostic messages are shown to players
   # (e.g. per-variant block counts during /typereplace).
