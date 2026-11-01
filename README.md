@@ -329,10 +329,22 @@ show` draws it again, and `undo`, `clear` and `list` manage the points. Then bui
 | `/gzspline build tube <pattern>` | `radius=1.5`, `hollow=0` (pipes, cables, tunnels) |
 | `/gzspline build wall <pattern>` | `height=4`, `thickness=1` |
 | `/gzspline build road <pattern>` | `width=3`, `clear=3` (air above), `fill=2` (support below) |
+| `/gzspline build river <bed pattern>` | `width=7`, `depth=3`, `sink=1`, `valley=10`, `slope=1` |
 
 The curve passes through every point without overshooting, and roads follow its height, so they climb hills, cut
 through them with `clear` and bridge dips with `fill`. Add `-p` to preview. Builds count towards
 `generation.max-blocks` and are undone with `//undo`.
+
+Rivers are made for clicking along the ground. For example, `/gzspline build river gravel` or
+`/gzspline build river 70%gravel,30%sand width=9`:
+
+- The water sits `sink` blocks below your points, in a rounded channel `width` across and up to `depth` deep, on a bed
+  of the pattern you give.
+- A river always flows downhill, whichever end you started at, and its level never rises: where your points climb
+  over a rise, it keeps its level and cuts through.
+- Above the water the ground is cut away up to `valley` blocks high, with banks sloping `slope` blocks up per block
+  out, so a river through a hill carves its own valley. Existing water (a lake or the sea at its mouth) is left alone.
+- Where the ground falls away beside the river, it builds banks from the ground it dug through, so the water stays in.
 
 ### Previews
 

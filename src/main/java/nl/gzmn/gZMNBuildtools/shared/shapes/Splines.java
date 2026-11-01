@@ -1,8 +1,11 @@
 package nl.gzmn.gZMNBuildtools.shared.shapes;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -18,6 +21,15 @@ public final class Splines {
     public static final int ROAD_FILL = 1;
     /** Road part: space cleared above the road. */
     public static final int ROAD_CLEAR = 2;
+
+    /** River part: the bed under the water (the river's pattern). */
+    public static final int RIVER_BED = 0;
+    /** River part: water. */
+    public static final int RIVER_WATER = 1;
+    /** River part: ground cut away above the water to form the valley. */
+    public static final int RIVER_CLEAR = 2;
+    /** River part: a bank to hold the water in, only needed where there is no ground. */
+    public static final int RIVER_BANK = 3;
 
     private Splines() {
     }
@@ -156,6 +168,98 @@ public final class Splines {
                 }
             }
         }
+    }
+
+    /** The shape of a river channel; see {@link #river}. */
+    public record RiverShape(double width, int depth, int sink, int valley, double slope) {
+    }
+
+    /** What {@link #river} worked out about the flow. */
+    public record RiverFlow(boolean reversed, int sourceLevel, int mouthLevel) {
+    }
+
+    /**
+     * A river along the curve. It always flows downhill: when the curve ends
+     * higher than it starts it is followed backwards, and the water level never
+     * rises along the way (it steps down where the ground drops). The water
+     * sits {@code sink} blocks below the curve in a rounded channel
+     * {@code width} across and up to {@code depth} deep, with the bed under
+     * it. Above the water, ground is cut away up to {@code valley} blocks high
+     * with banks sloping {@code slope} blocks up per block out, so the river
+     * carves a valley through hills; banks are emitted next to the channel for
+     * the places where the ground falls away.
+     */
+    public static RiverFlow river(List<double[]> samples, RiverShape shape, PartSink sink) {
+        if (samples.isEmpty()) {
+            return new RiverFlow(false, 0, 0);
+        }
+        List<double[]> path = new ArrayList<>(samples);
+        boolean reversed = path.get(path.size() - 1)[1] > path.get(0)[1];
+        if (reversed) {
+            Collections.reverse(path);
+        }
+        int[] level = new int[path.size()];
+        int current = Integer.MAX_VALUE;
+        for (int i = 0; i < path.size(); i++) {
+            current = Math.min(current, (int) Math.round(path.get(i)[1]) - shape.sink());
+            level[i] = current;
+        }
+
+        double half = shape.width() / 2.0;
+        double ring = shape.slope() <= 0 ? 1.5 : Math.max(1.5, shape.valley() / shape.slope());
+        double reach = half + ring;
+        int r = (int) Math.ceil(reach) + 1;
+        // Each column belongs to its nearest sample.
+        Map<Long, double[]> owner = new HashMap<>();
+        for (int i = 0; i < path.size(); i++) {
+            double[] s = path.get(i);
+            int cx = (int) Math.round(s[0]);
+            int cz = (int) Math.round(s[2]);
+            for (int x = cx - r; x <= cx + r; x++) {
+                for (int z = cz - r; z <= cz + r; z++) {
+                    double d = Math.hypot(x - s[0], z - s[2]);
+                    if (d > reach) {
+                        continue;
+                    }
+                    long key = pack(x, 0, z);
+                    double[] best = owner.get(key);
+                    if (best == null || d < best[0]) {
+                        owner.put(key, new double[]{d, i});
+                    }
+                }
+            }
+        }
+
+        for (Map.Entry<Long, double[]> entry : owner.entrySet()) {
+            int x = unpackX(entry.getKey());
+            int z = unpackZ(entry.getKey());
+            double d = entry.getValue()[0];
+            int water = level[(int) entry.getValue()[1]];
+            int top = water + shape.valley();
+            if (d <= half) {
+                double t = half <= 0 ? 0 : d / half;
+                int bed = water - Math.max(1, (int) Math.round(shape.depth() * (1 - t * t)));
+                sink.accept(x, bed, z, RIVER_BED, (char) 0);
+                for (int y = bed + 1; y <= water; y++) {
+                    sink.accept(x, y, z, RIVER_WATER, (char) 0);
+                }
+                for (int y = water + 1; y <= top; y++) {
+                    sink.accept(x, y, z, RIVER_CLEAR, (char) 0);
+                }
+            } else {
+                double out = d - half;
+                int from = water + 1 + (int) Math.ceil(out * Math.max(0, shape.slope()));
+                for (int y = from; y <= top; y++) {
+                    sink.accept(x, y, z, RIVER_CLEAR, (char) 0);
+                }
+                if (out <= 1.5) {
+                    for (int y = water - shape.depth(); y <= water; y++) {
+                        sink.accept(x, y, z, RIVER_BANK, (char) 0);
+                    }
+                }
+            }
+        }
+        return new RiverFlow(reversed, level[0], level[level.length - 1]);
     }
 
     /** Visits the blocks across the curve: a horizontal line of {@code width} perpendicular to it. */

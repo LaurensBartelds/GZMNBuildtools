@@ -1,6 +1,5 @@
 package nl.gzmn.gZMNBuildtools.modules.splines.command;
 
-import com.fastasyncworldedit.core.Fawe;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.LocalSession;
 import com.sk89q.worldedit.WorldEdit;
@@ -8,9 +7,11 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extension.input.InputParseException;
 import com.sk89q.worldedit.extension.input.ParserContext;
 import com.sk89q.worldedit.function.pattern.Pattern;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockState;
+import com.sk89q.worldedit.world.block.BlockType;
 import com.sk89q.worldedit.world.block.BlockTypes;
-import io.papermc.paper.math.Position;
+import com.sk89q.worldedit.world.registry.BlockMaterial;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -20,11 +21,12 @@ import nl.gzmn.gZMNBuildtools.shared.params.BrushArguments;
 import nl.gzmn.gZMNBuildtools.shared.params.BrushParam;
 import nl.gzmn.gZMNBuildtools.shared.preview.PreviewService;
 import nl.gzmn.gZMNBuildtools.shared.shapes.Splines;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.BlockKnowledge;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.PartPlacer;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.PlayerEdits;
 import org.bukkit.Bukkit;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -32,6 +34,7 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -54,13 +57,15 @@ public class SplineCommand {
     private final JavaPlugin plugin;
     private final Messages messages;
     private final PreviewService previews;
+    private final BlockKnowledge blocks;
     private final Map<UUID, Points> points = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> showing = new ConcurrentHashMap<>();
 
-    public SplineCommand(JavaPlugin plugin, Messages messages, PreviewService previews) {
+    public SplineCommand(JavaPlugin plugin, Messages messages, PreviewService previews, BlockKnowledge blocks) {
         this.plugin = plugin;
         this.messages = messages;
         this.previews = previews;
+        this.blocks = blocks;
     }
 
     private List<int[]> pointsOf(Player player) {
@@ -165,7 +170,7 @@ public class SplineCommand {
         String rest = String.join(" ", tokens);
         SplineType type = SplineType.byId(typeId).orElse(null);
         if (type == null) {
-            messages.error(player, "Unknown spline shape '%s'. Use tube, wall or road.", typeId);
+            messages.error(player, "Unknown spline shape '%s'. Use tube, wall, road or river.", typeId);
             return;
         }
         List<int[]> list = new ArrayList<>(pointsOf(player));
@@ -198,47 +203,89 @@ public class SplineCommand {
                     type.id(), count[0], max);
             return;
         }
-        BlockState air = BlockTypes.AIR.getDefaultState();
+        List<int[]> parts = new ArrayList<>(count[0]);
+        Splines.RiverFlow flow = type.build(args, samples,
+                (x, y, z, part, axis) -> parts.add(new int[]{x, y, z, part, axis}));
         int minY = player.getWorld().getMinHeight();
         int maxY = player.getWorld().getMaxHeight() - 1;
-        if (preview) {
-            Fawe.instance().getQueueHandler().async(() -> {
-                Map<Position, BlockData> ghost = new HashMap<>();
-                type.build(args, samples, (x, y, z, part, axis) -> {
-                    if (y < minY || y > maxY) {
-                        return;
-                    }
-                    BlockState state = type == SplineType.ROAD && part == Splines.ROAD_CLEAR ? air
-                            : placer.state(x, y, z, part, axis);
+        String label = "a " + type.id() + " through " + list.size() + " points";
+        PlayerEdits.async(player, editSession -> {
+            Placement placement = type == SplineType.RIVER ? riverPlacement(editSession, parts, placer)
+                    : (x, y, z, part, axis) -> type == SplineType.ROAD && part == Splines.ROAD_CLEAR ? AIR
+                    : placer.state(x, y, z, part, axis);
+            Map<BlockVector3, BlockState> changes = new LinkedHashMap<>();
+            for (int[] p : parts) {
+                if (p[1] >= minY && p[1] <= maxY) {
+                    BlockState state = placement.state(p[0], p[1], p[2], p[3], (char) p[4]);
                     if (state != null) {
-                        ghost.put(Position.block(x, y, z), BukkitAdapter.adapt(state));
+                        changes.put(BlockVector3.at(p[0], p[1], p[2]), state);
                     }
-                });
-                Bukkit.getScheduler().runTask(plugin, () -> previews.show(player, ghost,
-                        "a " + type.id() + " through " + list.size() + " points", () -> build(player, typeId, rest)));
-            });
-            return;
-        }
-        Fawe.instance().getQueueHandler().async(() -> {
-            try (EditSession editSession = session.createEditSession(actor)) {
-                type.build(args, samples, (x, y, z, part, axis) -> {
-                    if (y < minY || y > maxY) {
-                        return;
-                    }
-                    BlockState state = type == SplineType.ROAD && part == Splines.ROAD_CLEAR ? air
-                            : placer.state(x, y, z, part, axis);
-                    if (state != null) {
-                        editSession.setBlock(x, y, z, state);
-                    }
-                });
-                session.remember(editSession);
-                messages.success(player, "Built a %s through %d points (%d blocks). //undo reverts it.",
-                        type.id(), list.size(), editSession.getBlockChangeCount());
-            } catch (RuntimeException e) {
-                plugin.getLogger().log(Level.WARNING, "Spline build failed for " + player.getName(), e);
-                messages.error(player, "Building failed: %s", e.getMessage());
+                }
             }
+            if (preview) {
+                Bukkit.getScheduler().runTask(plugin, () -> previews.show(player, PlayerEdits.ghost(changes), label,
+                        () -> apply(player, changes)));
+                return false;
+            }
+            changes.forEach((pos, state) -> editSession.setBlock(pos.x(), pos.y(), pos.z(), state));
+            messages.success(player, "Built %s (%d blocks). //undo reverts it.", label, changes.size());
+            if (flow != null) {
+                messages.info(player, "The river flows from y=%d down to y=%d%s.", flow.sourceLevel(),
+                        flow.mouthLevel(), flow.reversed() ? " (from your last point to your first)" : "");
+            }
+            return true;
+        }, e -> {
+            plugin.getLogger().log(Level.WARNING, "Spline build failed for " + player.getName(), e);
+            messages.error(player, "Building failed: %s", e.getMessage());
         });
+    }
+
+    /** Picks the block for a generated part, or null to leave the world as it is. */
+    @FunctionalInterface
+    private interface Placement {
+        BlockState state(int x, int y, int z, int part, char axis);
+    }
+
+    private static final BlockState AIR = BlockTypes.AIR.getDefaultState();
+
+    /**
+     * River parts depend on what is there: the valley cut leaves air and
+     * existing water alone, and banks only fill gaps. Banks are made of the
+     * ground the river dug through most.
+     */
+    private Placement riverPlacement(EditSession world, List<int[]> parts, PartPlacer placer) {
+        Map<BlockType, Integer> dug = new HashMap<>();
+        for (int[] p : parts) {
+            if (p[3] != Splines.RIVER_BANK) {
+                BlockType existing = world.getBlock(p[0], p[1], p[2]).getBlockType();
+                String id = existing.id().replace("minecraft:", "");
+                if (existing.getMaterial().isSolid() && blocks.rules().isTerrain(id)) {
+                    dug.merge(existing == BlockTypes.GRASS_BLOCK ? BlockTypes.DIRT : existing, 1, Integer::sum);
+                }
+            }
+        }
+        BlockState bank = dug.entrySet().stream().max(Map.Entry.comparingByValue())
+                .map(e -> e.getKey().getDefaultState()).orElse(null);
+        BlockState water = BlockTypes.WATER.getDefaultState();
+        return (x, y, z, part, axis) -> {
+            BlockMaterial existing = world.getBlock(x, y, z).getBlockType().getMaterial();
+            return switch (part) {
+                case Splines.RIVER_BED -> placer.state(x, y, z, 0, axis);
+                case Splines.RIVER_WATER -> water;
+                case Splines.RIVER_CLEAR -> existing.isAir() || existing.isLiquid() ? null : AIR;
+                case Splines.RIVER_BANK -> existing.isAir() || (!existing.isSolid() && !existing.isLiquid())
+                        ? (bank != null ? bank : placer.state(x, y, z, 0, axis)) : null;
+                default -> null;
+            };
+        };
+    }
+
+    private void apply(Player player, Map<BlockVector3, BlockState> changes) {
+        PlayerEdits.async(player, editSession -> {
+            changes.forEach((pos, state) -> editSession.setBlock(pos.x(), pos.y(), pos.z(), state));
+            messages.success(player, "Applied %d blocks. //undo reverts it.", changes.size());
+            return true;
+        }, e -> messages.error(player, "Applying failed: %s", e.getMessage()));
     }
 
     private Pattern parsePattern(com.sk89q.worldedit.entity.Player actor, LocalSession session, String input)
@@ -258,8 +305,9 @@ public class SplineCommand {
             return List.of();
         }
         if (!typed.contains(" ")) {
-            return List.of("stone_bricks", "dirt_path", "cobblestone", "glass", "#stripes[y][1][stone][andesite]")
-                    .stream().filter(s -> s.startsWith(typed.toLowerCase(Locale.ROOT))).toList();
+            List<String> patterns = type == SplineType.RIVER ? List.of("gravel", "sand", "clay", "mud", "70%gravel,30%sand")
+                    : List.of("stone_bricks", "dirt_path", "cobblestone", "glass", "#stripes[y][1][stone][andesite]");
+            return patterns.stream().filter(s -> s.startsWith(typed.toLowerCase(Locale.ROOT))).toList();
         }
         String prefix = typed.substring(0, typed.lastIndexOf(' ') + 1);
         String current = typed.substring(prefix.length()).toLowerCase(Locale.ROOT);

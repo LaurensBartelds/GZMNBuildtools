@@ -24,7 +24,13 @@ public enum SplineType implements ParamSpec {
     ROAD("Road following the curve, cutting through hills and filling dips",
             new BrushParam("width", 3, 1, 16, "road width"),
             new BrushParam("clear", 3, 0, 16, "air cleared above the road"),
-            new BrushParam("fill", 2, 0, 16, "support filled in below the road"));
+            new BrushParam("fill", 2, 0, 16, "support filled in below the road")),
+    RIVER("River flowing downhill along the curve, carving its valley (pattern = river bed)",
+            new BrushParam("width", 7, 2, 32, "water width"),
+            new BrushParam("depth", 3, 1, 12, "deepest point of the channel"),
+            new BrushParam("sink", 1, 0, 8, "how far the water sits below your points"),
+            new BrushParam("valley", 10, 0, 48, "how high ground is cut away above the water"),
+            new BrushParam("slope", 1, 0.25, 4, "bank steepness, blocks up per block out"));
 
     private final String description;
     private final List<BrushParam> params;
@@ -66,13 +72,23 @@ public enum SplineType implements ParamSpec {
         return Arrays.stream(values()).filter(t -> t.id().equalsIgnoreCase(id)).findFirst();
     }
 
-    /** Builds this shape along the sampled curve; road parts use {@link Splines} part numbers. */
-    public void build(BrushArguments<SplineType> args, List<double[]> samples, PartSink sink) {
+    /**
+     * Builds this shape along the sampled curve; road and river parts use
+     * {@link Splines} part numbers.
+     *
+     * @return for rivers, which way it flows; null for the other shapes
+     */
+    public Splines.RiverFlow build(BrushArguments<SplineType> args, List<double[]> samples, PartSink sink) {
         BlockSink single = (x, y, z) -> sink.accept(x, y, z, 0, (char) 0);
         switch (this) {
             case TUBE -> Splines.tube(samples, args.get("radius"), args.get("hollow") >= 0.5, single);
             case WALL -> Splines.wall(samples, args.getInt("height"), args.getInt("thickness"), single);
             case ROAD -> Splines.road(samples, args.getInt("width"), args.getInt("clear"), args.getInt("fill"), sink);
+            case RIVER -> {
+                return Splines.river(samples, new Splines.RiverShape(args.get("width"), args.getInt("depth"),
+                        args.getInt("sink"), args.getInt("valley"), args.get("slope")), sink);
+            }
         }
+        return null;
     }
 }

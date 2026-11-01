@@ -27,7 +27,8 @@ public final class SplinesModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
-        splineCommand = new SplineCommand(context.plugin(), context.core().messages(), context.core().previews());
+        splineCommand = new SplineCommand(context.plugin(), context.core().messages(), context.core().previews(),
+                context.core().blocks());
         context.commands(this::registerSpline);
     }
 
@@ -66,7 +67,7 @@ public final class SplinesModule implements GzmnModule {
                 .then(Commands.literal("build")
                         .then(Commands.argument("shape", StringArgumentType.word())
                                 .suggests((ctx, builder) -> {
-                                    for (String s : List.of("tube", "wall", "road")) {
+                                    for (String s : List.of("tube", "wall", "road", "river")) {
                                         if (s.startsWith(builder.getRemainingLowerCase())) {
                                             builder.suggest(s);
                                         }
@@ -85,6 +86,6 @@ public final class SplinesModule implements GzmnModule {
                                                     StringArgumentType.getString(ctx, "args"));
                                             return 1;
                                         }))))
-                .build(), "Build tubes, walls and roads along a curve through points you pick.", List.of("gsp"));
+                .build(), "Build tubes, walls, roads and rivers along a curve through points you pick.", List.of("gsp"));
     }
 }
