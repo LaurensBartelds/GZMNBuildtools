@@ -16,6 +16,7 @@ import nl.gzmn.gZMNBuildtools.modules.pixelart.PixelArtModule;
 import nl.gzmn.gZMNBuildtools.modules.selection.BuildSelectModule;
 import nl.gzmn.gZMNBuildtools.modules.splines.SplinesModule;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.TerrainBrushModule;
+import nl.gzmn.gZMNBuildtools.modules.terraintexture.TerrainTextureModule;
 import nl.gzmn.gZMNBuildtools.modules.typereplace.TypeReplaceModule;
 import nl.gzmn.gZMNBuildtools.modules.weathering.WeatheringModule;
 import nl.gzmn.gZMNBuildtools.modules.webeditor.WebEditorModule;
@@ -97,7 +98,8 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new BuildSelectModule(),
                 new MaterialSwapModule(),
                 new WeatheringModule(),
-                new PixelArtModule());
+                new PixelArtModule(),
+                new TerrainTextureModule());
     }
 
     private ModuleHost host(PluginContext context) {

@@ -32,6 +32,7 @@ permissions:
       gzmnbuildtools.swap: true
       gzmnbuildtools.weathering: true
       gzmnbuildtools.pixelart: true
+      gzmnbuildtools.texture: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -71,4 +72,8 @@ permissions:
 
   gzmnbuildtools.pixelart:
     description: Allows use of /gzpixelart
+    default: op
+
+  gzmnbuildtools.texture:
+    description: Allows use of /gztexture
     default: op

@@ -243,6 +243,43 @@ nether and blackstone bricks); wear and vines work on any building block.
 Web downloads are limited for safety: they only go to public addresses (never localhost or private networks), never
 follow redirects, and are capped in size (`pixel-art.*` in `config.yml`; `allow-urls: false` turns them off).
 
+### Terrain texturing
+
+`/gztexture <preset>` (alias `/texture`) repaints the terrain in your WorldEdit selection with a ready-made look:
+`alpine`, `desert`, `forest`, `badlands`, `tundra` or `beach`. Run `/gztexture` for the list.
+
+- Each block is chosen by how steep the slope is, its height, how deep it is below the surface and a smooth noise
+  value that forms natural patches. For example, alpine puts snow on high ground, stone on cliffs, gravel scree on
+  steep slopes and grass with coarse dirt and moss patches elsewhere; badlands stripes its cliffs with terracotta bands.
+- Only natural terrain (and blocks the presets themselves use) is repainted, so builds inside the selection stay as
+  they are. Ground under trees is textured as well; leaves and logs don't count as ground.
+- Grass tufts and flowers are removed where the ground under them turns into something they can't grow on.
+- `-p` previews first; `seed=<n>` gives a different arrangement of the mixes and patches. `//undo` reverts it.
+- `/gztexture brush <preset> [radius]` binds the same look as a brush for touching up by hand. Brush strokes and
+  selection texturing line up seamlessly, and `//mask` limits the brush further.
+
+Presets live in `plugins/GZMNBuildtools/terrain-presets.yml`, so you can change them or add your own. A preset is a
+list of rules tried from top to bottom; the first rule that matches picks the block:
+
+```yaml
+presets:
+  volcanic:
+    description: Basalt flows with ash patches.
+    rules:
+      - when: { slope: "45..", depth: "0..3" }   # steep: 45 degrees or more, top 4 blocks
+        place: [ "60%basalt", "40%blackstone" ]
+      - when: { noise: "0.7.." }                  # patches covering about a third of the ground
+        place: [ "70%gravel", "30%tuff" ]
+      - when: { }                                 # everything else (just the top block)
+        place: [ blackstone ]
+      - when: { depth: "1..3" }
+        place: [ basalt ]
+```
+
+Conditions are `depth` (0 = the top block, the default), `slope` (degrees), `height` (world y) and `noise` (0 to 1),
+written as `a..b`, `a..`, `..b` or a single number. `bands: [...]` with `band-height: 2` stacks blocks by height
+instead of mixing them. Run `/gzmnbuildtools reload` after editing; problems are reported in the console.
+
 ### Shape generators
 
 `/gzgen <shape> <pattern> [parameters]` (alias `/ggen`) builds a shape with any FAWE pattern. Parameters can be given
@@ -324,6 +361,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `material-swap` | `/gzswap` | |
 | `weathering` | `/weathering` (`/age`) | |
 | `pixel-art` | `/gzpixelart` | |
+| `terrain-texture` | `/gztexture` and `terrain-presets.yml` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -338,6 +376,7 @@ On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
 - `block-families.yml`: The block families used by `/typereplace` (which stairs/slabs/walls/etc. each material has)
   and the material tabs shown in the Type Replace GUI (`categories:`).
 - `messages.yml`: Message template defaults.
+- `terrain-presets.yml`: The terrain looks used by `/gztexture`.
 
 After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to apply changes without restarting.
 
@@ -352,6 +391,7 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.swap`: Grants access to `/gzswap`.
 - `gzmnbuildtools.weathering`: Grants access to `/weathering`.
 - `gzmnbuildtools.pixelart`: Grants access to `/gzpixelart`.
+- `gzmnbuildtools.texture`: Grants access to `/gztexture`.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.
