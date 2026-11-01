@@ -8,7 +8,10 @@ import com.sk89q.worldedit.math.BlockVector3;
 import nl.gzmn.gZMNBuildtools.brush.BrushArguments;
 import nl.gzmn.gZMNBuildtools.brush.HeightOperation;
 import nl.gzmn.gZMNBuildtools.brush.TerrainBrushType;
+import nl.gzmn.gZMNBuildtools.generate.TreeStyle;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.LongFunction;
 
@@ -18,7 +21,8 @@ public final class TerrainBrushFactory {
     private TerrainBrushFactory() {
     }
 
-    public static Brush create(BrushArguments<TerrainBrushType> args) {
+    /** @param patterns the parsed fill patterns (the first is the tool's fill; more are passed to the brush) */
+    public static Brush create(BrushArguments<TerrainBrushType> args, List<Pattern> patterns) {
         return switch (args.type()) {
             case RAISE -> new HeightmapBrush(HeightOperation.raise(args.get("height"), args.get("hardness")));
             case LOWER -> new HeightmapBrush(HeightOperation.raise(-args.get("depth"), args.get("hardness")));
@@ -33,6 +37,11 @@ public final class TerrainBrushFactory {
             case BLOB -> new BlobBrush(args.get("roughness"), args.get("frequency"));
             case SPIKE -> new SpikeBrush(args.getInt("height"), args.get("sharpness"), args.get("tilt"),
                     args.get("down") >= 0.5);
+            case TREE -> new TreeBrush(TreeStyle.valueOf(args.choice("style").toUpperCase(Locale.ROOT)),
+                    args.getInt("height"), args.getInt("thickness"), args.getInt("leaves"), args.getInt("count"),
+                    patterns.get(1));
+            case ROCK -> new RockBrush(args.get("flatness"), args.get("roughness"), args.get("sink"),
+                    args.getInt("count"));
         };
     }
 

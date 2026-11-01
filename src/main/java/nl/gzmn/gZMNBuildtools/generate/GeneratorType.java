@@ -32,15 +32,31 @@ public enum GeneratorType implements ParamSpec {
             new BrushParam("radius", 6, 1, 128, "radius of the helix"),
             new BrushParam("height", 16, 1, 256, "total height"),
             new BrushParam("turns", 2, 0.25, 64, "number of full turns"),
-            new BrushParam("thickness", 1, 1, 16, "width of the helix"));
+            new BrushParam("thickness", 1, 1, 16, "width of the helix")),
+    TREE("Tree growing from your position (log and leaves patterns)", false, List.of("log", "leaves"),
+            BrushParam.choice("style", "tree shape", TreeStyle.ids().toArray(String[]::new)),
+            new BrushParam("height", 10, 3, 64, "trunk height"),
+            new BrushParam("thickness", 1, 1, 5, "trunk radius"),
+            new BrushParam("leaves", 3, 1, 10, "size of the leaf clusters")),
+    ROCK("Boulder embedded in the ground at your position", false,
+            new BrushParam("radius", 4, 1, 32, "size of the rock"),
+            new BrushParam("flatness", 0.35, 0, 0.8, "0 = round, 0.8 = flat slab"),
+            new BrushParam("roughness", 0.35, 0, 1, "how lumpy the surface is"),
+            new BrushParam("sink", 0.3, 0, 0.8, "how deep it is buried"));
 
     private final String description;
     private final boolean usesSelection;
+    private final List<String> patterns;
     private final List<BrushParam> params;
 
     GeneratorType(String description, boolean usesSelection, BrushParam... params) {
+        this(description, usesSelection, List.of("pattern"), params);
+    }
+
+    GeneratorType(String description, boolean usesSelection, List<String> patterns, BrushParam... params) {
         this.description = description;
         this.usesSelection = usesSelection;
+        this.patterns = patterns;
         this.params = List.of(params);
     }
 
@@ -59,8 +75,8 @@ public enum GeneratorType implements ParamSpec {
     }
 
     @Override
-    public boolean usesPattern() {
-        return true;
+    public List<String> patternNames() {
+        return patterns;
     }
 
     @Override
@@ -70,9 +86,10 @@ public enum GeneratorType implements ParamSpec {
 
     @Override
     public String usage() {
-        StringBuilder sb = new StringBuilder("/gzgen ").append(id()).append(" <pattern>");
+        StringBuilder sb = new StringBuilder("/gzgen ").append(id());
+        patterns.forEach(name -> sb.append(" <").append(name).append('>'));
         for (BrushParam p : params) {
-            sb.append(" [").append(p.name()).append('=').append(ParamSpec.format(p.defaultValue())).append(']');
+            sb.append(" [").append(p.name()).append('=').append(p.display(p.defaultValue())).append(']');
         }
         return sb.toString();
     }

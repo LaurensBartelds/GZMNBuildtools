@@ -25,7 +25,9 @@ import nl.gzmn.gZMNBuildtools.generate.GeneratorType;
 import nl.gzmn.gZMNBuildtools.generate.Generators;
 import nl.gzmn.gZMNBuildtools.preview.PreviewService;
 import io.papermc.paper.math.Position;
-import com.sk89q.worldedit.world.block.BaseBlock;
+import com.sk89q.worldedit.world.block.BlockState;
+import nl.gzmn.gZMNBuildtools.integration.worldedit.PartPlacer;
+import java.util.concurrent.ThreadLocalRandom;
 import org.bukkit.block.data.BlockData;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,12 +79,17 @@ public class GenerateCommand {
         }
         messages.info(player, "%s", type.get().usage());
         for (BrushParam p : type.get().params()) {
-            messages.info(player, "  %s (default %s): %s", p.name(), ParamSpec.format(p.defaultValue()),
-                    p.description());
+            messages.info(player, "  %s (default %s): %s%s", p.name(), p.display(p.defaultValue()),
+                    p.description(), p.isChoice() ? " [" + String.join(", ", p.choices()) + "]" : "");
         }
     }
 
     public void generate(Player player, String typeId, String rawRest) {
+        generate(player, typeId, rawRest, ThreadLocalRandom.current().nextLong());
+    }
+
+    /** @param seed fixes random shapes (trees, rocks) so an applied preview matches what was shown */
+    private void generate(Player player, String typeId, String rawRest, long seed) {
         // "-p" (or "preview") anywhere in the arguments shows ghost blocks first.
         List<String> tokens = new ArrayList<>(Arrays.asList(rawRest.trim().split("\\s+")));
         boolean preview = tokens.removeIf(t -> t.equalsIgnoreCase("-p") || t.equalsIgnoreCase("preview"));
@@ -125,16 +132,20 @@ public class GenerateCommand {
             }
         }
 
-        Pattern pattern;
+        PartPlacer placer;
         try {
-            pattern = parsePattern(actor, session, args.pattern());
+            List<Pattern> patterns = new ArrayList<>();
+            for (String text : args.patterns()) {
+                patterns.add(parsePattern(actor, session, text));
+            }
+            placer = new PartPlacer(patterns);
         } catch (InputParseException e) {
             messages.error(player, "Invalid pattern: %s", e.getMessage());
             return;
         }
 
         int[] count = {0};
-        Generators.generate(args, origin, a, b, (x, y, z) -> count[0]++);
+        Generators.generate(args, origin, a, b, seed, (x, y, z, part, axis) -> count[0]++);
         if (count[0] > maxBlocks()) {
             messages.error(player, "That shape has %d blocks, above the limit of %d (generation.max-blocks).",
                     count[0], maxBlocks());
@@ -143,17 +154,35 @@ public class GenerateCommand {
 
         final int[] fa = a;
         final int[] fb = b;
+        int minY = world.getMinY();
+        int maxY = world.getMaxY();
         if (preview) {
-            showPreview(player, typeId, rest, args, origin, fa, fb, pattern, world);
+            Fawe.instance().getQueueHandler().async(() -> {
+                Map<Position, BlockData> ghost = new HashMap<>();
+                try {
+                    Generators.generate(args, origin, fa, fb, seed, (x, y, z, part, axis) -> {
+                        BlockState state = y >= minY && y <= maxY ? placer.state(x, y, z, part, axis) : null;
+                        if (state != null) {
+                            ghost.put(Position.block(x, y, z), BukkitAdapter.adapt(state));
+                        }
+                    });
+                } catch (RuntimeException e) {
+                    plugin.getLogger().log(Level.WARNING, "Generator preview failed for " + player.getName(), e);
+                    messages.error(player, "Preview failed: %s", e.getMessage());
+                    return;
+                }
+                plugin.getServer().getScheduler().runTask(plugin, () ->
+                        previews.show(player, ghost, "a " + typeId.toLowerCase(Locale.ROOT),
+                                () -> generate(player, typeId, rest, seed)));
+            });
             return;
         }
         Fawe.instance().getQueueHandler().async(() -> {
             try (EditSession editSession = session.createEditSession(actor)) {
-                int minY = world.getMinY();
-                int maxY = world.getMaxY();
-                Generators.generate(args, origin, fa, fb, (x, y, z) -> {
-                    if (y >= minY && y <= maxY) {
-                        editSession.setBlock(x, y, z, pattern);
+                Generators.generate(args, origin, fa, fb, seed, (x, y, z, part, axis) -> {
+                    BlockState state = y >= minY && y <= maxY ? placer.state(x, y, z, part, axis) : null;
+                    if (state != null) {
+                        editSession.setBlock(x, y, z, state);
                     }
                 });
                 session.remember(editSession);
@@ -163,32 +192,6 @@ public class GenerateCommand {
                 plugin.getLogger().log(Level.WARNING, "Generator " + typeId + " failed for " + player.getName(), e);
                 messages.error(player, "Generation failed: %s", e.getMessage());
             }
-        });
-    }
-
-    private void showPreview(Player player, String typeId, String rest, BrushArguments<GeneratorType> args,
-                             int[] origin, int[] a, int[] b, Pattern pattern, World world) {
-        int minY = world.getMinY();
-        int maxY = world.getMaxY();
-        Fawe.instance().getQueueHandler().async(() -> {
-            Map<Position, BlockData> ghost = new HashMap<>();
-            try {
-                Generators.generate(args, origin, a, b, (x, y, z) -> {
-                    if (y >= minY && y <= maxY) {
-                        BaseBlock block = pattern.applyBlock(BlockVector3.at(x, y, z));
-                        if (block != null) {
-                            ghost.put(Position.block(x, y, z), BukkitAdapter.adapt(block.toImmutableState()));
-                        }
-                    }
-                });
-            } catch (RuntimeException e) {
-                plugin.getLogger().log(Level.WARNING, "Generator preview failed for " + player.getName(), e);
-                messages.error(player, "Preview failed: %s", e.getMessage());
-                return;
-            }
-            plugin.getServer().getScheduler().runTask(plugin, () ->
-                    previews.show(player, ghost, "a " + typeId.toLowerCase(Locale.ROOT),
-                            () -> generate(player, typeId, rest)));
         });
     }
 
@@ -216,16 +219,25 @@ public class GenerateCommand {
         if (type.isEmpty()) {
             return List.of();
         }
-        if (!typed.contains(" ")) {
-            return List.of("stone", "stone_bricks", "oak_planks", "iron_chain", "#stripes[y][1][stone][andesite]")
-                    .stream().filter(s -> s.startsWith(typed.toLowerCase(Locale.ROOT))).toList();
+        int words = typed.split(" ", -1).length;
+        if (words <= type.get().patternSlots()) {
+            String head = typed.contains(" ") ? typed.substring(0, typed.lastIndexOf(' ') + 1) : "";
+            String last = typed.substring(head.length()).toLowerCase(Locale.ROOT);
+            List<String> options = type.get() == GeneratorType.TREE
+                    ? (words == 1 ? List.of("oak_log", "spruce_log", "birch_log", "jungle_log", "dark_oak_log")
+                    : List.of("oak_leaves", "spruce_leaves", "birch_leaves", "azalea_leaves", "cherry_leaves"))
+                    : List.of("stone", "stone_bricks", "oak_planks", "iron_chain", "#stripes[y][1][stone][andesite]");
+            return options.stream().filter(s -> s.startsWith(last)).map(s -> head + s).toList();
         }
         String prefix = typed.substring(0, typed.lastIndexOf(' ') + 1);
         String current = typed.substring(prefix.length()).toLowerCase(Locale.ROOT);
         List<String> out = new ArrayList<>();
         for (BrushParam p : type.get().params()) {
             String option = p.name() + "=";
-            if (option.startsWith(current) && !typed.contains(option)) {
+            if (current.startsWith(option) && p.isChoice()) {
+                p.choices().stream().map(c -> option + c).filter(c -> c.startsWith(current))
+                        .forEach(c -> out.add(prefix + c));
+            } else if (option.startsWith(current) && !typed.contains(option)) {
                 out.add(prefix + option);
             }
         }

@@ -68,8 +68,8 @@ public class TerrainBrushCommand {
         }
         messages.info(player, "%s", type.get().usage());
         for (BrushParam p : type.get().params()) {
-            messages.info(player, "  %s (default %s): %s", p.name(), ParamSpec.format(p.defaultValue()),
-                    p.description());
+            messages.info(player, "  %s (default %s): %s%s", p.name(), p.display(p.defaultValue()),
+                    p.description(), p.isChoice() ? " [" + String.join(", ", p.choices()) + "]" : "");
         }
     }
 
@@ -96,12 +96,13 @@ public class TerrainBrushCommand {
         com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
         LocalSession session = WorldEdit.getInstance().getSessionManager().get(actor);
         try {
-            Pattern fill = null;
-            if (args.pattern() != null) {
-                fill = parsePattern(actor, session, args.pattern());
+            List<Pattern> patterns = new ArrayList<>();
+            for (String text : args.patterns()) {
+                patterns.add(parsePattern(actor, session, text));
             }
+            Pattern fill = patterns.isEmpty() ? null : patterns.get(0);
 
-            FaweBrushBinder.bind(player, TerrainBrushFactory.create(args), PERMISSION, radius,
+            FaweBrushBinder.bind(player, TerrainBrushFactory.create(args, patterns), PERMISSION, radius,
                     ("gzmn " + typeId + " " + radius + " " + (rest == null ? "" : rest)).trim(), fill);
         } catch (InputParseException e) {
             messages.error(player, "Invalid pattern: %s", e.getMessage());
@@ -116,7 +117,7 @@ public class TerrainBrushCommand {
         }
 
         messages.success(player, "Bound %s brush (radius %d%s) to your held item. %s",
-                type.get().id(), radius, args.pattern() == null ? "" : ", pattern " + args.pattern(),
+                type.get().id(), radius, args.patterns().isEmpty() ? "" : ", " + String.join(" + ", args.patterns()),
                 args.describe());
         messages.info(player, "Use //size, //mask and //mat to adjust it, or /none to unbind.");
     }
@@ -145,18 +146,26 @@ public class TerrainBrushCommand {
         String prefix = typed.contains(" ") ? typed.substring(0, typed.lastIndexOf(' ') + 1) : "";
         String current = typed.substring(prefix.length()).toLowerCase(Locale.ROOT);
         List<String> out = new ArrayList<>();
-        if (type.get().usesPattern() && prefix.isEmpty()) {
-            for (String block : List.of("stone", "andesite", "mossy_cobblestone", "dirt", "grass_block",
-                    "#byslope[0:grass_block][40:stone]")) {
+        int words = prefix.isEmpty() ? 0 : prefix.trim().split(" ").length;
+        if (words < type.get().patternSlots()) {
+            List<String> options = type.get() == TerrainBrushType.TREE
+                    ? (words == 0 ? List.of("oak_log", "spruce_log", "birch_log", "dark_oak_log", "cherry_log")
+                    : List.of("oak_leaves", "spruce_leaves", "birch_leaves", "azalea_leaves", "cherry_leaves"))
+                    : List.of("stone", "andesite", "mossy_cobblestone", "dirt", "grass_block",
+                    "#byslope[0:grass_block][40:stone]");
+            for (String block : options) {
                 if (block.startsWith(current)) {
-                    out.add(block);
+                    out.add(prefix + block);
                 }
             }
             return out;
         }
         for (BrushParam p : type.get().params()) {
             String option = p.name() + "=";
-            if (option.startsWith(current) && !typed.contains(option)) {
+            if (current.startsWith(option) && p.isChoice()) {
+                p.choices().stream().map(c -> option + c).filter(c -> c.startsWith(current))
+                        .forEach(c -> out.add(prefix + c));
+            } else if (option.startsWith(current) && !typed.contains(option)) {
                 out.add(prefix + option);
             }
         }

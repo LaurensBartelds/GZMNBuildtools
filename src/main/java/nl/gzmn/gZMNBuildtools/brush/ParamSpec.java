@@ -2,13 +2,22 @@ package nl.gzmn.gZMNBuildtools.brush;
 
 import java.util.List;
 
-/** Something configured by an optional pattern plus numeric parameters (brushes, generators). */
+/** Something configured by fill patterns plus parameters (brushes, generators). */
 public interface ParamSpec {
 
     String id();
 
     /** Whether the first argument is a fill pattern. */
-    boolean usesPattern();
+    default boolean usesPattern() {
+        return !patternNames().isEmpty();
+    }
+
+    /** Names of the leading pattern arguments, e.g. ["log", "leaves"]; empty for none. */
+    List<String> patternNames();
+
+    default int patternSlots() {
+        return patternNames().size();
+    }
 
     List<BrushParam> params();
 

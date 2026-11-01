@@ -1,34 +1,36 @@
 package nl.gzmn.gZMNBuildtools.brush;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 /**
- * Parsed arguments of a brush or generator: an optional fill pattern followed
- * by parameters given as {@code name=value} or positionally in declaration order.
+ * Parsed arguments of a brush or generator: its fill patterns followed by
+ * parameters given as {@code name=value} or positionally in declaration order.
  */
 public final class BrushArguments<T extends ParamSpec> {
 
     private final T type;
-    private final String pattern;
+    private final List<String> patterns;
     private final Map<String, Double> values;
 
-    private BrushArguments(T type, String pattern, Map<String, Double> values) {
+    private BrushArguments(T type, List<String> patterns, Map<String, Double> values) {
         this.type = type;
-        this.pattern = pattern;
+        this.patterns = List.copyOf(patterns);
         this.values = values;
     }
 
     public static <T extends ParamSpec> BrushArguments<T> parse(T type, String input) {
         String[] tokens = input == null || input.isBlank() ? new String[0] : input.trim().split("\\s+");
         int index = 0;
-        String pattern = null;
-        if (type.usesPattern()) {
-            if (tokens.length == 0) {
-                throw new IllegalArgumentException("Missing pattern. Usage: " + type.usage());
+        List<String> patterns = new ArrayList<>();
+        for (String name : type.patternNames()) {
+            if (index >= tokens.length) {
+                throw new IllegalArgumentException("Missing " + name + " pattern. Usage: " + type.usage());
             }
-            pattern = tokens[index++];
+            patterns.add(tokens[index++]);
         }
         Map<String, Double> values = new HashMap<>();
         int positional = 0;
@@ -52,10 +54,17 @@ public final class BrushArguments<T extends ParamSpec> {
             }
             values.put(param.name(), parseValue(param, raw));
         }
-        return new BrushArguments<>(type, pattern, values);
+        return new BrushArguments<>(type, patterns, values);
     }
 
     private static double parseValue(BrushParam param, String raw) {
+        if (param.isChoice()) {
+            int index = param.choices().indexOf(raw.toLowerCase(Locale.ROOT));
+            if (index < 0) {
+                throw new IllegalArgumentException(param.name() + " must be one of " + String.join(", ", param.choices()));
+            }
+            return index;
+        }
         double value;
         try {
             value = Double.parseDouble(raw);
@@ -73,9 +82,13 @@ public final class BrushArguments<T extends ParamSpec> {
         return type;
     }
 
-    /** The fill pattern text, or null for brushes that reshape terrain. */
+    /** The first fill pattern text, or null for brushes that reshape terrain. */
     public String pattern() {
-        return pattern;
+        return patterns.isEmpty() ? null : patterns.get(0);
+    }
+
+    public List<String> patterns() {
+        return patterns;
     }
 
     public double get(String name) {
@@ -83,13 +96,21 @@ public final class BrushArguments<T extends ParamSpec> {
         if (value != null) {
             return value;
         }
-        return type.params().stream().filter(p -> p.name().equals(name)).findFirst()
-                .map(BrushParam::defaultValue)
-                .orElseThrow(() -> new IllegalArgumentException("No parameter " + name));
+        return param(name).defaultValue();
     }
 
     public int getInt(String name) {
         return (int) Math.round(get(name));
+    }
+
+    /** The chosen option name of a choice parameter. */
+    public String choice(String name) {
+        return param(name).display(get(name));
+    }
+
+    private BrushParam param(String name) {
+        return type.params().stream().filter(p -> p.name().equals(name)).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("No parameter " + name));
     }
 
     /** Human readable summary of the effective parameter values. */
@@ -99,7 +120,7 @@ public final class BrushArguments<T extends ParamSpec> {
             if (!sb.isEmpty()) {
                 sb.append(", ");
             }
-            sb.append(p.name()).append('=').append(ParamSpec.format(get(p.name())));
+            sb.append(p.name()).append('=').append(p.display(get(p.name())));
         }
         return sb.toString();
     }

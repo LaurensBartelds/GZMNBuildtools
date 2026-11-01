@@ -106,6 +106,8 @@ one brush.
 | `overlay` | Paints the top layers of every upward-facing surface | pattern, `depth=1` |
 | `blob` | Places an organic, noisy blob | pattern, `roughness=0.4`, `frequency=1` |
 | `spike` | Places a tapering spike or stalactite | pattern, `height=12`, `sharpness=1.5`, `tilt=0`, `down=0` |
+| `tree` | Plants a tree, or a forest with `count` > 1 | log and leaves patterns, `style=oak`, `height=10`, `thickness=1`, `leaves=3`, `count=1` |
+| `rock` | Places boulders embedded in the ground | pattern, `flatness=0.35`, `roughness=0.35`, `sink=0.3`, `count=1` |
 
 The reshaping brushes (`raise` … `roughen`) move whole columns: the top four surface layers and any plants on top
 travel with the surface, so grass stays on top and dirt stays below it.
@@ -115,6 +117,11 @@ Examples:
 - `/tb smooth 8 3 iterations=4`
 - `/tb overlay 6 #byslope[0:grass_block][35:coarse_dirt][55:stone] 2`
 - `/tb spike 2 dripstone_block height=10 down=1`
+- `/tb tree 12 birch_log birch_leaves style=birch count=6` plants a birch grove with each click
+- `/tb rock 4 #byslope[0:mossy_cobblestone][35:stone][60:andesite]`
+
+Tree styles are `oak`, `spruce`, `birch`, `willow`, `dead` and `palm`. Logs follow the direction of trunks and branches,
+and leaves are placed persistent so they never decay.
 
 The largest allowed radius is set by `terrain-brushes.max-radius` in `config.yml` (default 32).
 
@@ -180,12 +187,15 @@ with `//undo`.
 | `cone` | Your position | `radius=6`, `height=12`, `hollow=0` |
 | `dome` | Your position | `radius=8`, `hollow=0` |
 | `spiral` | Your position | `radius=6`, `height=16`, `turns=2`, `thickness=1` |
+| `tree` | Your position (log and leaves patterns) | `style=oak`, `height=10`, `thickness=1`, `leaves=3` |
+| `rock` | The ground under you | `radius=4`, `flatness=0.35`, `roughness=0.35`, `sink=0.3` |
 
 Examples:
 
 - `//pos1` and `//pos2` on two pillars, then `/gzgen arch stone_bricks 10 2`
 - `/gzgen cable iron_chain sag=6` between two poles
 - `/gzgen dome glass 12 hollow=1`
+- `/gzgen tree spruce_log spruce_leaves style=spruce height=16 -p` previews a spruce before planting it
 
 A single shape is limited to `generation.max-blocks` in `config.yml` (default 500000). Add `-p` to any `/gzgen` command
 to preview it first.
