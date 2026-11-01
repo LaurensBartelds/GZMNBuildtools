@@ -87,7 +87,8 @@ public final class GZMNBuildtools extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "GZMNBuildtools started up successfully!");
 
         WebApi webApi = new WebApi(this, context.messages(), context.smartGradients(), context.presets(),
-                new WebSessions(Math.max(1, getConfig().getInt("web-editor.session-minutes", 30)) * 60_000L));
+                new WebSessions(Math.max(1, getConfig().getInt("web-editor.session-minutes", 30)) * 60_000L),
+                gradientBrushCommand::syncBrushSize);
         webEditorServer = new WebEditorServer(this, webApi);
         webEditorServer.start();
         gradientBrushCommand.setWeb(webEditorServer, webApi.sessions());

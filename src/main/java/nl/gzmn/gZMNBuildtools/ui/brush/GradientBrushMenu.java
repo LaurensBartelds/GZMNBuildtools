@@ -89,8 +89,11 @@ public class GradientBrushMenu extends Menu {
                 e -> update(x -> x.withKeepShapes(!x.keepShapes())));
         button(32, Items.icon(Material.SLIME_BALL, "Radius: " + s.radius(), NamedTextColor.AQUA,
                 "Brush stroke size.", "Left +1, right -1, shift ±5."),
-                e -> update(x -> x.withRadius(Math.max(1, Math.min(service.maxRadius(),
-                        x.radius() + (e.isRightClick() ? -1 : 1) * (e.isShiftClick() ? 5 : 1))))));
+                e -> {
+                    update(x -> x.withRadius(Math.max(1, Math.min(service.maxRadius(),
+                            x.radius() + (e.isRightClick() ? -1 : 1) * (e.isShiftClick() ? 5 : 1)))));
+                    command.syncBrushSize(viewer);
+                });
 
         button(45, Items.icon(Material.BLAZE_ROD, "Bind to held item", NamedTextColor.GREEN,
                 "Binds the brush to the item in your hand.", "Then click builds to paint them."),

@@ -45,15 +45,18 @@ public final class WebApi {
     private final SmartGradientService service;
     private final PresetRegistry presets;
     private final WebSessions sessions;
+    private final java.util.function.Consumer<Player> onApplied;
     private volatile String blocksJson;
 
+    /** @param onApplied runs on the main thread after a player's settings change (e.g. to resize their brush) */
     public WebApi(JavaPlugin plugin, Messages messages, SmartGradientService service, PresetRegistry presets,
-                  WebSessions sessions) {
+                  WebSessions sessions, java.util.function.Consumer<Player> onApplied) {
         this.plugin = plugin;
         this.messages = messages;
         this.service = service;
         this.presets = presets;
         this.sessions = sessions;
+        this.onApplied = onApplied;
     }
 
     public WebSessions sessions() {
@@ -202,6 +205,7 @@ public final class WebApi {
             if (online == null) {
                 return;
             }
+            onApplied.accept(online);
             messages.success(online, "The web editor updated your gradient brush.");
             try {
                 Palette resolved = service.parseSpec(applied.palette()).dependsOnBuild() ? null

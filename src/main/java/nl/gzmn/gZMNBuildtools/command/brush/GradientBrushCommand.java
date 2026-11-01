@@ -153,8 +153,23 @@ public class GradientBrushCommand {
         player.sendMessage(line);
     }
 
+    /** Resizes the player's bound smart gradient brush (if they hold it) to their radius setting. */
+    public void syncBrushSize(Player player) {
+        try {
+            com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
+            LocalSession session = WorldEdit.getInstance().getSessionManager().get(actor);
+            com.sk89q.worldedit.command.tool.BrushTool tool = session.getBrushTool(actor, false);
+            if (tool != null && tool.getBrush() instanceof SmartGradientBrush) {
+                tool.setSize(service.settings().get(player.getUniqueId()).radius());
+            }
+        } catch (WorldEditException e) {
+            // Not holding a brush tool: the radius applies on the next bind.
+        }
+    }
+
     public void set(Player player, String input) {
         if (apply(player, input)) {
+            syncBrushSize(player);
             messages.success(player, "Gradient settings updated; your brush uses them right away.");
             sendPaletteLine(player, service.settings().get(player.getUniqueId()));
         }
