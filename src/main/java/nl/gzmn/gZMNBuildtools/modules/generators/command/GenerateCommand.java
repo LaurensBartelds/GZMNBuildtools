@@ -20,6 +20,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.modules.generators.engine.GeneratorType;
 import nl.gzmn.gZMNBuildtools.modules.generators.engine.Generators;
 import nl.gzmn.gZMNBuildtools.shared.params.BrushArguments;
@@ -48,15 +49,18 @@ public class GenerateCommand {
     private final JavaPlugin plugin;
     private final Messages messages;
     private final PreviewService previews;
+    private final Limits limits;
 
-    public GenerateCommand(JavaPlugin plugin, Messages messages, PreviewService previews) {
+    public GenerateCommand(JavaPlugin plugin, Messages messages, PreviewService previews, Limits limits) {
         this.plugin = plugin;
         this.messages = messages;
         this.previews = previews;
+        this.limits = limits;
     }
 
-    private int maxBlocks() {
-        return Math.max(1, plugin.getConfig().getInt("generation.max-blocks", 500_000));
+    private int maxBlocks(Player player) {
+        return limits.get(player, Limits.Kind.BLOCKS,
+                Math.max(1, plugin.getConfig().getInt("generation.max-blocks", 500_000)));
     }
 
     public void list(Player player) {
@@ -145,9 +149,8 @@ public class GenerateCommand {
 
         int[] count = {0};
         Generators.generate(args, origin, a, b, seed, (x, y, z, part, axis) -> count[0]++);
-        if (count[0] > maxBlocks()) {
-            messages.error(player, "That shape has %d blocks, above the limit of %d (generation.max-blocks).",
-                    count[0], maxBlocks());
+        if (count[0] > maxBlocks(player)) {
+            messages.error(player, "That shape has %d blocks, above your limit of %d.", count[0], maxBlocks(player));
             return;
         }
 

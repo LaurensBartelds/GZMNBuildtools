@@ -52,7 +52,8 @@ public final class PrefabScatterModule implements GzmnModule {
         ScatterPlanner.Rules rules = new ScatterPlanner.Rules(id -> solid.test(id) && !canopy.contains(id), solid,
                 id -> blocks.rules().isTerrain(id) || id.equals("moss_block") || id.endsWith("terracotta"), liquid);
         load(context);
-        command = new ScatterCommand(context.plugin(), context.core().messages(), () -> library, rules);
+        command = new ScatterCommand(context.plugin(), context.core().messages(), () -> library, rules,
+                context.core().limits());
         context.commands(this::register);
     }
 

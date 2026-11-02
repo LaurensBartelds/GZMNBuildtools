@@ -55,6 +55,7 @@ public final class GZMNBuildtools extends JavaPlugin {
 
         context = new PluginContext(this);
         context.load();
+        context.limits().start(this);
         getServer().getPluginManager().registerEvents(new MenuListener(), this);
 
         modules = new ModuleManager(host(context));
@@ -142,6 +143,7 @@ public final class GZMNBuildtools extends JavaPlugin {
             modules.disableAll();
         }
         if (context != null) {
+            context.limits().stop();
             context.playerData().flush();
         }
         getLogger().info("GZMNBuildtools disabled.");

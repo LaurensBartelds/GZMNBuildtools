@@ -1,6 +1,8 @@
 package nl.gzmn.gZMNBuildtools.core;
 
 import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
+import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleManager;
@@ -53,6 +55,40 @@ public final class CoreCommands {
                     return 1;
                 }))
                 .build(), "Apply or cancel a GZMN preview.", List.of("gzp"));
+
+        commands.register(Commands.literal("gzlimits")
+                .executes(ctx -> {
+                    if (ctx.getSource().getSender() instanceof Player player) {
+                        showLimits(player, player);
+                    } else {
+                        ctx.getSource().getSender().sendMessage("Usage: /gzlimits <player>");
+                    }
+                    return 1;
+                })
+                .then(Commands.argument("player", ArgumentTypes.player())
+                        .requires(source -> source.getSender().hasPermission("gzmnbuildtools.admin"))
+                        .executes(ctx -> {
+                            List<Player> found = ctx.getArgument("player", PlayerSelectorArgumentResolver.class)
+                                    .resolve(ctx.getSource());
+                            for (Player target : found) {
+                                showLimits(ctx.getSource().getSender(), target);
+                            }
+                            return 1;
+                        }))
+                .build(), "Show the brush and edit limits of your rank.", List.of("gzlimit"));
+    }
+
+    private void showLimits(CommandSender viewer, Player player) {
+        Limits.Resolved limits = context.limits().of(player);
+        viewer.sendMessage(Component.text("Limits for " + player.getName() + " (ranks: "
+                + (limits.ranks().isEmpty() ? "none" : String.join(", ", limits.ranks())) + "):", NamedTextColor.YELLOW));
+        for (Limits.Kind kind : Limits.Kind.values()) {
+            String source = limits.source(kind);
+            String value = limits.unlimited() ? "unlimited"
+                    : source == null ? "server setting" : limits.get(kind, 0) + " (from " + source + ")";
+            viewer.sendMessage(Component.text("  " + kind.label() + ": ", NamedTextColor.GRAY)
+                    .append(Component.text(value, source == null ? NamedTextColor.WHITE : NamedTextColor.AQUA)));
+        }
     }
 
     private void reload(CommandSender sender) {

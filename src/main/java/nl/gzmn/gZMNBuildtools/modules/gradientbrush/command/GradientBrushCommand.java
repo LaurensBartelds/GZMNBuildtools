@@ -96,7 +96,8 @@ public class GradientBrushCommand {
                 String token = tokens[i];
                 int eq = token.indexOf('=');
                 if (eq > 0 && !token.startsWith("[")) {
-                    s = s.with(token.substring(0, eq), token.substring(eq + 1), service.maxRadius());
+                    s = s.with(token.substring(0, eq), token.substring(eq + 1),
+                            service.maxRadius(player.getUniqueId()));
                 } else if (i == 0) {
                     service.parseSpec(token);
                     s = s.withPalette(token);
@@ -170,14 +171,15 @@ public class GradientBrushCommand {
 
     // ---- loadouts ----------------------------------------------------------------------------------------------
 
-    private int maxLoadouts() {
-        return Math.max(1, plugin.getConfig().getInt("loadouts.max-per-player", 30));
+    private int maxLoadouts(Player player) {
+        return service.maxLoadouts(player.getUniqueId(),
+                Math.max(1, plugin.getConfig().getInt("loadouts.max-per-player", 30)));
     }
 
     public void saveLoadout(Player player, String name) {
         String chosen = name == null || name.isBlank() ? service.nextLoadoutName(player.getUniqueId()) : name;
         try {
-            service.saveLoadout(player.getUniqueId(), chosen, maxLoadouts());
+            service.saveLoadout(player.getUniqueId(), chosen, maxLoadouts(player));
         } catch (IllegalArgumentException e) {
             messages.error(player, "%s", e.getMessage());
             return;
@@ -248,8 +250,9 @@ public class GradientBrushCommand {
         GradientSettings s = service.settings().get(player.getUniqueId());
         try {
             UUID owner = player.getUniqueId();
+            int max = service.maxRadius(owner);
             FaweBrushBinder.bind(player, new SmartGradientBrush(service, owner, outcome -> feedback(owner, outcome)),
-                    PERMISSION, s.radius(), "gzmn gradient " + s.palette(), null);
+                    PERMISSION, Math.min(s.radius(), max), max, "gzmn gradient " + s.palette(), null);
         } catch (WorldEditException e) {
             messages.error(player, "Cannot bind a brush to this item: %s", e.getMessage());
             return;
@@ -262,7 +265,7 @@ public class GradientBrushCommand {
         messages.success(player, "Smart gradient brush bound (radius %d). Click any build to paint it.", s.radius());
         sendPaletteLine(player, s);
         messages.info(player, "It fits the gradient to the build you click, keeps stairs/slabs/walls and leaves "
-                + "glass, lights and other materials alone. //size changes the radius.");
+                + "glass, lights and other materials alone. /size changes the radius.");
     }
 
     private void feedback(UUID owner, SmartGradientService.Outcome outcome) {

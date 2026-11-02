@@ -50,7 +50,8 @@ public final class TerrainTextureModule implements GzmnModule {
         runner = new TextureRunner(context.core().blocks(), Set.copyOf(canopy),
                 new Texturer.Plants(Set.copyOf(plants)::contains, Set.copyOf(soil)::contains));
         load(context);
-        command = new TextureCommand(context.plugin(), context.core().messages(), runner, context.core().previews());
+        command = new TextureCommand(context.plugin(), context.core().messages(), runner, context.core().previews(),
+                context.core().limits());
         context.commands(this::register);
     }
 

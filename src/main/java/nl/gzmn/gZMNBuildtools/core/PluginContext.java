@@ -16,7 +16,7 @@ import java.io.File;
 
 /**
  * The always-on core services every module may use (messages, gradient
- * presets, block families, previews, block knowledge and player data), exposed to other plugins as the
+ * presets, block families, previews, block knowledge, player data and limits), exposed to other plugins as the
  * public {@link GzmnBuildtoolsApi}.
  */
 public final class PluginContext implements GzmnBuildtoolsApi {
@@ -26,6 +26,7 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     private final BlockFamilyRegistry blockFamilies;
     private final PreviewService previews;
     private final PlayerDataStore playerData;
+    private final Limits limits = new Limits();
     private final JavaPlugin plugin;
     private volatile BlockKnowledge blocks;
 
@@ -43,6 +44,7 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     public void load() {
         presetRegistry.reload();
         blockFamilies.reload();
+        limits.reload(plugin.getConfig()).forEach(p -> plugin.getLogger().warning("config.yml " + p));
     }
 
     /** Re-reads configuration and content after /gzmnbuildtools reload. */
@@ -64,6 +66,11 @@ public final class PluginContext implements GzmnBuildtoolsApi {
             blocks.reload(plugin.getConfig());
         }
         return blocks;
+    }
+
+    /** Per-rank limits (brush radius, blocks per action, ...). */
+    public Limits limits() {
+        return limits;
     }
 
     @Override

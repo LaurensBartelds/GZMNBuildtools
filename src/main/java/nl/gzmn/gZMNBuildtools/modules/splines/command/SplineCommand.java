@@ -16,6 +16,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.modules.splines.engine.SplineType;
 import nl.gzmn.gZMNBuildtools.shared.params.BrushArguments;
 import nl.gzmn.gZMNBuildtools.shared.params.BrushParam;
@@ -58,14 +59,17 @@ public class SplineCommand {
     private final Messages messages;
     private final PreviewService previews;
     private final BlockKnowledge blocks;
+    private final Limits limits;
     private final Map<UUID, Points> points = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> showing = new ConcurrentHashMap<>();
 
-    public SplineCommand(JavaPlugin plugin, Messages messages, PreviewService previews, BlockKnowledge blocks) {
+    public SplineCommand(JavaPlugin plugin, Messages messages, PreviewService previews, BlockKnowledge blocks,
+                         Limits limits) {
         this.plugin = plugin;
         this.messages = messages;
         this.previews = previews;
         this.blocks = blocks;
+        this.limits = limits;
     }
 
     private List<int[]> pointsOf(Player player) {
@@ -197,9 +201,10 @@ public class SplineCommand {
         List<double[]> samples = Splines.sample(list, 3);
         int[] count = {0};
         type.build(args, samples, (x, y, z, part, axis) -> count[0]++);
-        int max = Math.max(1, plugin.getConfig().getInt("generation.max-blocks", 500_000));
+        int max = limits.get(player, Limits.Kind.BLOCKS,
+                Math.max(1, plugin.getConfig().getInt("generation.max-blocks", 500_000)));
         if (count[0] > max) {
-            messages.error(player, "That %s has %d blocks, above the limit of %d (generation.max-blocks).",
+            messages.error(player, "That %s has %d blocks, above your limit of %d.",
                     type.id(), count[0], max);
             return;
         }

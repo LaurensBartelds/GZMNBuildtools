@@ -104,6 +104,32 @@ scatter:
   max-prefab-blocks: 50000
   max-blocks-per-click: 50000
 
+limits:
+  # Give ranks their own limits instead of the settings above. A player gets
+  # the highest value among their ranks (permission gzmnbuildtools.limits.<rank>),
+  # and "default" applies to everyone. Limits no rank sets use the settings
+  # above. gzmnbuildtools.limits.unlimited lifts them all. Players see theirs
+  # with /gzlimits.
+  #   radius:    brush radius (all GZMN brushes; //size is capped to it)
+  #   blocks:    blocks one /gzgen, /gzspline or scatter click may place
+  #   selection: blocks in a selection /gztexture works on
+  #   image:     longest side of a /gzpixelart picture
+  #   loadouts:  saved loadouts per brush
+  # Example: smaller brushes for everyone, bigger ones for builders.
+  #   default:
+  #     radius: 12
+  #     blocks: 100000
+  #   ranks:
+  #     builder:
+  #       radius: 32
+  #       blocks: 500000
+  #     architect:
+  #       radius: 64
+  #       blocks: 2000000
+  #       image: 512
+  default: {}
+  ranks: {}
+
 preview:
   # Largest edit that can be previewed as ghost blocks, and how long a preview stays.
   max-blocks: 60000

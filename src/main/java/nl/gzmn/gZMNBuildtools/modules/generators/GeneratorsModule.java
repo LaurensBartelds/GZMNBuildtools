@@ -27,7 +27,8 @@ public final class GeneratorsModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
-        generateCommand = new GenerateCommand(context.plugin(), context.core().messages(), context.core().previews());
+        generateCommand = new GenerateCommand(context.plugin(), context.core().messages(), context.core().previews(),
+                context.core().limits());
         context.commands(this::registerGenerate);
     }
 

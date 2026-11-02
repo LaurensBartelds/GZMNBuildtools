@@ -6,6 +6,7 @@ import com.sk89q.worldedit.world.block.BlockState;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.modules.materialswap.engine.MaterialSwap;
 import nl.gzmn.gZMNBuildtools.modules.materialswap.engine.SwapOptions;
 import nl.gzmn.gZMNBuildtools.modules.materialswap.fawe.MaterialSwapBrush;
@@ -38,21 +39,26 @@ public class SwapCommand {
     private final MaterialSwap swap;
     private final PreviewService previews;
 
-    public SwapCommand(JavaPlugin plugin, Messages messages, BuildEditor editor, PreviewService previews) {
+    private final Limits limits;
+
+    public SwapCommand(JavaPlugin plugin, Messages messages, BuildEditor editor, PreviewService previews,
+                       Limits limits) {
         this.plugin = plugin;
         this.messages = messages;
         this.editor = editor;
         this.swap = new MaterialSwap(editor.blocks().catalog(), editor.blocks().variants());
         this.previews = previews;
+        this.limits = limits;
     }
 
-    private int maxRadius() {
-        return Math.max(1, plugin.getConfig().getInt("smart-gradient.max-radius", 32));
+    private int maxRadius(Player player) {
+        return limits.get(player, Limits.Kind.RADIUS,
+                Math.max(1, plugin.getConfig().getInt("smart-gradient.max-radius", 32)));
     }
 
     private Optional<SwapOptions> parse(Player player, String input) {
         try {
-            return Optional.of(SwapOptions.parse(input, editor.blocks().catalog()::exists, maxRadius(), 4));
+            return Optional.of(SwapOptions.parse(input, editor.blocks().catalog()::exists, maxRadius(player), 4));
         } catch (IllegalArgumentException e) {
             messages.error(player, "%s", e.getMessage());
             return Optional.empty();
@@ -74,7 +80,7 @@ public class SwapCommand {
         UUID owner = player.getUniqueId();
         try {
             FaweBrushBinder.bind(player, new MaterialSwapBrush(editor, swap, options.get(), o -> feedback(owner, o)),
-                    PERMISSION, options.get().radius(), "gzmn swap " + input.trim(), null);
+                    PERMISSION, options.get().radius(), maxRadius(player), "gzmn swap " + input.trim(), null);
         } catch (WorldEditException e) {
             messages.error(player, "Cannot bind a brush to this item: %s", e.getMessage());
             return;

@@ -12,6 +12,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.core.PlayerDataStore;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.engine.TerrainBrushType;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.fawe.TerrainBrushFactory;
@@ -33,7 +34,7 @@ import java.util.logging.Level;
 
 /**
  * {@code /terrainbrush}: binds one of the GZMN terrain brushes to the held item
- * as a regular FAWE brush, so {@code //size}, {@code //mat}, {@code //mask},
+ * as a regular FAWE brush, so {@code /size}, {@code /mat}, {@code //mask},
  * scroll actions and visualisation keep working.
  */
 public class TerrainBrushCommand {
@@ -51,16 +52,19 @@ public class TerrainBrushCommand {
     private final JavaPlugin plugin;
     private final Messages messages;
     private final PlayerDataStore playerData;
+    private final Limits limits;
     private final Map<UUID, Bound> lastBound = new ConcurrentHashMap<>();
 
-    public TerrainBrushCommand(JavaPlugin plugin, Messages messages, PlayerDataStore playerData) {
+    public TerrainBrushCommand(JavaPlugin plugin, Messages messages, PlayerDataStore playerData, Limits limits) {
         this.plugin = plugin;
         this.messages = messages;
         this.playerData = playerData;
+        this.limits = limits;
     }
 
-    public int maxRadius() {
-        return Math.max(1, plugin.getConfig().getInt("terrain-brushes.max-radius", 32));
+    public int maxRadius(Player player) {
+        return limits.get(player, Limits.Kind.RADIUS,
+                Math.max(1, plugin.getConfig().getInt("terrain-brushes.max-radius", 32)));
     }
 
     public void list(Player player) {
@@ -94,8 +98,8 @@ public class TerrainBrushCommand {
             list(player);
             return;
         }
-        if (radius > maxRadius()) {
-            messages.error(player, "Radius %d is above the configured maximum of %d.", radius, maxRadius());
+        if (radius > maxRadius(player)) {
+            messages.error(player, "Radius %d is above your limit of %d.", radius, maxRadius(player));
             return;
         }
 
@@ -117,7 +121,7 @@ public class TerrainBrushCommand {
             Pattern fill = patterns.isEmpty() ? null : patterns.get(0);
 
             FaweBrushBinder.bind(player, TerrainBrushFactory.create(args, patterns), PERMISSION, radius,
-                    ("gzmn " + typeId + " " + radius + " " + (rest == null ? "" : rest)).trim(), fill);
+                    maxRadius(player), ("gzmn " + typeId + " " + radius + " " + (rest == null ? "" : rest)).trim(), fill);
         } catch (InputParseException e) {
             messages.error(player, "Invalid pattern: %s", e.getMessage());
             return;
@@ -134,7 +138,7 @@ public class TerrainBrushCommand {
         messages.success(player, "Bound %s brush (radius %d%s) to your held item. %s",
                 type.get().id(), radius, args.patterns().isEmpty() ? "" : ", " + String.join(" + ", args.patterns()),
                 args.describe());
-        messages.info(player, "Use //size, //mask and //mat to adjust it, /tb save <name> to keep it, or /none to unbind.");
+        messages.info(player, "Use /size, //mask and /mat to adjust it, /tb save <name> to keep it, or /none to unbind.");
     }
 
     // ---- loadouts ----------------------------------------------------------------------------------------------
@@ -155,7 +159,8 @@ public class TerrainBrushCommand {
             messages.error(player, "Loadout names use letters, digits, - and _ (up to 32).");
             return;
         }
-        int max = Math.max(1, plugin.getConfig().getInt("loadouts.max-per-player", 30));
+        int max = limits.get(player, Limits.Kind.LOADOUTS,
+                Math.max(1, plugin.getConfig().getInt("loadouts.max-per-player", 30)));
         if (!loadoutNames(player).contains(name) && loadoutNames(player).size() >= max) {
             messages.error(player, "You already have %d terrain loadouts; delete one first.", max);
             return;
@@ -177,7 +182,7 @@ public class TerrainBrushCommand {
         Object radius = playerData.get(player.getUniqueId(), DATA, "loadouts." + name + ".radius");
         Object args = playerData.get(player.getUniqueId(), DATA, "loadouts." + name + ".args");
         int r = radius instanceof Number n ? n.intValue() : 5;
-        bind(player, type.toString(), Math.min(r, maxRadius()), args == null ? "" : args.toString());
+        bind(player, type.toString(), Math.min(r, maxRadius(player)), args == null ? "" : args.toString());
     }
 
     public void deleteLoadout(Player player, String rawName) {

@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.modules.scatter.engine.ScatterOptions;
 import nl.gzmn.gZMNBuildtools.modules.scatter.engine.ScatterPlanner;
 import nl.gzmn.gZMNBuildtools.modules.scatter.fawe.ScatterBrush;
@@ -34,21 +35,24 @@ public class ScatterCommand {
     private final Messages messages;
     private final Supplier<PrefabLibrary> library;
     private final ScatterPlanner.Rules rules;
+    private final Limits limits;
 
     public ScatterCommand(JavaPlugin plugin, Messages messages, Supplier<PrefabLibrary> library,
-                          ScatterPlanner.Rules rules) {
+                          ScatterPlanner.Rules rules, Limits limits) {
         this.plugin = plugin;
         this.messages = messages;
         this.library = library;
         this.rules = rules;
+        this.limits = limits;
     }
 
-    private int maxRadius() {
-        return Math.max(1, plugin.getConfig().getInt("scatter.max-radius", 32));
+    private int maxRadius(Player player) {
+        return limits.get(player, Limits.Kind.RADIUS, Math.max(1, plugin.getConfig().getInt("scatter.max-radius", 32)));
     }
 
-    private int maxBlocks() {
-        return Math.max(1, plugin.getConfig().getInt("scatter.max-blocks-per-click", 50_000));
+    private int maxBlocks(Player player) {
+        return limits.get(player, Limits.Kind.BLOCKS,
+                Math.max(1, plugin.getConfig().getInt("scatter.max-blocks-per-click", 50_000)));
     }
 
     public void help(Player player) {
@@ -88,8 +92,8 @@ public class ScatterCommand {
         if (!tokens.isEmpty() && tokens.get(0).matches("\\d+")) {
             radius = Integer.parseInt(tokens.remove(0));
         }
-        if (radius < 1 || radius > maxRadius()) {
-            messages.error(player, "Radius must be between 1 and %d (scatter.max-radius).", maxRadius());
+        if (radius < 1 || radius > maxRadius(player)) {
+            messages.error(player, "Radius must be between 1 and %d (your limit).", maxRadius(player));
             return;
         }
         ScatterOptions options;
@@ -102,7 +106,7 @@ public class ScatterCommand {
             return;
         }
         UUID owner = player.getUniqueId();
-        ScatterBrush brush = new ScatterBrush(prefabs, options, rules, maxBlocks(),
+        ScatterBrush brush = new ScatterBrush(prefabs, options, rules, maxBlocks(player),
                 ThreadLocalRandom.current().nextLong(), (placed, blocks) -> {
             Player online = plugin.getServer().getPlayer(owner);
             if (online != null) {
@@ -112,7 +116,7 @@ public class ScatterCommand {
             }
         });
         try {
-            FaweBrushBinder.bind(player, brush, PERMISSION, radius, "gzmn scatter " + spec, null);
+            FaweBrushBinder.bind(player, brush, PERMISSION, radius, maxRadius(player), "gzmn scatter " + spec, null);
         } catch (WorldEditException e) {
             messages.error(player, "Cannot bind a brush to this item: %s", e.getMessage());
             return;

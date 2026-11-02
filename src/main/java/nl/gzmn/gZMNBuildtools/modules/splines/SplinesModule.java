@@ -28,7 +28,7 @@ public final class SplinesModule implements GzmnModule {
     @Override
     public void enable(ModuleContext context) throws Exception {
         splineCommand = new SplineCommand(context.plugin(), context.core().messages(), context.core().previews(),
-                context.core().blocks());
+                context.core().blocks(), context.core().limits());
         context.commands(this::registerSpline);
     }
 

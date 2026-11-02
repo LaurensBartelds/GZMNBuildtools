@@ -93,7 +93,7 @@ Every `pattern` slot accepts any FAWE pattern, including random mixes and other 
 `/terrainbrush <type> <radius> [pattern] [parameters]` (aliases `/tbrush`, `/tb`) binds a terrain brush to the item in
 your hand. `/tb` on its own opens a menu: pick a brush, adjust its radius and parameters with left/right clicks
 (shift for bigger steps), click blocks in your inventory to choose its patterns, then press Bind. `/tb list` lists
-the brushes in chat. It is a normal FAWE brush, so `//size`, `//mask`, `//mat`, scroll actions, `/none` and visualisation all
+the brushes in chat. It is a normal FAWE brush, so `/size`, `//mask`, `/mat`, scroll actions, `/none` and visualisation all
 work. Parameters can be given in order or as `name=value`. Run `/tb list` for the list or `/tb <type>` for the details of
 one brush.
 
@@ -171,7 +171,7 @@ Options (`key=value`, after the palette or with `/gb set`):
 | `steps` | `auto`; number of palette steps (fills in between explicit blocks) |
 | `shapes` | `keep`, `full` |
 | `range` | `build`, or fixed world coordinates such as `60..120` |
-| `radius` | `4`; the brush radius (`//size` works too) |
+| `radius` | `4`; the brush radius (`/size` works too) |
 
 Run `/gb` without arguments to open the brush menu. It shows the palette and has a button for every option. To base
 a palette on a block, click it in your own inventory; shift-click blocks to build a palette in order, and the Steps
@@ -381,7 +381,7 @@ expires after `preview.seconds` (default 60) and is limited to `preview.max-bloc
 
 `/gzhover` (alias `/hover`) toggles a live preview. While you hold the gradient, swap, weathering, texture or scatter
 brush, ghost blocks show what a click would change wherever you look, and they follow your aim. A click places exactly
-what was shown. The preview respects the brush's `//size` and `//mask` and your global mask, and changes nothing until
+what was shown. The preview respects the brush's `/size` and `//mask` and your global mask, and changes nothing until
 you click. The setting is remembered per player.
 
 Server owners can tune it under `hover:` in `config.yml`. `interval-ticks` sets how often aim is checked (default 4)
@@ -430,6 +430,39 @@ On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
 
 After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to apply changes without restarting.
 
+### Limits per rank
+
+The limits in `config.yml` (brush radius, `generation.max-blocks`, ...) apply to everyone. Under `limits:` you can give
+ranks their own:
+
+```yaml
+limits:
+  default:          # everyone
+    radius: 12
+    blocks: 100000
+  ranks:
+    builder:        # players with gzmnbuildtools.limits.builder
+      radius: 32
+      blocks: 500000
+    architect:      # gzmnbuildtools.limits.architect
+      radius: 64
+      blocks: 2000000
+      image: 512
+```
+
+| Limit | What it caps |
+|-------|--------------|
+| `radius` | Radius of every GZMN brush. Larger `/size` values are capped to it |
+| `blocks` | Blocks one `/gzgen`, `/gzspline` or scatter click may place |
+| `selection` | Blocks in a selection `/gztexture` works on |
+| `image` | Longest side of a `/gzpixelart` picture |
+| `loadouts` | Saved loadouts per brush |
+
+A player gets the highest value among their ranks. Anything no rank sets falls back to the normal setting.
+`gzmnbuildtools.limits.unlimited` lifts every limit (operators don't get it automatically). `/gzlimits` shows players
+their own limits and where they come from; admins can check anyone with `/gzlimits <player>`. FAWE's own limits still
+apply on top.
+
 ## Permissions
 
 - `gzmnbuildtools.typereplace`: Grants access to the type replace command.
@@ -444,6 +477,8 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.texture`: Grants access to `/gztexture`.
 - `gzmnbuildtools.hover`: Grants access to `/gzhover`.
 - `gzmnbuildtools.scatter`: Grants access to `/gzscatter` and using its brush.
+- `gzmnbuildtools.limits.<rank>`: Gives the limits of a rank from `limits.ranks` (see above).
+- `gzmnbuildtools.limits.unlimited`: Lifts all limits (not given to operators by default).
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.

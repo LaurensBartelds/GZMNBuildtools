@@ -54,7 +54,7 @@ public class TerrainBrushParamsMenu extends Menu {
                 type.description()));
         button(10, Items.icon(Material.SLIME_BALL, "Radius: " + radius, NamedTextColor.YELLOW,
                 "Left +1, right -1, shift ±5."), e -> {
-            radius = clamp(radius + (e.isRightClick() ? -1 : 1) * (e.isShiftClick() ? 5 : 1), 1, command.maxRadius());
+            radius = clamp(radius + (e.isRightClick() ? -1 : 1) * (e.isShiftClick() ? 5 : 1), 1, command.maxRadius(viewer));
             refresh();
         });
         List<BrushParam> params = type.params();

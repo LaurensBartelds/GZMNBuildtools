@@ -14,6 +14,7 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.engine.TexturePreset;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.fawe.TextureBrush;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.fawe.TextureRunner;
@@ -76,20 +77,25 @@ public class TextureCommand {
     private final Messages messages;
     private final TextureRunner runner;
     private final PreviewService previews;
+    private final Limits limits;
 
-    public TextureCommand(JavaPlugin plugin, Messages messages, TextureRunner runner, PreviewService previews) {
+    public TextureCommand(JavaPlugin plugin, Messages messages, TextureRunner runner, PreviewService previews,
+                          Limits limits) {
         this.plugin = plugin;
         this.messages = messages;
         this.runner = runner;
         this.previews = previews;
+        this.limits = limits;
     }
 
-    private long maxVolume() {
-        return Math.max(1, plugin.getConfig().getLong("terrain-texture.max-volume", 8_000_000L));
+    private long maxVolume(Player player) {
+        return limits.get(player, Limits.Kind.SELECTION,
+                Math.max(1, plugin.getConfig().getInt("terrain-texture.max-volume", 8_000_000)));
     }
 
-    private int maxRadius() {
-        return Math.max(1, plugin.getConfig().getInt("terrain-texture.max-radius", 32));
+    private int maxRadius(Player player) {
+        return limits.get(player, Limits.Kind.RADIUS,
+                Math.max(1, plugin.getConfig().getInt("terrain-texture.max-radius", 32)));
     }
 
     public void list(Player player) {
@@ -147,8 +153,8 @@ public class TextureCommand {
     }
 
     private void bind(Player player, TexturePreset preset, int radius, long seed) {
-        if (radius > maxRadius()) {
-            messages.error(player, "Radius %d is above the configured maximum of %d.", radius, maxRadius());
+        if (radius > maxRadius(player)) {
+            messages.error(player, "Radius %d is above your limit of %d.", radius, maxRadius(player));
             return;
         }
         UUID owner = player.getUniqueId();
@@ -159,14 +165,14 @@ public class TextureCommand {
                     online.sendActionBar(Component.text(changed + " blocks textured (" + preset.id() + ")",
                             NamedTextColor.GRAY));
                 }
-            }), PERMISSION, radius, "gzmn texture " + preset.id(), null);
+            }), PERMISSION, radius, maxRadius(player), "gzmn texture " + preset.id(), null);
         } catch (WorldEditException e) {
             messages.error(player, "Cannot bind a brush to this item: %s", e.getMessage());
             return;
         }
         messages.success(player, "Bound the %s texture brush (radius %d). Paint over terrain; builds are left alone.",
                 preset.id(), radius);
-        messages.info(player, "//size changes the radius and //mask limits it further. /none unbinds.");
+        messages.info(player, "/size changes the radius and //mask limits it further. /none unbinds.");
     }
 
     private void texture(Player player, TexturePreset preset, boolean preview, long seed) {
@@ -183,9 +189,8 @@ public class TextureCommand {
         BlockVector3 max = region.getMaximumPoint();
         Bounds bounds = new Bounds(min.x(), min.y(), min.z(), max.x(), max.y(), max.z());
         long volume = (long) bounds.sizeX() * bounds.sizeY() * bounds.sizeZ();
-        if (volume > maxVolume()) {
-            messages.error(player, "That selection has %d blocks, above the limit of %d (terrain-texture.max-volume).",
-                    volume, maxVolume());
+        if (volume > maxVolume(player)) {
+            messages.error(player, "That selection has %d blocks, above your limit of %d.", volume, maxVolume(player));
             return;
         }
         boolean cuboid = region instanceof CuboidRegion;

@@ -90,7 +90,7 @@ public class GradientBrushMenu extends Menu {
         button(32, Items.icon(Material.SLIME_BALL, "Radius: " + s.radius(), NamedTextColor.AQUA,
                 "Brush stroke size.", "Left +1, right -1, shift ±5."),
                 e -> {
-                    update(x -> x.withRadius(Math.max(1, Math.min(service.maxRadius(),
+                    update(x -> x.withRadius(Math.max(1, Math.min(service.maxRadius(viewer.getUniqueId()),
                             x.radius() + (e.isRightClick() ? -1 : 1) * (e.isShiftClick() ? 5 : 1)))));
                     command.syncBrushSize(viewer);
                 });

@@ -11,6 +11,7 @@ import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
 import net.kyori.adventure.text.Component;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.core.PlayerDataStore;
 import nl.gzmn.gZMNBuildtools.gradient.model.GradientPreset;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.command.Swatches;
@@ -33,6 +34,7 @@ import nl.gzmn.gZMNBuildtools.shared.palette.MaterialClass;
 import nl.gzmn.gZMNBuildtools.shared.palette.PaletteGenerator;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BlockKnowledge;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.ExtentBlockSource;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.LimitedBrush;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.StateMapper;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -105,6 +107,7 @@ public final class SmartGradientService {
     private final PresetRegistry presets;
     private final GradientSettingsStore settings;
     private final PlayerDataStore playerData;
+    private final Limits limits;
     private final Map<UUID, Memory> memory = new ConcurrentHashMap<>();
     private final Map<UUID, Lookahead> lookahead = new ConcurrentHashMap<>();
 
@@ -115,7 +118,9 @@ public final class SmartGradientService {
     private static final String DATA = "gradient-brush";
     private static final java.util.regex.Pattern LOADOUT_NAME = java.util.regex.Pattern.compile("[a-z0-9_-]{1,32}");
 
-    public SmartGradientService(PresetRegistry presets, BlockKnowledge blocks, PlayerDataStore playerData) {
+    public SmartGradientService(PresetRegistry presets, BlockKnowledge blocks, PlayerDataStore playerData,
+                                Limits limits) {
+        this.limits = limits;
         this.presets = presets;
         this.blocks = blocks;
         this.playerData = playerData;
@@ -150,7 +155,7 @@ public final class SmartGradientService {
         for (String key : playerData.keys(player, DATA, path)) {
             saved.put(key, playerData.get(player, DATA, path + "." + key));
         }
-        return Optional.of(GradientSettings.fromMap(saved, maxRadius, this::isValidPalette));
+        return Optional.of(GradientSettings.fromMap(saved, maxRadius(player), this::isValidPalette));
     }
 
     private boolean isValidPalette(String text) {
@@ -233,8 +238,19 @@ public final class SmartGradientService {
         return colors;
     }
 
+    /** The server's radius setting (smart-gradient.max-radius). */
     public int maxRadius() {
         return maxRadius;
+    }
+
+    /** The largest radius this player may use (their rank's limit, or the server setting). */
+    public int maxRadius(UUID player) {
+        return limits.get(player, Limits.Kind.RADIUS, maxRadius);
+    }
+
+    /** How many loadouts this player may keep. */
+    public int maxLoadouts(UUID player, int fallback) {
+        return limits.get(player, Limits.Kind.LOADOUTS, fallback);
     }
 
     // ---- module API (used by other modules, e.g. the web editor) ------------------------------------------------------
@@ -306,7 +322,7 @@ public final class SmartGradientService {
             s = s.withPalette(palette);
         }
         for (Map.Entry<String, String> option : options.entrySet()) {
-            s = s.with(option.getKey(), option.getValue(), maxRadius);
+            s = s.with(option.getKey(), option.getValue(), maxRadius(player));
         }
         settings.set(player, s);
         forget(player);
@@ -328,8 +344,8 @@ public final class SmartGradientService {
             com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
             LocalSession session = WorldEdit.getInstance().getSessionManager().get(actor);
             BrushTool tool = session.getBrushTool(actor, false);
-            if (tool != null && tool.getBrush() instanceof SmartGradientBrush) {
-                tool.setSize(settings.get(player.getUniqueId()).radius());
+            if (tool != null && LimitedBrush.unwrap(tool.getBrush()) instanceof SmartGradientBrush) {
+                tool.setSize(Math.min(settings.get(player.getUniqueId()).radius(), maxRadius(player.getUniqueId())));
             }
         } catch (WorldEditException e) {
             // Not holding a brush tool: the radius applies on the next bind.

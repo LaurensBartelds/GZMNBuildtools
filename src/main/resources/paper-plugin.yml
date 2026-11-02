@@ -87,3 +87,7 @@ permissions:
   gzmnbuildtools.scatter:
     description: Allows use of the /gzscatter prefab brush
     default: op
+
+  gzmnbuildtools.limits.unlimited:
+    description: Lifts all GZMN limits (brush radius, blocks per action, ...)
+    default: false

@@ -146,7 +146,7 @@ public final class WebApi {
         Player online = Bukkit.getPlayer(player.get());
         out.addProperty("player", online != null ? online.getName() : player.get().toString());
         out.add("settings", settingsJson(service.settingsView(player.get())));
-        out.addProperty("maxRadius", service.maxRadius());
+        out.addProperty("maxRadius", service.maxRadius(player.get()));
         send(exchange, 200, out.toString());
     }
 

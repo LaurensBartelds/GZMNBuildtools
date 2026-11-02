@@ -31,7 +31,8 @@ public final class WeatheringModule implements GzmnModule {
     @Override
     public void enable(ModuleContext context) {
         command = new WeatheringCommand(context.plugin(), context.core().messages(),
-                new BuildEditor(context.core().blocks()), context.core().previews());
+                new BuildEditor(context.core().blocks()), context.core().previews(),
+                context.core().limits());
         context.commands(this::register);
     }
 

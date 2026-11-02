@@ -32,7 +32,8 @@ public final class GradientBrushModule implements GzmnModule {
     @Override
     public void enable(ModuleContext context) throws Exception {
         presetRegistry = context.core().presets();
-        service = new SmartGradientService(presetRegistry, context.core().blocks(), context.core().playerData());
+        service = new SmartGradientService(presetRegistry, context.core().blocks(), context.core().playerData(),
+                context.core().limits());
         service.reload(context.plugin().getConfig());
         brushCommand = new GradientBrushCommand(context.plugin(), context.core().messages(), service,
                 presetRegistry, context.core().previews());

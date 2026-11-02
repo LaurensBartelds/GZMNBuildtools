@@ -40,7 +40,7 @@ public final class PixelArtModule implements GzmnModule {
                 config.getBoolean("pixel-art.allow-urls", true),
                 config.getBoolean("pixel-art.allow-private-addresses", false)));
         command = new PixelArtCommand(context.plugin(), context.core().messages(), context.core().blocks(),
-                context.core().previews(), loader);
+                context.core().previews(), loader, context.core().limits());
         context.commands(this::register);
     }
 

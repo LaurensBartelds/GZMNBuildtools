@@ -29,7 +29,7 @@ public final class TerrainBrushModule implements GzmnModule {
     @Override
     public void enable(ModuleContext context) throws Exception {
         terrainBrushCommand = new TerrainBrushCommand(context.plugin(), context.core().messages(),
-                context.core().playerData());
+                context.core().playerData(), context.core().limits());
         context.commands(this::registerTerrainBrush);
     }
 

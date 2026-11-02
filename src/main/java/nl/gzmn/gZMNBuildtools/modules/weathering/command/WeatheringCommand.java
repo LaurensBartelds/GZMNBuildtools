@@ -6,6 +6,7 @@ import com.sk89q.worldedit.world.block.BlockState;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.modules.weathering.engine.WeatherOptions;
 import nl.gzmn.gZMNBuildtools.modules.weathering.fawe.WeatheringBrush;
 import nl.gzmn.gZMNBuildtools.modules.weathering.fawe.WeatheringRunner;
@@ -38,18 +39,25 @@ public class WeatheringCommand {
     private final Messages messages;
     private final WeatheringRunner runner;
     private final PreviewService previews;
+    private final Limits limits;
 
-    public WeatheringCommand(JavaPlugin plugin, Messages messages, BuildEditor editor, PreviewService previews) {
+    public WeatheringCommand(JavaPlugin plugin, Messages messages, BuildEditor editor, PreviewService previews,
+                             Limits limits) {
         this.plugin = plugin;
         this.messages = messages;
         this.runner = new WeatheringRunner(editor);
         this.previews = previews;
+        this.limits = limits;
+    }
+
+    private int maxRadius(Player player) {
+        return limits.get(player, Limits.Kind.RADIUS,
+                Math.max(1, plugin.getConfig().getInt("smart-gradient.max-radius", 32)));
     }
 
     private Optional<WeatherOptions> parse(Player player, String input) {
         try {
-            return Optional.of(WeatherOptions.parse(input,
-                    Math.max(1, plugin.getConfig().getInt("smart-gradient.max-radius", 32))));
+            return Optional.of(WeatherOptions.parse(input, maxRadius(player)));
         } catch (IllegalArgumentException e) {
             messages.error(player, "%s", e.getMessage());
             return Optional.empty();
@@ -64,7 +72,7 @@ public class WeatheringCommand {
         UUID owner = player.getUniqueId();
         try {
             FaweBrushBinder.bind(player, new WeatheringBrush(runner, options.get(), r -> feedback(owner, r)),
-                    PERMISSION, options.get().radius(), "gzmn weathering " + input.trim(), null);
+                    PERMISSION, options.get().radius(), maxRadius(player), "gzmn weathering " + input.trim(), null);
         } catch (WorldEditException e) {
             messages.error(player, "Cannot bind a brush to this item: %s", e.getMessage());
             return;

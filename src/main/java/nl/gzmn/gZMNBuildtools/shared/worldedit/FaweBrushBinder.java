@@ -17,15 +17,16 @@ public final class FaweBrushBinder {
     }
 
     /**
-     * @param label shown by FAWE's brush info (e.g. "gzmn gradient auto")
+     * @param maxRadius the player's radius limit; larger /size values are capped to it
+     * @param label     shown by FAWE's brush info (e.g. "gzmn gradient auto")
      * @param fill  fill pattern, or null for brushes that do not use one
      */
-    public static void bind(Player player, Brush brush, String permission, double radius, String label,
-                            Pattern fill) throws WorldEditException {
+    public static void bind(Player player, Brush brush, String permission, double radius, double maxRadius,
+                            String label, Pattern fill) throws WorldEditException {
         com.sk89q.worldedit.entity.Player actor = BukkitAdapter.adapt(player);
         LocalSession session = WorldEdit.getInstance().getSessionManager().get(actor);
         BrushSettings settings = new BrushSettings();
-        settings.setBrush(brush);
+        settings.setBrush(LimitedBrush.limit(brush, maxRadius));
         settings.addPermission(permission);
         settings.addSetting(BrushSettings.SettingType.BRUSH, label);
 
@@ -33,7 +34,7 @@ public final class FaweBrushBinder {
         BrushTool tool = session.getBrushTool(actor);
         tool.setPrimary(settings);
         tool.setSecondary(settings);
-        tool.setSize(radius);
+        tool.setSize(Math.min(radius, maxRadius));
         if (fill != null) {
             tool.setFill(fill);
         }

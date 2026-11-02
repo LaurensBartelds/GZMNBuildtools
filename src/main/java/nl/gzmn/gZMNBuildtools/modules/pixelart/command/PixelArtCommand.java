@@ -4,6 +4,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.world.block.BlockState;
 import com.sk89q.worldedit.world.block.BlockType;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.Limits;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.engine.BlockSets;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.engine.ImageQuantizer;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.engine.PixelArtOptions;
@@ -48,10 +49,12 @@ public class PixelArtCommand {
     private final BlockKnowledge blocks;
     private final PreviewService previews;
     private final ImageLoader loader;
+    private final Limits limits;
     private volatile List<ImageQuantizer.Swatch> mapSwatches;
 
     public PixelArtCommand(JavaPlugin plugin, Messages messages, BlockKnowledge blocks, PreviewService previews,
-                           ImageLoader loader) {
+                           ImageLoader loader, Limits limits) {
+        this.limits = limits;
         this.plugin = plugin;
         this.messages = messages;
         this.blocks = blocks;
@@ -59,8 +62,8 @@ public class PixelArtCommand {
         this.loader = loader;
     }
 
-    private int maxSide() {
-        return Math.max(8, plugin.getConfig().getInt("pixel-art.max-size", 256));
+    private int maxSide(Player player) {
+        return Math.max(8, limits.get(player, Limits.Kind.IMAGE, plugin.getConfig().getInt("pixel-art.max-size", 256)));
     }
 
     public void help(Player player) {
@@ -75,7 +78,7 @@ public class PixelArtCommand {
     public void build(Player player, String input) {
         PixelArtOptions options;
         try {
-            options = PixelArtOptions.parse(input, maxSide());
+            options = PixelArtOptions.parse(input, maxSide(player));
         } catch (IllegalArgumentException e) {
             messages.error(player, "%s", e.getMessage());
             return;
@@ -87,10 +90,11 @@ public class PixelArtCommand {
         }
         BlockFace facing = options.map() ? BlockFace.NORTH : player.getFacing();
         messages.info(player, "Loading %s...", options.source());
+        int maxSide = maxSide(player);
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             Map<BlockVector3, String> placement;
             try {
-                placement = plan(options, target.get(), facing);
+                placement = plan(options, target.get(), facing, maxSide);
             } catch (IllegalArgumentException e) {
                 messages.error(player, "%s", e.getMessage());
                 return;
@@ -127,12 +131,13 @@ public class PixelArtCommand {
     }
 
     /** Loads, scales and quantizes the image, and works out where each block goes. */
-    Map<BlockVector3, String> plan(PixelArtOptions options, BlockVector3 target, BlockFace facing) throws IOException {
+    Map<BlockVector3, String> plan(PixelArtOptions options, BlockVector3 target, BlockFace facing, int maxSide)
+            throws IOException {
         BufferedImage image = loader.load(options.source());
         int width = options.width();
         int height = options.heightFor(image.getWidth(), image.getHeight());
-        if (height > maxSide()) {
-            throw new IllegalArgumentException("That would be " + height + " blocks tall; the limit is " + maxSide()
+        if (height > maxSide) {
+            throw new IllegalArgumentException("That would be " + height + " blocks tall; the limit is " + maxSide
                     + ". Set a smaller width or a height.");
         }
         int[] pixels = ImageLoader.scaledPixels(image, width, height);
