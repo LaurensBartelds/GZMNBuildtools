@@ -31,12 +31,14 @@ class BlockFamilyRegistryTest {
     }
 
     @Test
-    void stone_hasStairsSlabWall() {
+    void stone_hasStairsAndSlabButNoWall() {
         MaterialDefinition def = registry.definition("stone");
         assertNotNull(def);
         assertEquals("stone", def.blockName);
         assertEquals("stone", def.variantPrefix);
-        assertTrue(def.hasStairs && def.hasSlab && def.hasWall);
+        assertTrue(def.hasStairs && def.hasSlab);
+        // Vanilla has no stone_wall (only cobblestone/brick walls).
+        assertFalse(def.hasWall);
         assertFalse(def.hasFence);
     }
 

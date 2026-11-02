@@ -12,6 +12,15 @@ import org.bukkit.entity.Player;
  */
 public interface Messages {
 
+    /**
+     * Marks a string as translatable without translating it yet (for text kept
+     * as data, such as help entries); pass it to {@link #text} when showing it.
+     * The message catalogue picks up the literal passed to every {@code tr} call.
+     */
+    static String tr(String text) {
+        return text;
+    }
+
     /** Wrap a message body with the {@code [GZMN]} prefix. */
     Component prefixed(Component body);
 
@@ -29,6 +38,15 @@ public interface Messages {
 
     /** Error message (red). */
     void error(Player player, String template, Object... args);
+
+    /**
+     * The template in the player's language, formatted, for text that goes
+     * into components built by hand (buttons, lists). Untranslated templates
+     * come back in English.
+     */
+    default String text(Player player, String template, Object... args) {
+        return String.format(java.util.Locale.ROOT, template, args);
+    }
 
     /** Diagnostic message, only sent when {@link #isVerbose()} is true. */
     void verbose(Player player, String template, Object... args);

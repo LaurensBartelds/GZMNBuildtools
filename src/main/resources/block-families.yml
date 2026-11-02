@@ -15,17 +15,17 @@
 
 families:
   # --- Stone ---
-  stone: { block: stone, prefix: stone, variants: [stairs, slab, wall] }
+  stone: { block: stone, prefix: stone, variants: [stairs, slab] }
   cobblestone: { block: cobblestone, prefix: cobblestone, variants: [stairs, slab, wall] }
   mossy_cobblestone: { block: mossy_cobblestone, prefix: mossy_cobblestone, variants: [stairs, slab, wall] }
   stone_brick: { block: stone_bricks, prefix: stone_brick, variants: [stairs, slab, wall] }
   mossy_stone_brick: { block: mossy_stone_bricks, prefix: mossy_stone_brick, variants: [stairs, slab, wall] }
   granite: { block: granite, prefix: granite, variants: [stairs, slab, wall] }
-  polished_granite: { block: polished_granite, prefix: polished_granite, variants: [stairs, slab, wall] }
+  polished_granite: { block: polished_granite, prefix: polished_granite, variants: [stairs, slab] }
   diorite: { block: diorite, prefix: diorite, variants: [stairs, slab, wall] }
-  polished_diorite: { block: polished_diorite, prefix: polished_diorite, variants: [stairs, slab, wall] }
+  polished_diorite: { block: polished_diorite, prefix: polished_diorite, variants: [stairs, slab] }
   andesite: { block: andesite, prefix: andesite, variants: [stairs, slab, wall] }
-  polished_andesite: { block: polished_andesite, prefix: polished_andesite, variants: [stairs, slab, wall] }
+  polished_andesite: { block: polished_andesite, prefix: polished_andesite, variants: [stairs, slab] }
 
   # --- Deepslate ---
   deepslate: { block: deepslate, prefix: deepslate, variants: [] }
@@ -89,9 +89,9 @@ families:
   oxidized_copper: { block: oxidized_copper, prefix: oxidized_cut_copper, variants: [stairs, slab], bars: oxidized_copper_bars, grate: oxidized_copper_grate }
   oxidized_cut_copper: { block: oxidized_cut_copper, prefix: oxidized_cut_copper, variants: [stairs, slab], bars: oxidized_copper_bars, grate: oxidized_copper_grate }
   waxed_copper: { block: waxed_copper_block, prefix: waxed_cut_copper, variants: [stairs, slab], bars: waxed_copper_bars, grate: waxed_copper_grate }
-  waxed_cut_copper: { block: waxed_cut_copper, prefix: waxed_cut_copper, variants: [stairs, slab], bars: waxed_cut_copper_bars, grate: waxed_cut_copper_grate }
+  waxed_cut_copper: { block: waxed_cut_copper, prefix: waxed_cut_copper, variants: [stairs, slab], bars: waxed_copper_bars, grate: waxed_copper_grate }
   waxed_exposed_copper: { block: waxed_exposed_copper, prefix: waxed_exposed_cut_copper, variants: [stairs, slab], bars: waxed_exposed_copper_bars, grate: waxed_exposed_copper_grate }
-  waxed_exposed_cut_copper: { block: waxed_exposed_cut_copper, prefix: waxed_exposed_cut_copper, variants: [stairs, slab], bars: waxed_exposed_copper_bars, grate: waxed_exposed_cut_copper_grate }
+  waxed_exposed_cut_copper: { block: waxed_exposed_cut_copper, prefix: waxed_exposed_cut_copper, variants: [stairs, slab], bars: waxed_exposed_copper_bars, grate: waxed_exposed_copper_grate }
   waxed_weathered_copper: { block: waxed_weathered_copper, prefix: waxed_weathered_cut_copper, variants: [stairs, slab], bars: waxed_weathered_copper_bars, grate: waxed_weathered_copper_grate }
   waxed_weathered_cut_copper: { block: waxed_weathered_cut_copper, prefix: waxed_weathered_cut_copper, variants: [stairs, slab], bars: waxed_weathered_copper_bars, grate: waxed_weathered_copper_grate }
   waxed_oxidized_copper: { block: waxed_oxidized_copper, prefix: waxed_oxidized_cut_copper, variants: [stairs, slab], bars: waxed_oxidized_copper_bars, grate: waxed_oxidized_copper_grate }

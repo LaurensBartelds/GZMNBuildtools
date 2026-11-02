@@ -8,6 +8,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import org.bukkit.entity.Player;
 
+import java.util.IllegalFormatException;
 import java.util.Locale;
 
 /**
@@ -16,6 +17,7 @@ import java.util.Locale;
 public final class AdventureMessages implements Messages {
 
     private volatile boolean verbose;
+    private volatile Translations translations = Translations.NONE;
 
     public AdventureMessages(boolean verbose) {
         this.verbose = verbose;
@@ -39,14 +41,35 @@ public final class AdventureMessages implements Messages {
         player.sendMessage(prefixed(body));
     }
 
+    public void setTranslations(Translations translations) {
+        this.translations = translations;
+    }
+
+    public Translations translations() {
+        return translations;
+    }
+
+    @Override
+    public String text(Player player, String template, Object... args) {
+        String translated = translations.translate(template, player == null ? null : player.locale());
+        if (!translated.equals(template)) {
+            try {
+                return format(translated, args);
+            } catch (IllegalFormatException e) {
+                // A translation with the wrong placeholders: fall back to English.
+            }
+        }
+        return format(template, args);
+    }
+
     @Override
     public void info(Player player, String template, Object... args) {
-        send(player, Component.text(format(template, args)).color(NamedTextColor.YELLOW));
+        send(player, Component.text(text(player, template, args)).color(NamedTextColor.YELLOW));
     }
 
     @Override
     public void success(Player player, String template, Object... args) {
-        send(player, Component.text(format(template, args)).color(NamedTextColor.GRAY));
+        send(player, Component.text(text(player, template, args)).color(NamedTextColor.GRAY));
     }
 
     @Override
@@ -56,13 +79,13 @@ public final class AdventureMessages implements Messages {
 
     @Override
     public void error(Player player, String template, Object... args) {
-        send(player, Component.text(format(template, args)).color(NamedTextColor.RED));
+        send(player, Component.text(text(player, template, args)).color(NamedTextColor.RED));
     }
 
     @Override
     public void verbose(Player player, String template, Object... args) {
         if (verbose) {
-            send(player, Component.text(format(template, args)).color(NamedTextColor.GRAY));
+            send(player, Component.text(text(player, template, args)).color(NamedTextColor.GRAY));
         }
     }
 

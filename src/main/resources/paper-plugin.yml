@@ -1,8 +1,8 @@
 name: GZMNBuildtools
 version: '${project.version}'
 main: nl.gzmn.gZMNBuildtools.GZMNBuildtools
-api-version: '1.21'
-description: Advanced WorldEdit/FAWE extension for type replacement and gradient generation
+api-version: '26.2'
+description: FAWE extension with terrain masks, patterns, brushes, shape generators, gradients and type replacement
 author: GZMN
 load: POSTWORLD
 
@@ -25,6 +25,16 @@ permissions:
       gzmnbuildtools.typereplace: true
       gzmnbuildtools.gradient: true
       gzmnbuildtools.admin: true
+      gzmnbuildtools.brush: true
+      gzmnbuildtools.terrainbrush: true
+      gzmnbuildtools.generate: true
+      gzmnbuildtools.select: true
+      gzmnbuildtools.swap: true
+      gzmnbuildtools.weathering: true
+      gzmnbuildtools.pixelart: true
+      gzmnbuildtools.texture: true
+      gzmnbuildtools.hover: true
+      gzmnbuildtools.scatter: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -39,5 +49,45 @@ permissions:
     default: op
 
   gzmnbuildtools.brush:
-    description: Allows use of /gzmnbrush command
+    description: Allows use of the smart gradient brush (/gradientbrush, /gb)
     default: op
+
+  gzmnbuildtools.terrainbrush:
+    description: Allows binding and using /terrainbrush terrain brushes
+    default: op
+
+  gzmnbuildtools.generate:
+    description: Allows use of /gzgen shape generators and /gzspline
+    default: op
+
+  gzmnbuildtools.select:
+    description: Allows use of /gzselect to select the build you are looking at
+    default: op
+
+  gzmnbuildtools.swap:
+    description: Allows use of the /gzswap material swap brush
+    default: op
+
+  gzmnbuildtools.weathering:
+    description: Allows use of the /weathering brush
+    default: op
+
+  gzmnbuildtools.pixelart:
+    description: Allows use of /gzpixelart
+    default: op
+
+  gzmnbuildtools.texture:
+    description: Allows use of /gztexture
+    default: op
+
+  gzmnbuildtools.hover:
+    description: Allows use of the /gzhover live brush preview
+    default: op
+
+  gzmnbuildtools.scatter:
+    description: Allows use of the /gzscatter prefab brush
+    default: op
+
+  gzmnbuildtools.limits.unlimited:
+    description: Lifts all GZMN limits (brush radius, blocks per action, ...)
+    default: false

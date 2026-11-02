@@ -1,0 +1,112 @@
+# Terrain texturing presets for /gztexture.
+#
+# A preset is a list of rules tried top to bottom; the first rule whose
+# conditions all match picks the block. Conditions (all optional):
+#   depth:  blocks below the surface, 0 = the top block (default 0..0)
+#   slope:  degrees, 0 = flat, 90 = a vertical cliff
+#   height: world y
+#   noise:  a smooth 0..1 value that forms patches across the terrain
+# Ranges are written "a..b", "a.." (at least), "..b" (at most) or a single number.
+#
+# A rule places one of a weighted list ("60%stone", "andesite" = weight 1), or
+# with bands: a list of blocks stacked by height, band-height blocks each.
+#
+# Only natural terrain (and blocks used by these presets) is repainted, and
+# only as deep as the deepest rule reaches. Add your own presets below and run
+# /gzmnbuildtools reload.
+
+presets:
+  alpine:
+    description: Snowy peaks, grey cliffs, scree slopes and alpine meadows.
+    rules:
+      - when: { slope: "50..", depth: "0..4" }
+        place: [ "70%stone", "20%andesite", "10%tuff" ]
+      - when: { height: "150..", slope: "..40", depth: "0..1" }
+        place: [ snow_block ]
+      - when: { height: "140..", depth: "0..1" }
+        place: [ "60%stone", "25%snow_block", "15%gravel" ]
+      - when: { slope: "32..50", depth: "0..1" }
+        place: [ "45%gravel", "35%coarse_dirt", "20%stone" ]
+      - when: { noise: "0.72.." }
+        place: [ "75%coarse_dirt", "25%gravel" ]
+      - when: { noise: "..0.22" }
+        place: [ "70%moss_block", "30%grass_block" ]
+      - when: { }
+        place: [ "94%grass_block", "6%coarse_dirt" ]
+      - when: { depth: "1..3" }
+        place: [ dirt ]
+
+  desert:
+    description: Rolling sand with sandstone cliffs and dry, darker patches.
+    rules:
+      - when: { slope: "42..", depth: "0..4" }
+        bands: [ sandstone, sandstone, smooth_sandstone, sandstone, cut_sandstone ]
+        band-height: 2
+      - when: { noise: "0.76..", depth: "0..1" }
+        place: [ "70%sand", "30%sandstone" ]
+      - when: { depth: "0..2" }
+        place: [ sand ]
+      - when: { depth: "3..5" }
+        place: [ sandstone ]
+
+  forest:
+    description: Grassy forest floor with podzol and moss patches and mossy rock faces.
+    rules:
+      - when: { slope: "50..", depth: "0..3" }
+        place: [ "55%stone", "25%andesite", "20%moss_block" ]
+      - when: { slope: "35..50" }
+        place: [ "55%coarse_dirt", "25%grass_block", "20%rooted_dirt" ]
+      - when: { noise: "0.7.." }
+        place: [ "70%podzol", "30%coarse_dirt" ]
+      - when: { noise: "..0.25" }
+        place: [ "60%moss_block", "40%grass_block" ]
+      - when: { }
+        place: [ "95%grass_block", "5%coarse_dirt" ]
+      - when: { depth: "1..3" }
+        place: [ "85%dirt", "15%coarse_dirt" ]
+
+  badlands:
+    description: Red sand flats over striped terracotta mesas.
+    rules:
+      - when: { slope: "35..", depth: "0..5" }
+        bands: [ terracotta, orange_terracotta, terracotta, yellow_terracotta, brown_terracotta,
+                 red_terracotta, white_terracotta, light_gray_terracotta ]
+        band-height: 2
+      - when: { depth: "0..1" }
+        place: [ red_sand ]
+      - when: { depth: "2..5" }
+        bands: [ terracotta, orange_terracotta, terracotta, yellow_terracotta, brown_terracotta,
+                 red_terracotta, white_terracotta, light_gray_terracotta ]
+        band-height: 2
+
+  tundra:
+    description: Snow fields with icy patches over frozen gravelly ground.
+    rules:
+      - when: { slope: "45..", depth: "0..3" }
+        place: [ "65%stone", "25%andesite", "10%packed_ice" ]
+      - when: { noise: "0.74.." }
+        place: [ "80%packed_ice", "20%snow_block" ]
+      - when: { slope: "28..45" }
+        place: [ "60%snow_block", "25%gravel", "15%stone" ]
+      - when: { }
+        place: [ "88%snow_block", "12%calcite" ]
+      - when: { depth: "1..3" }
+        place: [ "70%dirt", "30%gravel" ]
+
+  beach:
+    description: Sandy shores with a gravelly seabed, rocky outcrops and grass inland.
+    rules:
+      - when: { slope: "40..", depth: "0..3" }
+        place: [ "70%stone", "30%andesite" ]
+      - when: { height: "..61", depth: "0..2" }
+        place: [ "65%sand", "25%gravel", "10%clay" ]
+      - when: { height: "62..65", depth: "0..3" }
+        place: [ sand ]
+      - when: { height: "66..67" }
+        place: [ "55%sand", "45%grass_block" ]
+      - when: { height: "..67", depth: "4..5" }
+        place: [ sandstone ]
+      - when: { }
+        place: [ grass_block ]
+      - when: { depth: "1..3" }
+        place: [ dirt ]

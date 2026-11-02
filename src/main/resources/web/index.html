@@ -3,60 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GZMN BuildTools - Gradient Brush Editor</title>
+    <title>GZMN Smart Gradient</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Gradient Brush Editor</h1>
-        <p>Design your custom gradient and generate a code to use in-game.</p>
-
-        <div class="editor-section">
-            <h2>1. Choose Blocks (Layers)</h2>
-            <div id="layers-container">
-                <!-- Layers will be dynamically added here -->
-            </div>
-            <button id="add-layer-btn">+ Add Layer</button>
+<header>
+    <h1>Smart Gradient</h1>
+    <span id="session" class="badge">Designer</span>
+</header>
+<main>
+    <section class="card">
+        <h2>Palette</h2>
+        <div class="tabs" id="modes">
+            <button data-mode="auto">Auto</button>
+            <button data-mode="block">From a block</button>
+            <button data-mode="ramp">Ramp</button>
+            <button data-mode="custom">Custom</button>
+            <button data-mode="preset">Preset</button>
         </div>
 
-        <div class="editor-section">
-            <h2>2. Gradient Settings</h2>
-            <div class="setting">
-                <label for="direction">Direction:</label>
-                <select id="direction">
-                    <option value="up">Up</option>
-                    <option value="down">Down</option>
-                    <option value="x">X</option>
-                    <option value="z">Z</option>
-                    <option value="radial">Radial</option>
-                </select>
-            </div>
-
-            <div class="setting">
-                <label for="mode">Mode:</label>
-                <select id="mode">
-                    <option value="linear">Linear</option>
-                    <option value="smooth">Smooth</option>
-                    <option value="discrete">Discrete</option>
-                    <option value="blended">Blended</option>
-                    <option value="noise">Noise</option>
-                </select>
+        <div class="mode" data-for="auto">
+            <p>Built from the material of whatever build you click: mossy and cracked at the base, lighter towards
+                the top.</p>
+            <label>Preview it as <span class="block-input" data-field="previewMaterial"></span></label>
+        </div>
+        <div class="mode" data-for="block">
+            <label>Block <span class="block-input" data-field="base"></span></label>
+            <div class="row">
+                <label><input type="radio" name="generator" value="aged" checked> Aged (mossy &amp; cracked first)</label>
+                <label><input type="radio" name="generator" value="shades"> Shades</label>
             </div>
         </div>
-
-        <div class="editor-section result-section">
-            <h2>3. Generated Code</h2>
-            <p>Copy this code and paste it in Minecraft when prompted.</p>
-            <div class="code-box">
-                <input type="text" id="generated-code" readonly>
-                <button id="copy-btn">Copy</button>
-            </div>
-            <div class="preview" id="pattern-preview">
-                Preview: #gradient[up][linear][stone]
-            </div>
+        <div class="mode" data-for="ramp">
+            <label>From <span class="block-input" data-field="from"></span></label>
+            <label>To <span class="block-input" data-field="to"></span></label>
         </div>
-    </div>
+        <div class="mode" data-for="custom">
+            <ol id="custom-list"></ol>
+            <div class="row">
+                <span class="block-input" data-field="customAdd"></span>
+                <button id="custom-add-btn">Add step</button>
+            </div>
+            <label>Advanced (overrides the list): <input id="custom-raw" placeholder="[50%stone,50%andesite][deepslate]"></label>
+        </div>
+        <div class="mode" data-for="preset">
+            <div id="preset-list" class="preset-list"></div>
+        </div>
 
-    <script src="script.js"></script>
+        <label class="slider">Steps <input type="range" id="steps" min="0" max="12" value="0"> <output id="steps-out">auto</output></label>
+    </section>
+
+    <section class="card">
+        <h2>Preview</h2>
+        <canvas id="preview" width="320" height="400"></canvas>
+        <div id="swatches" class="swatches"></div>
+        <p id="palette-error" class="error"></p>
+    </section>
+
+    <section class="card">
+        <h2>Options</h2>
+        <label>Direction
+            <select id="axis">
+                <option value="auto">auto (up for walls, along floors)</option>
+                <option value="up">up</option><option value="down">down</option>
+                <option value="x">x</option><option value="-x">-x</option>
+                <option value="z">z</option><option value="-z">-z</option>
+                <option value="radial">radial</option><option value="inward">inward</option>
+            </select>
+        </label>
+        <label>Paint
+            <select id="target">
+                <option value="clicked">the material you click</option>
+                <option value="main">the build's main materials</option>
+                <option value="structural">all building blocks</option>
+                <option value="all">every block</option>
+            </select>
+        </label>
+        <label>Blend
+            <select id="dither">
+                <option value="ordered">ordered (even, grain-free)</option>
+                <option value="noise">noise (speckled)</option>
+                <option value="none">none (clean bands)</option>
+            </select>
+        </label>
+        <label class="slider">Softness <input type="range" id="softness" min="0" max="1" step="0.1" value="0.6"> <output id="softness-out">0.6</output></label>
+        <label class="check"><input type="checkbox" id="shapes" checked> Keep stairs, slabs and walls</label>
+        <label class="slider">Radius <input type="range" id="radius" min="1" max="32" value="4"> <output id="radius-out">4</output></label>
+    </section>
+
+    <section class="card">
+        <h2>Use it</h2>
+        <button id="apply-btn" class="primary" hidden>Apply to my brush</button>
+        <p id="apply-status"></p>
+        <p>Or paste this command in game:</p>
+        <div class="row"><input id="command" readonly><button id="copy-btn">Copy</button></div>
+    </section>
+</main>
+<datalist id="blocks"></datalist>
+<script src="script.js"></script>
 </body>
 </html>
