@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.sk89q.worldedit.WorldEdit;
 import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.gradient.command.BracketBlocksArgumentType;
@@ -12,9 +13,12 @@ import nl.gzmn.gZMNBuildtools.modules.gradient.command.GradientCommand;
 import nl.gzmn.gZMNBuildtools.modules.gradient.pattern.GradientPatternParser;
 import nl.gzmn.gZMNBuildtools.modules.gradient.service.GradientExecutor;
 import nl.gzmn.gZMNBuildtools.modules.gradient.storage.GradientStorageManager;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** Selection gradients, saved gradients and the #gradient pattern (/gradient). */
 @SuppressWarnings("UnstableApiUsage")
@@ -36,6 +40,10 @@ public final class GradientModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
+        context.help(HelpEntry.of(HelpEntry.Category.BUILDS, Material.PAINTING, "/gradient",
+                        tr("Gradients"),
+                        tr("Fill your selection with a gradient between blocks, and save or share gradients."))
+                .example("/gradient [stone][andesite][diorite] up").permission("gzmnbuildtools.gradient"));
         messages = context.core().messages();
         storage = new GradientStorageManager(context.plugin());
         storage.load();

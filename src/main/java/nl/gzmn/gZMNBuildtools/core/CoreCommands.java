@@ -5,13 +5,18 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleManager;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleStatus;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** Commands that belong to the plugin itself rather than a feature: admin and previews. */
 @SuppressWarnings("UnstableApiUsage")
@@ -79,14 +84,18 @@ public final class CoreCommands {
     }
 
     private void showLimits(CommandSender viewer, Player player) {
+        Messages messages = context.messages();
+        Player reader = viewer instanceof Player p ? p : null;
         Limits.Resolved limits = context.limits().of(player);
-        viewer.sendMessage(Component.text("Limits for " + player.getName() + " (ranks: "
-                + (limits.ranks().isEmpty() ? "none" : String.join(", ", limits.ranks())) + "):", NamedTextColor.YELLOW));
+        String ranks = limits.ranks().isEmpty() ? messages.text(reader, "none") : String.join(", ", limits.ranks());
+        viewer.sendMessage(Component.text(messages.text(reader, "Limits for %s (ranks: %s):", player.getName(), ranks),
+                NamedTextColor.YELLOW));
         for (Limits.Kind kind : Limits.Kind.values()) {
             String source = limits.source(kind);
-            String value = limits.unlimited() ? "unlimited"
-                    : source == null ? "server setting" : limits.get(kind, 0) + " (from " + source + ")";
-            viewer.sendMessage(Component.text("  " + kind.label() + ": ", NamedTextColor.GRAY)
+            String value = limits.unlimited() ? messages.text(reader, "unlimited")
+                    : source == null ? messages.text(reader, "server setting")
+                    : messages.text(reader, "%d (from %s)", limits.get(kind, 0), source);
+            viewer.sendMessage(Component.text("  " + messages.text(reader, kind.label()) + ": ", NamedTextColor.GRAY)
                     .append(Component.text(value, source == null ? NamedTextColor.WHITE : NamedTextColor.AQUA)));
         }
     }
@@ -118,6 +127,17 @@ public final class CoreCommands {
             }
             sender.sendMessage(line);
         }
+    }
+
+    /** The core's own entries in the /gz help hub. */
+    public static List<HelpEntry> help() {
+        return List.of(
+                HelpEntry.of(HelpEntry.Category.OTHER, Material.CLOCK, "/gzlimits", tr("Your limits"),
+                        tr("See your brush radius, block and other limits, and which rank gives them.")).runs()
+                        .build("core"),
+                HelpEntry.of(HelpEntry.Category.OTHER, Material.COMPARATOR, "/gzmnbuildtools", tr("Modules"),
+                        tr("See which features are running; /gzmnbuildtools reload re-reads the configuration."))
+                        .runs().permission("gzmnbuildtools.admin").build("core"));
     }
 
     /** One-line summary for the startup log. */

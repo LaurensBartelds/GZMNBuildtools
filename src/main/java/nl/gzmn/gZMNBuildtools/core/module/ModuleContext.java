@@ -2,6 +2,7 @@ package nl.gzmn.gZMNBuildtools.core.module;
 
 import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +28,9 @@ public interface ModuleContext {
 
     /** Registers a Bukkit event listener for this module. */
     void listen(Listener listener);
+
+    /** Adds the module's features to the {@code /gz} help hub. */
+    void help(HelpEntry.Builder entry);
 
     /** Offers a service to modules that declare this one as a dependency. */
     <T> void provide(Class<T> type, T service);

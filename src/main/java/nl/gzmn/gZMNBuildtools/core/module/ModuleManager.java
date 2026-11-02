@@ -2,6 +2,7 @@ package nl.gzmn.gZMNBuildtools.core.module;
 
 import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,6 +30,7 @@ public final class ModuleManager {
     private final Map<String, Map<Class<?>, Object>> services = new HashMap<>();
     private final Map<String, ModuleContext> contexts = new HashMap<>();
     private final List<Consumer<Commands>> commandRegistrars = new ArrayList<>();
+    private final List<HelpEntry> help = new ArrayList<>();
     private final List<String> enableOrder = new ArrayList<>();
 
     public ModuleManager(ModuleHost host) {
@@ -120,6 +122,7 @@ public final class ModuleManager {
         services.put(module.id(), context.provided);
         context.listeners.forEach(host::registerListener);
         commandRegistrars.addAll(context.registrars);
+        help.addAll(context.help);
         contexts.put(module.id(), context);
         enableOrder.add(module.id());
         statuses.put(module.id(), status(module, ModuleState.ENABLED, null));
@@ -131,6 +134,11 @@ public final class ModuleManager {
         } catch (Throwable t) {
             host.logger().log(Level.WARNING, "Module '" + module.id() + "' failed to clean up", t);
         }
+    }
+
+    /** Help hub entries of the enabled modules, in the order they were added. */
+    public List<HelpEntry> helpEntries() {
+        return List.copyOf(help);
     }
 
     /** Command registrars of the enabled modules, to run in the COMMANDS lifecycle event. */
@@ -178,6 +186,7 @@ public final class ModuleManager {
         private final Map<Class<?>, Object> provided = new HashMap<>();
         private final List<Listener> listeners = new ArrayList<>();
         private final List<Consumer<Commands>> registrars = new ArrayList<>();
+        private final List<HelpEntry> help = new ArrayList<>();
 
         Context(GzmnModule module) {
             this.module = module;
@@ -206,6 +215,11 @@ public final class ModuleManager {
         @Override
         public void listen(Listener listener) {
             listeners.add(listener);
+        }
+
+        @Override
+        public void help(HelpEntry.Builder entry) {
+            help.add(entry.build(module.id()));
         }
 
         @Override

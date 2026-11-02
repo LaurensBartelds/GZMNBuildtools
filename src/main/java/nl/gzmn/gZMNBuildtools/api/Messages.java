@@ -12,6 +12,15 @@ import org.bukkit.entity.Player;
  */
 public interface Messages {
 
+    /**
+     * Marks a string as translatable without translating it yet (for text kept
+     * as data, such as help entries); pass it to {@link #text} when showing it.
+     * The message catalogue picks up the literal passed to every {@code tr} call.
+     */
+    static String tr(String text) {
+        return text;
+    }
+
     /** Wrap a message body with the {@code [GZMN]} prefix. */
     Component prefixed(Component body);
 

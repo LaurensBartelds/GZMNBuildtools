@@ -1,5 +1,6 @@
 package nl.gzmn.gZMNBuildtools.modules.webeditor;
 
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleDisabledException;
@@ -8,9 +9,12 @@ import nl.gzmn.gZMNBuildtools.modules.gradientbrush.WebEditorLink;
 import nl.gzmn.gZMNBuildtools.modules.webeditor.server.WebApi;
 import nl.gzmn.gZMNBuildtools.modules.webeditor.server.WebEditorServer;
 import nl.gzmn.gZMNBuildtools.modules.webeditor.server.WebSessions;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /**
  * The browser editor for the gradient brush. Serves the page and its API, and
@@ -38,6 +42,10 @@ public final class WebEditorModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
+        context.help(HelpEntry.of(HelpEntry.Category.OTHER, Material.WRITABLE_BOOK, "/gb web",
+                        tr("Web editor"),
+                        tr("Get a private link to edit your gradient brush in the browser."))
+                .permission("gzmnbuildtools.brush").runs());
         if (!context.plugin().getConfig().getBoolean("web-editor.enabled", true)) {
             throw new ModuleDisabledException("web-editor.enabled is false");
         }

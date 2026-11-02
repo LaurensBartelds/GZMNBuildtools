@@ -2,13 +2,17 @@ package nl.gzmn.gZMNBuildtools.modules.terrainbrush;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.command.TerrainBrushCommand;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.menu.TerrainBrushMenu;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** Terrain sculpting, tree and rock brushes (/terrainbrush). */
 @SuppressWarnings("UnstableApiUsage")
@@ -28,6 +32,11 @@ public final class TerrainBrushModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
+        context.help(HelpEntry.of(HelpEntry.Category.TERRAIN, Material.GRASS_BLOCK, "/tb",
+                        tr("Terrain brushes"),
+                        tr("Sculpt terrain: smooth, raise, lower, erode and flatten, plus brushes that plant trees "
+                                + "and rocks."))
+                .permission(TerrainBrushCommand.PERMISSION).runs());
         terrainBrushCommand = new TerrainBrushCommand(context.plugin(), context.core().messages(),
                 context.core().playerData(), context.core().limits());
         context.commands(this::registerTerrainBrush);

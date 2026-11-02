@@ -2,16 +2,20 @@ package nl.gzmn.gZMNBuildtools.modules.pixelart;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.command.PixelArtCommand;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.image.ImageLoader;
+import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** /gzpixelart: pictures and map art built from blocks. */
 @SuppressWarnings("UnstableApiUsage")
@@ -31,6 +35,10 @@ public final class PixelArtModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
+        context.help(HelpEntry.of(HelpEntry.Category.OTHER, Material.PAINTING, "/gzpixelart",
+                        tr("Pixel art"),
+                        tr("Build pictures and map art from images, matched to block colours."))
+                .example("/gzpixelart logo.png width=64").permission(PixelArtCommand.PERMISSION));
         Path folder = context.plugin().getDataFolder().toPath().resolve("images");
         Files.createDirectories(folder);
         FileConfiguration config = context.plugin().getConfig();

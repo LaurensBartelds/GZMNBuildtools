@@ -22,6 +22,8 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
+
 /**
  * Per-rank limits. Ranks are defined under {@code limits.ranks} in config.yml
  * and given with the permission {@code gzmnbuildtools.limits.<rank>}; the
@@ -37,15 +39,15 @@ public final class Limits implements Listener {
     /** What can be limited. */
     public enum Kind {
         /** Brush radius. */
-        RADIUS("radius", "brush radius"),
+        RADIUS("radius", tr("brush radius")),
         /** Blocks one generator, spline or scatter click may change. */
-        BLOCKS("blocks", "blocks per action"),
+        BLOCKS("blocks", tr("blocks per action")),
         /** Blocks in a selection a command works on. */
-        SELECTION("selection", "selection size"),
+        SELECTION("selection", tr("selection size")),
         /** Longest side of a pixel-art picture. */
-        IMAGE("image", "picture size"),
+        IMAGE("image", tr("picture size")),
         /** Saved loadouts per brush. */
-        LOADOUTS("loadouts", "saved loadouts");
+        LOADOUTS("loadouts", tr("saved loadouts"));
 
         private final String key;
         private final String label;

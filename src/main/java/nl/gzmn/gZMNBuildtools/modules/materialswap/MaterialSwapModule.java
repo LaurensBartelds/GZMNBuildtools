@@ -4,13 +4,17 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.materialswap.command.SwapCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BuildEditor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** /gzswap: swap a build's material while keeping shapes, states and textures. */
 @SuppressWarnings("UnstableApiUsage")
@@ -30,6 +34,11 @@ public final class MaterialSwapModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) {
+        context.help(HelpEntry.of(HelpEntry.Category.BRUSHES, Material.DEEPSLATE_BRICKS, "/gzswap",
+                        tr("Material swap"),
+                        tr("Swap a build to another material with a brush or in one go, keeping shapes and mossy or "
+                                + "cracked forms."))
+                .example("/gzswap deepslate_bricks").permission(SwapCommand.PERMISSION));
         swapCommand = new SwapCommand(context.plugin(), context.core().messages(),
                 new BuildEditor(context.core().blocks()), context.core().previews(),
                 context.core().limits());

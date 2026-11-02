@@ -2,13 +2,17 @@ package nl.gzmn.gZMNBuildtools.modules.typereplace;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.typereplace.command.TypeReplaceCommand;
 import nl.gzmn.gZMNBuildtools.modules.typereplace.menu.TypeReplaceUIManager;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** Swap whole block families while keeping shapes (/typereplace). */
 @SuppressWarnings("UnstableApiUsage")
@@ -29,6 +33,11 @@ public final class TypeReplaceModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
+        context.help(HelpEntry.of(HelpEntry.Category.BUILDS, Material.STONE_BRICK_STAIRS, "/typereplace",
+                        tr("Type replace"),
+                        tr("Swap one material for another in your selection, keeping every stair, slab and wall "
+                                + "shape."))
+                .permission("gzmnbuildtools.typereplace").runs());
         typeReplaceCommand = new TypeReplaceCommand();
         typeReplaceCommand.setMessages(context.core().messages());
         typeReplaceCommand.setBlockFamilies(context.core().blockFamilies());

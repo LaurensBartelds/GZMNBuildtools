@@ -2,6 +2,7 @@ package nl.gzmn.gZMNBuildtools.modules.terraintexture;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.command.TextureCommand;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** /gztexture: one-click terrain looks (alpine, desert, ...) for a selection or as a brush. */
 @SuppressWarnings("UnstableApiUsage")
@@ -42,6 +45,11 @@ public final class TerrainTextureModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) {
+        context.help(HelpEntry.of(HelpEntry.Category.TERRAIN, Material.MOSS_BLOCK, "/gztexture",
+                        tr("Terrain texturing"),
+                        tr("Repaint terrain with a ready-made look such as alpine, desert or badlands, by slope and "
+                                + "height."))
+                .permission(TextureCommand.PERMISSION).runs());
         Set<String> canopy = ids(Stream.concat(Tag.LEAVES.getValues().stream(), Tag.LOGS.getValues().stream()));
         Set<String> soil = ids(Tag.DIRT.getValues().stream());
         soil.add("farmland");

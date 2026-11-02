@@ -2,12 +2,16 @@ package nl.gzmn.gZMNBuildtools.modules.splines;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.splines.command.SplineCommand;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** Tubes, walls and roads along a curve through picked points (/gzspline). */
 @SuppressWarnings("UnstableApiUsage")
@@ -27,6 +31,10 @@ public final class SplinesModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
+        context.help(HelpEntry.of(HelpEntry.Category.SHAPES, Material.STRING, "/gzspline",
+                        tr("Splines and rivers"),
+                        tr("Tubes, walls, roads and rivers along a smooth curve through points you pick."))
+                .example("/gzspline build river gravel").permission(SplineCommand.PERMISSION).runs());
         splineCommand = new SplineCommand(context.plugin(), context.core().messages(), context.core().previews(),
                 context.core().blocks(), context.core().limits());
         context.commands(this::registerSpline);

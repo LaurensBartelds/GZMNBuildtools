@@ -173,4 +173,20 @@ class ModuleManagerTest {
         assertEquals(ModuleState.ENABLED, state(manager, "d"));
         assertThrows(IllegalArgumentException.class, () -> manager.add(new TestModule("d", log)));
     }
+
+    @Test
+    void onlyRunningModulesAppearInTheHelpHub() {
+        List<String> log = new ArrayList<>();
+        Consumer<ModuleContext> addsHelp = ctx -> ctx.help(nl.gzmn.gZMNBuildtools.core.help.HelpEntry.of(
+                nl.gzmn.gZMNBuildtools.core.help.HelpEntry.Category.BRUSHES, org.bukkit.Material.BRUSH, "/x",
+                "X", "Does x"));
+        ModuleManager manager = new ModuleManager(new FakeHost("off"))
+                .add(new TestModule("on", List.of(), log, addsHelp))
+                .add(new TestModule("off", List.of(), log, addsHelp))
+                .add(new TestModule("broken", List.of(), log, addsHelp.andThen(ctx -> {
+                    throw new IllegalStateException("boom");
+                })));
+        manager.enableAll();
+        assertEquals(List.of("on"), manager.helpEntries().stream().map(e -> e.module()).toList());
+    }
 }

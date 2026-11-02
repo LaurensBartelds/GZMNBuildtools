@@ -4,6 +4,8 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import nl.gzmn.gZMNBuildtools.api.GzmnBuildtoolsApi;
 import nl.gzmn.gZMNBuildtools.core.CoreCommands;
 import nl.gzmn.gZMNBuildtools.core.PluginContext;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
+import nl.gzmn.gZMNBuildtools.core.help.HelpHub;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleHost;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleManager;
@@ -29,6 +31,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -63,8 +66,14 @@ public final class GZMNBuildtools extends JavaPlugin {
         modules.enableAll();
 
         CoreCommands coreCommands = new CoreCommands(this, context, modules);
+        HelpHub help = new HelpHub(context.messages(), () -> {
+            List<HelpEntry> all = new ArrayList<>(modules.helpEntries());
+            all.addAll(CoreCommands.help());
+            return all;
+        });
         getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             coreCommands.register(event.registrar());
+            help.register(event.registrar());
             modules.commandRegistrars().forEach(registrar -> registrar.accept(event.registrar()));
         });
 

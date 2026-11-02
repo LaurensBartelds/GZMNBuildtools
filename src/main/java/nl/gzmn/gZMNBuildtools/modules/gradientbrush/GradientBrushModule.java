@@ -3,13 +3,17 @@ package nl.gzmn.gZMNBuildtools.modules.gradientbrush;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.command.GradientBrushCommand;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.menu.GradientBrushMenu;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** The smart, build-aware gradient brush and its menus (/gradientbrush, /gb). */
 @SuppressWarnings("UnstableApiUsage")
@@ -31,6 +35,11 @@ public final class GradientBrushModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) throws Exception {
+        context.help(HelpEntry.of(HelpEntry.Category.BRUSHES, Material.BRUSH, "/gb",
+                        tr("Smart gradient brush"),
+                        tr("Paints a colour gradient over the build you click, fitted to its shape, keeping stairs, "
+                                + "slabs and details."))
+                .permission(GradientBrushCommand.PERMISSION).runs());
         presetRegistry = context.core().presets();
         service = new SmartGradientService(presetRegistry, context.core().blocks(), context.core().playerData(),
                 context.core().limits());

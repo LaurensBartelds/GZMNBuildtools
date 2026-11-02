@@ -17,6 +17,11 @@ generators, gradients and type replacement.
 
 ## Usage
 
+Not sure where to start? Run `/gz` (aliases `/gzhelp`, `/gzmn`). It opens a menu of everything GZMNBuildtools can do
+that you have permission for, grouped into brushes, terrain, shapes, builds and other tools. Click a feature to open
+it, or to get a ready-to-edit example in chat. `/gz list` shows the same as a clickable chat list, and `/gz <word>`
+searches it (for example `/gz terrain` or `/gz river`).
+
 ### Type Replace
 
 The Type Replace tool allows replacing entire families of blocks (stairs, slabs, walls, fences) while preserving their
@@ -527,6 +532,10 @@ that list it in `dependencies()` and `require` it. For example, `web-editor` req
 only uses modules it declares, and only through their top-level package, and modules have no cycles. To add a
 feature, create `modules/<name>/<Name>Module.java`, add it to `GZMNBuildtools.allModules()` and give it a switch in
 `config.yml`.
+
+A module adds itself to the `/gz` help hub with `context.help(HelpEntry.of(...))`. Wrap the title and description in
+`tr(...)` so the message catalogue picks them up for translation. Entries only appear while the module is running
+and for players who have the entry's permission.
 
 Modules can also meet through shared interfaces instead of depending on each other. A brush that implements
 `shared.worldedit.PreviewableBrush` gets hover previews from the `hover-preview` module without either knowing about

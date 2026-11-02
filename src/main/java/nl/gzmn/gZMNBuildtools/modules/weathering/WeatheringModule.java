@@ -4,13 +4,17 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.weathering.command.WeatheringCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BuildEditor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** /weathering: age builds with moss, cracks, worn edges and vines. */
 @SuppressWarnings("UnstableApiUsage")
@@ -30,6 +34,10 @@ public final class WeatheringModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) {
+        context.help(HelpEntry.of(HelpEntry.Category.BRUSHES, Material.VINE, "/weathering",
+                        tr("Weathering"),
+                        tr("Age a build with moss, cracks, worn edges and vines."))
+                .permission(WeatheringCommand.PERMISSION).runs());
         command = new WeatheringCommand(context.plugin(), context.core().messages(),
                 new BuildEditor(context.core().blocks()), context.core().previews(),
                 context.core().limits());

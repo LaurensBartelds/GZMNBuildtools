@@ -3,13 +3,17 @@ package nl.gzmn.gZMNBuildtools.modules.selection;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.selection.command.SelectCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BuildEditor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** /gzselect: select the build you are looking at as a WorldEdit selection. */
 @SuppressWarnings("UnstableApiUsage")
@@ -29,6 +33,10 @@ public final class BuildSelectModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) {
+        context.help(HelpEntry.of(HelpEntry.Category.BUILDS, Material.SPYGLASS, "/gzselect",
+                        tr("Select a build"),
+                        tr("Select the build you are looking at as a WorldEdit selection, ready for any command."))
+                .permission(SelectCommand.PERMISSION).runs());
         selectCommand = new SelectCommand(context.plugin(), context.core().messages(),
                 new BuildEditor(context.core().blocks()));
         context.commands(this::register);

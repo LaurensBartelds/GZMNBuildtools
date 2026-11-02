@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.world.block.BlockType;
 import io.papermc.paper.command.brigadier.Commands;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.scatter.command.ScatterCommand;
@@ -24,6 +25,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
+
 /** /gzscatter: a brush that scatters schematics, trees and rocks naturally over the ground. */
 @SuppressWarnings("UnstableApiUsage")
 public final class PrefabScatterModule implements GzmnModule {
@@ -43,6 +46,10 @@ public final class PrefabScatterModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) {
+        context.help(HelpEntry.of(HelpEntry.Category.TERRAIN, Material.OAK_SAPLING, "/gzscatter",
+                        tr("Prefab scatter"),
+                        tr("Scatter schematics, trees and rocks naturally over the ground with a brush."))
+                .example("/gzscatter tree:oak,tree:birch,rock 10").permission(ScatterCommand.PERMISSION));
         BlockKnowledge blocks = context.core().blocks();
         Set<String> canopy = Stream.concat(Tag.LEAVES.getValues().stream(), Tag.LOGS.getValues().stream())
                 .map(PrefabScatterModule::id).collect(Collectors.toUnmodifiableSet());

@@ -31,6 +31,8 @@ class MessageCatalogueTest {
     private static final Path SOURCES = Path.of("src/main/java");
     private static final Path LANG = Path.of("src/main/resources/lang");
     private static final Pattern CALL = Pattern.compile("\\bmessages\\.(info|success|warn|error|verbose|text)\\(");
+    /** {@code tr("...")}: text kept as data and translated when shown (help entries). */
+    private static final Pattern MARKER = Pattern.compile("(?<![\\w.])tr\\(");
     private static final Pattern PLACEHOLDER = Pattern.compile("%(?:(\\d+)\\$)?([-#+ 0,(]*\\d*(?:\\.\\d+)?)([a-zA-Z%])");
     private static final String HEADER = """
             # GZMNBuildtools messages in English: each key is the message as written in
@@ -50,12 +52,20 @@ class MessageCatalogueTest {
         try (Stream<Path> files = Files.walk(SOURCES)) {
             for (Path file : files.filter(p -> p.toString().endsWith(".java")).toList()) {
                 String src = Files.readString(file, StandardCharsets.UTF_8);
+                List<Integer> starts = new ArrayList<>();
                 Matcher m = CALL.matcher(src);
                 while (m.find()) {
                     int pos = skipArgument(src, m.end());
-                    if (pos < 0) {
-                        continue;
+                    if (pos >= 0) {
+                        starts.add(pos);
                     }
+                }
+                Matcher marker = MARKER.matcher(src);
+                while (marker.find()) {
+                    starts.add(marker.end());
+                }
+                for (int start : starts) {
+                    int pos = start;
                     StringBuilder template = new StringBuilder();
                     boolean any = false;
                     while (true) {

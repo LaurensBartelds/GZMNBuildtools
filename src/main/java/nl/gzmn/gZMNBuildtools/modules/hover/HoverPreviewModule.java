@@ -5,12 +5,16 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import nl.gzmn.gZMNBuildtools.api.Messages;
+import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.hover.live.HoverService;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+
+import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 
 /** /gzhover: a live ghost preview of the held brush's stroke wherever you look. */
 @SuppressWarnings("UnstableApiUsage")
@@ -33,6 +37,10 @@ public final class HoverPreviewModule implements GzmnModule {
 
     @Override
     public void enable(ModuleContext context) {
+        context.help(HelpEntry.of(HelpEntry.Category.BRUSHES, Material.ENDER_EYE, "/gzhover",
+                        tr("Hover preview"),
+                        tr("See what your brush would change wherever you look, before you click."))
+                .permission(PERMISSION).runs());
         messages = context.core().messages();
         service = new HoverService(context.plugin(), context.core().previews(), context.core().playerData());
         context.listen(service);
