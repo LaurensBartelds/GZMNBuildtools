@@ -280,6 +280,31 @@ Conditions are `depth` (0 = the top block, the default), `slope` (degrees), `hei
 written as `a..b`, `a..`, `..b` or a single number. `bands: [...]` with `band-height: 2` stacks blocks by height
 instead of mixing them. Run `/gzmnbuildtools reload` after editing; problems are reported in the console.
 
+### Prefab scatter
+
+`/gzscatter <prefabs> [radius] [options]` (alias `/scatter`) binds a brush that scatters prefabs naturally over the
+ground. For example:
+
+- `/gzscatter tree:oak,tree:birch,rock 12` for a woodland edge
+- `/gzscatter bushes/ 8` for every schematic in the `bushes` folder
+- `/gzscatter ruin1,ruin2,rock,rock 16 density=0.2` (repeat a name to make it more common)
+
+Prefabs are your WorldEdit schematics (save them with `//copy` and `//schem save <name>`; your own folder is searched
+first when FAWE keeps one per player) plus the built-in `tree:<style>` (`oak`, `spruce`, `birch`, `willow`, `dead`,
+`palm`) and `rock`, which come out different every time. `/gzscatter list` shows everything you can use.
+
+- Prefabs are kept apart (by their size, or `spacing=`), and `density=` (0.05 to 1, default 0.5) sets how full the
+  area gets.
+- Each prefab is set down on the lowest ground under its base, so no corner floats. If a schematic was saved with the
+  ground under it (a grass or dirt layer), that layer is buried; `sink=` overrides how deep.
+- It skips steep ground (`slope=`, default 35 degrees), water, roofs and other non-natural ground (`on=any` allows
+  them), and spots that already have a tree or build on them.
+- Each prefab gets a random quarter turn (`rotate=0` turns this off) and can be mirrored with `flip=1`; stairs, logs
+  and other directional blocks turn with it.
+- Prefabs only fill air and plants, so they never cut into terrain or builds; `replace=all` lets them.
+- Every click places a new random layout, and with `/gzhover` on you see the next one before you click. `//undo`
+  reverts a click.
+
 ### Shape generators
 
 `/gzgen <shape> <pattern> [parameters]` (alias `/ggen`) builds a shape with any FAWE pattern. Parameters can be given
@@ -354,10 +379,10 @@ expires after `preview.seconds` (default 60) and is limited to `preview.max-bloc
 
 ### Hover preview
 
-`/gzhover` (alias `/hover`) toggles a live preview: while you hold the gradient, swap, weathering or texture brush,
-ghost blocks show what a click would change wherever you look, and they follow your aim. A click places exactly what
-was shown. The preview respects the brush's `//size` and `//mask` and your global mask, and changes nothing until you
-click. The setting is remembered per player.
+`/gzhover` (alias `/hover`) toggles a live preview. While you hold the gradient, swap, weathering, texture or scatter
+brush, ghost blocks show what a click would change wherever you look, and they follow your aim. A click places exactly
+what was shown. The preview respects the brush's `//size` and `//mask` and your global mask, and changes nothing until
+you click. The setting is remembered per player.
 
 Server owners can tune it under `hover:` in `config.yml`. `interval-ticks` sets how often aim is checked (default 4)
 and `range` how far you can look (default 64). Strokes changing more than `max-blocks` (default 4000) aren't previewed.
@@ -386,6 +411,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `pixel-art` | `/gzpixelart` | |
 | `terrain-texture` | `/gztexture` and `terrain-presets.yml` | |
 | `hover-preview` | `/gzhover` live brush previews | |
+| `prefab-scatter` | `/gzscatter` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -417,6 +443,7 @@ After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to ap
 - `gzmnbuildtools.pixelart`: Grants access to `/gzpixelart`.
 - `gzmnbuildtools.texture`: Grants access to `/gztexture`.
 - `gzmnbuildtools.hover`: Grants access to `/gzhover`.
+- `gzmnbuildtools.scatter`: Grants access to `/gzscatter` and using its brush.
 - `gzmnbuildtools.*`: Grants access to all commands.
 
 All permissions default to OP.

@@ -34,6 +34,7 @@ permissions:
       gzmnbuildtools.pixelart: true
       gzmnbuildtools.texture: true
       gzmnbuildtools.hover: true
+      gzmnbuildtools.scatter: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -81,4 +82,8 @@ permissions:
 
   gzmnbuildtools.hover:
     description: Allows use of the /gzhover live brush preview
+    default: op
+
+  gzmnbuildtools.scatter:
+    description: Allows use of the /gzscatter prefab brush
     default: op

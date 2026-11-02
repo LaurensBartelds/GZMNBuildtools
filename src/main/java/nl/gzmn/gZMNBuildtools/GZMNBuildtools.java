@@ -14,6 +14,7 @@ import nl.gzmn.gZMNBuildtools.modules.hover.HoverPreviewModule;
 import nl.gzmn.gZMNBuildtools.modules.materialswap.MaterialSwapModule;
 import nl.gzmn.gZMNBuildtools.modules.patterns.PatternsModule;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.PixelArtModule;
+import nl.gzmn.gZMNBuildtools.modules.scatter.PrefabScatterModule;
 import nl.gzmn.gZMNBuildtools.modules.selection.BuildSelectModule;
 import nl.gzmn.gZMNBuildtools.modules.splines.SplinesModule;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.TerrainBrushModule;
@@ -101,7 +102,8 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new WeatheringModule(),
                 new PixelArtModule(),
                 new TerrainTextureModule(),
-                new HoverPreviewModule());
+                new HoverPreviewModule(),
+                new PrefabScatterModule());
     }
 
     private ModuleHost host(PluginContext context) {

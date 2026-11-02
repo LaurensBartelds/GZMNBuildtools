@@ -20,6 +20,7 @@ modules:
   pixel-art: true            # /gzpixelart
   terrain-texture: true      # /gztexture
   hover-preview: true        # /gzhover
+  prefab-scatter: true       # /gzscatter
 
 messages:
   # When true, extra per-operation diagnostic messages are shown to players
@@ -94,6 +95,14 @@ hover:
   interval-ticks: 4
   range: 64
   max-blocks: 4000
+
+scatter:
+  # /gzscatter places schematics from WorldEdit's schematics folder plus the
+  # built-in tree:<style> and rock prefabs. Largest brush radius, largest
+  # schematic accepted as a prefab, and most blocks one click may set.
+  max-radius: 32
+  max-prefab-blocks: 50000
+  max-blocks-per-click: 50000
 
 preview:
   # Largest edit that can be previewed as ghost blocks, and how long a preview stays.
