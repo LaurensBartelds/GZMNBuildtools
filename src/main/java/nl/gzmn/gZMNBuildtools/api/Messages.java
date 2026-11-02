@@ -30,6 +30,15 @@ public interface Messages {
     /** Error message (red). */
     void error(Player player, String template, Object... args);
 
+    /**
+     * The template in the player's language, formatted, for text that goes
+     * into components built by hand (buttons, lists). Untranslated templates
+     * come back in English.
+     */
+    default String text(Player player, String template, Object... args) {
+        return String.format(java.util.Locale.ROOT, template, args);
+    }
+
     /** Diagnostic message, only sent when {@link #isVerbose()} is true. */
     void verbose(Player player, String template, Object... args);
 

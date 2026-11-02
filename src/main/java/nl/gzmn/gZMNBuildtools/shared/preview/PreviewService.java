@@ -78,13 +78,13 @@ public final class PreviewService implements Listener {
         }, seconds() * 20L);
         pending.put(id, new Pending(player.getWorld().getName(), new HashMap<>(changes), apply, timeout));
         messages.info(player, "Previewing %s: %d blocks (only you can see this).", label, changes.size());
-        player.sendMessage(Component.text("[Apply]", NamedTextColor.GREEN)
-                .hoverEvent(HoverEvent.showText(Component.text("Place exactly what you see")))
+        player.sendMessage(Component.text(messages.text(player, "[Apply]"), NamedTextColor.GREEN)
+                .hoverEvent(HoverEvent.showText(Component.text(messages.text(player, "Place exactly what you see"))))
                 .clickEvent(ClickEvent.runCommand("/gzpreview apply"))
                 .append(Component.text("  "))
-                .append(Component.text("[Cancel]", NamedTextColor.RED)
+                .append(Component.text(messages.text(player, "[Cancel]"), NamedTextColor.RED)
                         .clickEvent(ClickEvent.runCommand("/gzpreview cancel")))
-                .append(Component.text("  expires in " + seconds() + "s", NamedTextColor.DARK_GRAY)));
+                .append(Component.text("  " + messages.text(player, "expires in %ds", seconds()), NamedTextColor.DARK_GRAY)));
     }
 
     /** The positions the player's pending preview shows (empty when there is none). */

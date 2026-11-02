@@ -5,6 +5,7 @@ import nl.gzmn.gZMNBuildtools.api.GzmnBuildtoolsApi;
 import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
+import nl.gzmn.gZMNBuildtools.common.Translations;
 import nl.gzmn.gZMNBuildtools.gradient.registry.YamlPresetRegistry;
 import nl.gzmn.gZMNBuildtools.shared.preview.PreviewService;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BlockKnowledge;
@@ -21,7 +22,7 @@ import java.io.File;
  */
 public final class PluginContext implements GzmnBuildtoolsApi {
 
-    private final Messages messages;
+    private final AdventureMessages messages;
     private final PresetRegistry presetRegistry;
     private final BlockFamilyRegistry blockFamilies;
     private final PreviewService previews;
@@ -42,6 +43,7 @@ public final class PluginContext implements GzmnBuildtoolsApi {
 
     /** Load all externalized content. */
     public void load() {
+        messages.setTranslations(Translations.load(plugin, plugin.getConfig().getString("messages.language", "auto")));
         presetRegistry.reload();
         blockFamilies.reload();
         limits.reload(plugin.getConfig()).forEach(p -> plugin.getLogger().warning("config.yml " + p));

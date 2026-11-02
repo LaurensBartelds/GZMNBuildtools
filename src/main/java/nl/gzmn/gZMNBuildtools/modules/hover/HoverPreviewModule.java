@@ -50,12 +50,13 @@ public final class HoverPreviewModule implements GzmnModule {
     private void set(Player player, boolean on) {
         service.setEnabled(player, on);
         if (on) {
-            messages.success(player, "Hover preview on. Hold a GZMN brush (gradient, swap, weathering or texture) "
+            messages.success(player, "Hover preview on. Hold a GZMN brush (gradient, swap, weathering, texture or scatter) "
                     + "and look at a build: ghost blocks show what a click would change.");
         } else {
             messages.success(player, "Hover preview off.");
         }
-        player.sendMessage(Component.text(on ? "[Turn off]" : "[Turn on]", NamedTextColor.AQUA)
+        player.sendMessage(Component.text(on ? messages.text(player, "[Turn off]") : messages.text(player, "[Turn on]"),
+                        NamedTextColor.AQUA)
                 .clickEvent(ClickEvent.runCommand("/gzhover " + (on ? "off" : "on"))));
     }
 

@@ -427,8 +427,30 @@ On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
   and the material tabs shown in the Type Replace GUI (`categories:`).
 - `messages.yml`: Message template defaults.
 - `terrain-presets.yml`: The terrain looks used by `/gztexture`.
+- `lang/en.yml`, `lang/nl.yml`: Message texts per language (see below).
 
 After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to apply changes without restarting.
+
+### Languages
+
+Players see GZMN messages in their game's language when there is a translation, and in English otherwise. English
+and Dutch (`nl`) are included. To force one language for everyone, set `messages.language` (for example to `nl`) in
+`config.yml`; the default `auto` follows each player.
+
+Each file in `lang/` maps the English message, exactly as written in the code, to the text to show:
+
+```yaml
+"Radius %d is above your limit of %d.": "Straal %d is groter dan je limiet van %d."
+```
+
+To add a language, copy `lang/en.yml` to `lang/<code>.yml` (e.g. `de.yml`), translate the values and run
+`/gzmnbuildtools reload`. Keep the placeholders (`%s`, `%d`, `%.2f`); number them (`%2$s`) to change their order. If
+a translation's placeholders don't match, that message falls back to English. You can also edit `en.yml` to reword
+messages. Edited files override the bundled text one message at a time, so plugin updates still bring in new messages.
+
+For contributors: `lang/en.yml` is generated from the `messages.*(...)` calls in the code, and `MessageCatalogueTest`
+fails when it is out of date (regenerate it with `mvn test -Dcatalogue.write=true`). The test also checks that every
+bundled translation covers all messages, has no stale keys and uses the right placeholders.
 
 ### Limits per rank
 
