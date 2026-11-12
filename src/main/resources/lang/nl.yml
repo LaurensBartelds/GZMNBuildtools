@@ -201,7 +201,6 @@
 "Smart gradient brush bound (radius %d). Click any build to paint it.": "Slimme verloopbrush gekoppeld (straal %d). Klik op een bouwwerk om het te schilderen."
 "Smart gradient brush:": "Slimme verloopbrush:"
 "Smear": "Smeren"
-"Smear blocks along the stroke direction with a brush (/gzsmear).": "Smeer blokken langs de vegerrichting met een borstel (/gzsmear)."
 "Smear brush bound (radius %d, amount %d, direction %s). /none unbinds it.": "Smeerborstel gebonden (straal %d, hoeveelheid %d, richting %s). /none maakt het los."
 "Source variants: %s": "Bronvarianten: %s"
 "Spline points cleared.": "Splinepunten gewist."

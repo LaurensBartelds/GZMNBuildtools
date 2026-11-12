@@ -206,7 +206,6 @@
 "Smart gradient brush bound (radius %d). Click any build to paint it.": "Smart gradient brush bound (radius %d). Click any build to paint it."
 "Smart gradient brush:": "Smart gradient brush:"
 "Smear": "Smear"
-"Smear blocks along the stroke direction with a brush (/gzsmear).": "Smear blocks along the stroke direction with a brush (/gzsmear)."
 "Smear brush bound (radius %d, amount %d, direction %s). /none unbinds it.": "Smear brush bound (radius %d, amount %d, direction %s). /none unbinds it."
 "Source variants: %s": "Source variants: %s"
 "Spline points cleared.": "Spline points cleared."
