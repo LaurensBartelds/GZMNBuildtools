@@ -9,6 +9,7 @@ import nl.gzmn.gZMNBuildtools.core.help.HelpHub;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleHost;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleManager;
+import nl.gzmn.gZMNBuildtools.modules.fixconnect.FixConnectModule;
 import nl.gzmn.gZMNBuildtools.modules.generators.GeneratorsModule;
 import nl.gzmn.gZMNBuildtools.modules.gradient.GradientModule;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.GradientBrushModule;
@@ -125,7 +126,8 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new RevolveModule(),
                 new ResizeModule(),
                 new SmearModule(),
-                new ShadowModule());
+                new ShadowModule(),
+                new FixConnectModule());
     }
 
     private ModuleHost host(PluginContext context) {

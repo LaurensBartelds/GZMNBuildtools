@@ -41,6 +41,7 @@ permissions:
       gzmnbuildtools.resize: true
       gzmnbuildtools.smear: true
       gzmnbuildtools.shadow: true
+      gzmnbuildtools.fixconnect: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -116,6 +117,10 @@ permissions:
 
   gzmnbuildtools.shadow:
     description: Allows use of /gzshadow
+    default: op
+
+  gzmnbuildtools.fixconnect:
+    description: Allows use of /gzfix
     default: op
 
   gzmnbuildtools.limits.unlimited:

@@ -298,6 +298,15 @@ blocks are never overwritten. `-p` previews the shadow as ghost blocks first.
 Example: `/gzshadow black_concrete` darkens the ground under the build you look at; `/gzshadow deepslate dir=east
 dist=16` casts an eastward shadow onto a wall.
 
+### Fix connections
+
+`/gzfix [-p]` (aliases `/fix`, `/fc`) fixes the `north/east/south/west` connection properties of every fence, wall,
+glass pane and iron bars in your cuboid selection, so they connect to adjacent blocks of the same family and to solid
+blocks. All other states (including `waterlogged`) are preserved, neighbours outside the selection count too, and
+`//undo` reverts the change.
+
+Example: `/gzfix` after pasting a fence line that did not connect.
+
 ### Material swap
 
 `/gzswap <block> [options]` (alias `/swap`) binds a brush that swaps the material of the build you click, keeping its
@@ -462,6 +471,7 @@ show` draws it again, and `undo`, `clear` and `list` manage the points. Then bui
 | `/gzspline build wall <pattern>` | `height=4`, `thickness=1` |
 | `/gzspline build road <pattern>` | `width=3`, `clear=3` (air above), `fill=2` (support below) |
 | `/gzspline build river <bed pattern>` | `width=7`, `depth=3`, `sink=1`, `valley=10`, `slope=1` |
+| `/gzspline build dashes <pattern>` | `dash=3`, `gap=3`, `width=1` (broken line along the curve) |
 
 The curve passes through every point without overshooting, and roads follow its height, so they climb hills, cut
 through them with `clear` and bridge dips with `fill`. Add `-p` to preview. Builds count towards
@@ -525,6 +535,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `resize` | `/gzresize` | |
 | `smear` | `/gzsmear` | |
 | `shadow` | `/gzshadow` | |
+| `fix-connect` | `/gzfix` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -618,6 +629,7 @@ apply on top.
 - `gzmnbuildtools.resize`: Grants access to `/gzresize`.
 - `gzmnbuildtools.smear`: Grants access to `/gzsmear` and using its brush.
 - `gzmnbuildtools.shadow`: Grants access to `/gzshadow`.
+- `gzmnbuildtools.fixconnect`: Grants access to `/gzfix`.
 - `gzmnbuildtools.limits.<rank>`: Gives the limits of a rank from `limits.ranks` (see above).
 - `gzmnbuildtools.limits.unlimited`: Lifts all limits (not given to operators by default).
 - `gzmnbuildtools.*`: Grants access to all commands.
