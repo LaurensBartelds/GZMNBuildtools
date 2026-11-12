@@ -237,6 +237,24 @@ Options (`key=value`, or positionally after the pattern):
 
 Example: `/gzroof stone_brick_stairs style=hip height=4 overhang=2 -p` previews a hip roof first.
 
+### Loft
+
+`/gzloft` (alias `/loft`) lofts a smooth organic surface through frames you place — cloth, terrain drapes, curved
+roofs. Look at a block and run `/gzloft add [w] [h]` (or `/gzloft here` for the block you stand on) to add a point
+with a frame size; `/gzloft frame <w> <h>` resizes the last point, and `remove`, `clear`, `list` and `show` manage
+the points (particles draw the curve). Then build along it:
+
+`/gzloft build <pattern> [options] [-p]`
+
+- The curve passes smoothly through every point, and each point's frame (width × height) sets the elliptical
+  cross-section there; frames blend between points with `smooth=1`.
+- `outline=1` (default) places only the surface ring; `fill=1` makes it solid. `lowpoly=1` uses fewer samples and
+  section segments, `stack-down=1` stacks every column down to the ground, `density=3` sets the curve sampling.
+- Add `-p` to preview the loft as ghost blocks first. Builds count towards `generation.max-blocks` and are undone
+  with `//undo`.
+
+Example: `/gzloft add 6 2`, look elsewhere, `/gzloft add 2 8`, then `/gzloft build white_wool fill=1 -p`.
+
 ### Material swap
 
 `/gzswap <block> [options]` (alias `/swap`) binds a brush that swaps the material of the build you click, keeping its
@@ -452,6 +470,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `hover-preview` | `/gzhover` live brush previews | |
 | `prefab-scatter` | `/gzscatter` | |
 | `roof` | `/gzroof` | |
+| `loft` | `/gzloft` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -540,6 +559,7 @@ apply on top.
 - `gzmnbuildtools.hover`: Grants access to `/gzhover`.
 - `gzmnbuildtools.scatter`: Grants access to `/gzscatter` and using its brush.
 - `gzmnbuildtools.roof`: Grants access to `/gzroof`.
+- `gzmnbuildtools.loft`: Grants access to `/gzloft`.
 - `gzmnbuildtools.limits.<rank>`: Gives the limits of a rank from `limits.ranks` (see above).
 - `gzmnbuildtools.limits.unlimited`: Lifts all limits (not given to operators by default).
 - `gzmnbuildtools.*`: Grants access to all commands.

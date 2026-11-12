@@ -22,6 +22,7 @@ modules:
   hover-preview: true        # /gzhover
   prefab-scatter: true       # /gzscatter
   roof: true                 # /gzroof
+  loft: true                 # /gzloft
 
 messages:
   # When true, extra per-operation diagnostic messages are shown to players

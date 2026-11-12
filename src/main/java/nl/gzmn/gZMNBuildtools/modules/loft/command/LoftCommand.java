@@ -220,16 +220,16 @@ public class LoftCommand {
             messages.error(player, "Usage: %s", LoftSpec.INSTANCE.usage());
             return;
         }
-        List<LoftPlanner.Station> stations = new ArrayList<>(pointsOf(player));
-        if (stations.size() < 2) {
-            messages.error(player, "Add at least two loft points first (/gzloft add while looking at a block).");
-            return;
-        }
         BrushArguments<LoftSpec> args;
         try {
             args = BrushArguments.parse(LoftSpec.INSTANCE, rest);
         } catch (IllegalArgumentException e) {
             messages.error(player, "%s", e.getMessage());
+            return;
+        }
+        List<LoftPlanner.Station> stations = new ArrayList<>(pointsOf(player));
+        if (stations.size() < 2) {
+            messages.error(player, "Add at least two loft points first (/gzloft add while looking at a block).");
             return;
         }
         LoftOptions options = new LoftOptions(args.get("outline") >= 0.5, args.get("fill") >= 0.5,
