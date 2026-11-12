@@ -38,6 +38,7 @@ permissions:
       gzmnbuildtools.roof: true
       gzmnbuildtools.loft: true
       gzmnbuildtools.revolve: true
+      gzmnbuildtools.resize: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -101,6 +102,10 @@ permissions:
 
   gzmnbuildtools.revolve:
     description: Allows use of /gzrevolve
+    default: op
+
+  gzmnbuildtools.resize:
+    description: Allows use of /gzresize
     default: op
 
   gzmnbuildtools.limits.unlimited:
