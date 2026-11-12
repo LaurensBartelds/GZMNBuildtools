@@ -31,6 +31,26 @@ Phases:
 - **Phase 2 — transforms & painting:** 3. Revolve, 4. Resize, 5. Smear, 6. Text
 - **Phase 3 — finishing touches:** 7. Shadow, 8. Smooth Snow, 9. Dashes, 10. Fix-connect, 11. `//` aliases
 
+## Implementation status (PR #5, branch `vibe/arceon-parity-spec-88e6d4`)
+
+All 11 features implemented; CI green (`mvn -B verify`, 248 tests).
+
+| # | Feature | Command | Module | Plan |
+|---|---------|---------|--------|------|
+| 1 | Roof | `/gzroof` | `roof` | `docs/superpowers/plans/2026-11-12-roof-tool.md` |
+| 2 | Loft | `/gzloft` | `loft` | `docs/superpowers/plans/2026-11-12-loft-tool.md` |
+| 3 | Revolve | `/gzrevolve` | `revolve` | `docs/superpowers/plans/2026-11-12-revolve-tool.md` |
+| 4 | Resize | `/gzresize` | `resize` | `docs/superpowers/plans/2026-11-12-resize-tool.md` |
+| 5 | Smear | `/gzsmear` | `smear` | `docs/superpowers/plans/2026-11-12-smear-brush.md` |
+| 6 | Text | `/gztext`, `/gzfont` | `pixel-art` | `docs/superpowers/plans/2026-11-12-text-tool.md` |
+| 7 | Shadow | `/gzshadow` | `shadow` | `docs/superpowers/plans/2026-11-12-shadow-tool.md` |
+| 8 | Smooth Snow | `/tb snow` | `terrain-brushes` | `docs/superpowers/plans/2026-11-12-smooth-snow-brush.md` |
+| 9 | Dashes | `/gzspline build dashes` | `splines` | `docs/superpowers/plans/2026-11-12-dashes-spline.md` |
+| 10 | Fix-connect | `/gzfix` | `fix-connect` | `docs/superpowers/plans/2026-11-12-fix-connect.md` |
+| 11 | `//` aliases | `//roof` `//loft` `//revolve` `//resize` `//shadow` `//smear` `//fc` | — (registered in FAWE's command manager via `shared/worldedit/WeAliases`) | `docs/superpowers/plans/2026-11-12-double-slash-aliases.md` |
+
+SDD ledgers: `.superpowers/sdd/2026-11-12-*/progress.md`.
+
 ---
 
 ## 1. Roof tool (Phase 1)
