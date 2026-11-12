@@ -41,7 +41,7 @@ All 11 features implemented; CI green (`mvn -B verify`, 248 tests).
 | 2 | Loft | `/gzloft` | `loft` | `docs/superpowers/plans/2026-11-12-loft-tool.md` |
 | 3 | Revolve | `/gzrevolve` | `revolve` | `docs/superpowers/plans/2026-11-12-revolve-tool.md` |
 | 4 | Resize | `/gzresize` | `resize` | `docs/superpowers/plans/2026-11-12-resize-tool.md` |
-| 5 | Smear | `/gzsmear` | `smear` | `docs/superpowers/plans/2026-11-12-smear-brush.md` |
+| 5 | Smear | `/gzsmear` | `smear` | `docs/superpowers/plans/2026-11-12-smear-tool.md` |
 | 6 | Text | `/gztext`, `/gzfont` | `pixel-art` | `docs/superpowers/plans/2026-11-12-text-tool.md` |
 | 7 | Shadow | `/gzshadow` | `shadow` | `docs/superpowers/plans/2026-11-12-shadow-tool.md` |
 | 8 | Smooth Snow | `/tb snow` | `terrain-brushes` | `docs/superpowers/plans/2026-11-12-smooth-snow-brush.md` |
