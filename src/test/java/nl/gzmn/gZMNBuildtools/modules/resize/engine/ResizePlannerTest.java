@@ -16,9 +16,9 @@ class ResizePlannerTest {
         Plan plan = ResizePlanner.plan(new Bounds(0, 64, 0, 3, 65, 3), 2, 2, 2);
         assertNull(plan.problem());
         assertEquals(256, plan.blockCount());
-        assertEquals(new Bounds(0, 64, 0, 7, 71, 7), plan.out());
+        assertEquals(new Bounds(0, 64, 0, 7, 67, 7), plan.out());
         assertEquals(new Cell(1, 64, 0), plan.placements().get(new Cell(2, 64, 0)));
-        assertEquals(new Cell(3, 65, 3), plan.placements().get(new Cell(7, 71, 7)));
+        assertEquals(new Cell(3, 65, 3), plan.placements().get(new Cell(7, 67, 7)));
     }
 
     @Test
@@ -26,7 +26,7 @@ class ResizePlannerTest {
         Plan plan = ResizePlanner.plan(new Bounds(0, 64, 0, 3, 65, 3), 0.5, 0.5, 0.5);
         assertNull(plan.problem());
         assertEquals(4, plan.blockCount());
-        assertEquals(new Cell(2, 65, 2), plan.placements().get(new Cell(1, 65, 1)));
+        assertEquals(new Cell(2, 64, 2), plan.placements().get(new Cell(1, 64, 1)));
     }
 
     @Test
