@@ -256,7 +256,7 @@
 "Unknown mode '%s'. Use build, material or all.": "Onbekende modus '%s'. Gebruik build, material of all."
 "Unknown option '%s'. Use amount=<n> or direction=<dir>.": "Onbekende optie '%s'. Gebruik amount=<n> of direction=<richting>."
 "Unknown preset: %s": "Onbekende preset: %s"
-"Unknown spline shape '%s'. Use tube, wall, road or river.": "Onbekende splinevorm '%s'. Gebruik tube, wall, road of river."
+"Unknown spline shape '%s'. Use tube, wall, road, river or dashes.": "Onbekende splinevorm '%s'. Gebruik tube, wall, road, river of dashes."
 "Unknown terrain brush '%s'.": "Onbekende terreinbrush '%s'."
 "Unknown terrain preset '%s'.": "Onbekende terreinpreset '%s'."
 "Usage: %s": "Gebruik: %s"

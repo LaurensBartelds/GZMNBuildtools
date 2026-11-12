@@ -174,7 +174,7 @@ public class SplineCommand {
         String rest = String.join(" ", tokens);
         SplineType type = SplineType.byId(typeId).orElse(null);
         if (type == null) {
-            messages.error(player, "Unknown spline shape '%s'. Use tube, wall, road or river.", typeId);
+            messages.error(player, "Unknown spline shape '%s'. Use tube, wall, road, river or dashes.", typeId);
             return;
         }
         List<int[]> list = new ArrayList<>(pointsOf(player));

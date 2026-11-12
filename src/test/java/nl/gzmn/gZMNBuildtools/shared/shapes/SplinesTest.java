@@ -79,4 +79,45 @@ class SplinesTest {
         assertEquals(11 * 3 * 2, cleared.size());
         assertEquals(11 * 3, filled.size());
     }
+
+    @Test
+    void dashesAlternateAlongTheCurve() {
+        List<double[]> straight = new ArrayList<>();
+        for (int i = 0; i <= 20; i++) {
+            straight.add(new double[]{i, 64, 0});
+        }
+        Set<String> placed = new HashSet<>();
+        Splines.dashes(straight, 3, 2, 1, (x, y, z) -> placed.add(x + "," + y + "," + z));
+        // period 5: samples 0-2, 5-7, 10-12, 15-17, 20 are on
+        for (int i : new int[]{0, 1, 2, 5, 6, 7, 10, 11, 12, 15, 16, 17, 20}) {
+            assertTrue(placed.contains(i + ",64,0"), "missing dash block at x=" + i);
+        }
+        for (int i : new int[]{3, 4, 8, 9, 13, 14, 18, 19}) {
+            assertFalse(placed.contains(i + ",64,0"), "unexpected gap block at x=" + i);
+        }
+        assertEquals(13, placed.size());
+    }
+
+    @Test
+    void zeroGapDashesAreASolidLine() {
+        List<double[]> straight = new ArrayList<>();
+        for (int i = 0; i <= 10; i++) {
+            straight.add(new double[]{i, 64, 0});
+        }
+        Set<String> placed = new HashSet<>();
+        Splines.dashes(straight, 3, 0, 1, (x, y, z) -> placed.add(x + "," + y + "," + z));
+        assertEquals(11, placed.size());
+    }
+
+    @Test
+    void dashesStampTheRequestedWidthAcrossTheCurve() {
+        List<double[]> straight = new ArrayList<>();
+        for (int i = 0; i <= 10; i++) {
+            straight.add(new double[]{i, 64, 0});
+        }
+        Set<String> placed = new HashSet<>();
+        Splines.dashes(straight, 11, 0, 3, (x, y, z) -> placed.add(x + "," + y + "," + z));
+        assertEquals(11 * 3, placed.size());
+        assertTrue(placed.contains("5,64,-1") && placed.contains("5,64,1"));
+    }
 }

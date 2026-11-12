@@ -262,21 +262,52 @@ public final class Splines {
         return new RiverFlow(reversed, level[0], level[level.length - 1]);
     }
 
+    /**
+     * A broken line along the curve: {@code dash} blocks of arc length on,
+     * then {@code gap} off, repeated; each on-segment is stamped {@code width}
+     * blocks across, perpendicular to the curve.
+     */
+    public static void dashes(List<double[]> samples, int dash, int gap, int width, BlockSink sink) {
+        double period = dash + gap;
+        if (period <= 0) {
+            return;
+        }
+        double along = 0;
+        Set<Long> done = new HashSet<>();
+        for (int i = 0; i < samples.size(); i++) {
+            if (i > 0) {
+                along += dist(samples.get(i - 1), samples.get(i));
+            }
+            if (along % period < dash) {
+                acrossAt(samples, i, width, (x, y, z) -> {
+                    if (done.add(pack(x, y, z))) {
+                        sink.accept(x, y, z);
+                    }
+                });
+            }
+        }
+    }
+
     /** Visits the blocks across the curve: a horizontal line of {@code width} perpendicular to it. */
     private static void across(List<double[]> samples, int width, BlockSink visit) {
-        double half = (width - 1) / 2.0;
         for (int i = 0; i < samples.size(); i++) {
-            double[] s = samples.get(i);
-            double[] a = samples.get(Math.max(0, i - 1));
-            double[] b = samples.get(Math.min(samples.size() - 1, i + 1));
-            double tx = b[0] - a[0];
-            double tz = b[2] - a[2];
-            double len = Math.sqrt(tx * tx + tz * tz);
-            double px = len < 1e-9 ? 1 : -tz / len;
-            double pz = len < 1e-9 ? 0 : tx / len;
-            for (double o = -half; o <= half + 1e-9; o += 0.5) {
-                visit.accept((int) Math.round(s[0] + px * o), (int) Math.round(s[1]), (int) Math.round(s[2] + pz * o));
-            }
+            acrossAt(samples, i, width, visit);
+        }
+    }
+
+    /** Visits the blocks across the curve at sample {@code i}. */
+    private static void acrossAt(List<double[]> samples, int i, int width, BlockSink visit) {
+        double half = (width - 1) / 2.0;
+        double[] s = samples.get(i);
+        double[] a = samples.get(Math.max(0, i - 1));
+        double[] b = samples.get(Math.min(samples.size() - 1, i + 1));
+        double tx = b[0] - a[0];
+        double tz = b[2] - a[2];
+        double len = Math.sqrt(tx * tx + tz * tz);
+        double px = len < 1e-9 ? 1 : -tz / len;
+        double pz = len < 1e-9 ? 0 : tx / len;
+        for (double o = -half; o <= half + 1e-9; o += 0.5) {
+            visit.accept((int) Math.round(s[0] + px * o), (int) Math.round(s[1]), (int) Math.round(s[2] + pz * o));
         }
     }
 
