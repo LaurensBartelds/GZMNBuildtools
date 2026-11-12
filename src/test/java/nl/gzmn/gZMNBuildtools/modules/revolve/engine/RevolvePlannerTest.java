@@ -14,36 +14,36 @@ class RevolvePlannerTest {
 
     @Test
     void quarterTurnMappingAroundY() {
-        Plan plan = RevolvePlanner.plan(new Bounds(0, 64, 0, 2, 64, 2), new int[]{1, 64, 1}, 'y', 360, 4);
+        Plan plan = RevolvePlanner.plan(new Bounds(2, 64, 0, 4, 64, 2), new int[]{0, 64, 0}, 'y', 360, 4);
         assertNull(plan.problem());
-        assertEquals(33, plan.blockCount());
-        Placement p = plan.placements().get(new Cell(1, 64, 0));
+        assertEquals(36, plan.blockCount());
+        Placement p = plan.placements().get(new Cell(0, 64, -2));
         assertNotNull(p);
-        assertEquals(new Cell(2, 64, 1), p.source());
+        assertEquals(new Cell(2, 64, 0), p.source());
         assertEquals(1, p.quarterTurns());
     }
 
     @Test
     void partialRevolve() {
-        Plan plan = RevolvePlanner.plan(new Bounds(0, 64, 0, 2, 64, 2), new int[]{1, 64, 1}, 'y', 180, 2);
+        Plan plan = RevolvePlanner.plan(new Bounds(2, 64, 0, 4, 64, 2), new int[]{0, 64, 0}, 'y', 180, 2);
         assertNull(plan.problem());
-        assertEquals(17, plan.blockCount());
-        Placement turned = plan.placements().get(new Cell(1, 64, 0));
-        assertEquals(new Cell(2, 64, 1), turned.source());
+        assertEquals(18, plan.blockCount());
+        Placement turned = plan.placements().get(new Cell(0, 64, -2));
+        assertEquals(new Cell(2, 64, 0), turned.source());
         assertEquals(1, turned.quarterTurns());
-        Placement straight = plan.placements().get(new Cell(2, 64, 1));
-        assertEquals(new Cell(2, 64, 1), straight.source());
+        Placement straight = plan.placements().get(new Cell(2, 64, 0));
+        assertEquals(new Cell(2, 64, 0), straight.source());
         assertEquals(0, straight.quarterTurns());
     }
 
     @Test
     void revolveAroundX() {
-        Plan plan = RevolvePlanner.plan(new Bounds(0, 64, 0, 0, 66, 0), new int[]{0, 65, 0}, 'x', 360, 4);
+        Plan plan = RevolvePlanner.plan(new Bounds(0, 64, 2, 0, 66, 2), new int[]{0, 65, 0}, 'x', 360, 4);
         assertNull(plan.problem());
-        assertEquals(9, plan.blockCount());
-        Placement p = plan.placements().get(new Cell(0, 65, 1));
+        assertEquals(12, plan.blockCount());
+        Placement p = plan.placements().get(new Cell(0, 63, 0));
         assertNotNull(p);
-        assertEquals(new Cell(0, 66, 0), p.source());
+        assertEquals(new Cell(0, 65, 2), p.source());
         assertEquals(1, p.quarterTurns());
     }
 
