@@ -35,6 +35,13 @@ permissions:
       gzmnbuildtools.texture: true
       gzmnbuildtools.hover: true
       gzmnbuildtools.scatter: true
+      gzmnbuildtools.roof: true
+      gzmnbuildtools.loft: true
+      gzmnbuildtools.revolve: true
+      gzmnbuildtools.resize: true
+      gzmnbuildtools.smear: true
+      gzmnbuildtools.shadow: true
+      gzmnbuildtools.fixconnect: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -86,6 +93,34 @@ permissions:
 
   gzmnbuildtools.scatter:
     description: Allows use of the /gzscatter prefab brush
+    default: op
+
+  gzmnbuildtools.roof:
+    description: Allows use of /gzroof
+    default: op
+
+  gzmnbuildtools.loft:
+    description: Allows use of /gzloft
+    default: op
+
+  gzmnbuildtools.revolve:
+    description: Allows use of /gzrevolve
+    default: op
+
+  gzmnbuildtools.resize:
+    description: Allows use of /gzresize
+    default: op
+
+  gzmnbuildtools.smear:
+    description: Allows binding and using the /gzsmear brush
+    default: op
+
+  gzmnbuildtools.shadow:
+    description: Allows use of /gzshadow
+    default: op
+
+  gzmnbuildtools.fixconnect:
+    description: Allows use of /gzfix
     default: op
 
   gzmnbuildtools.limits.unlimited:

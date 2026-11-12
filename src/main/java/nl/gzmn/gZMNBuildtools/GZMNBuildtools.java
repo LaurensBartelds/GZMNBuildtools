@@ -9,15 +9,22 @@ import nl.gzmn.gZMNBuildtools.core.help.HelpHub;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleHost;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleManager;
+import nl.gzmn.gZMNBuildtools.modules.fixconnect.FixConnectModule;
 import nl.gzmn.gZMNBuildtools.modules.generators.GeneratorsModule;
 import nl.gzmn.gZMNBuildtools.modules.gradient.GradientModule;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.GradientBrushModule;
 import nl.gzmn.gZMNBuildtools.modules.hover.HoverPreviewModule;
+import nl.gzmn.gZMNBuildtools.modules.loft.LoftModule;
 import nl.gzmn.gZMNBuildtools.modules.materialswap.MaterialSwapModule;
 import nl.gzmn.gZMNBuildtools.modules.patterns.PatternsModule;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.PixelArtModule;
+import nl.gzmn.gZMNBuildtools.modules.resize.ResizeModule;
+import nl.gzmn.gZMNBuildtools.modules.revolve.RevolveModule;
+import nl.gzmn.gZMNBuildtools.modules.roof.RoofModule;
 import nl.gzmn.gZMNBuildtools.modules.scatter.PrefabScatterModule;
+import nl.gzmn.gZMNBuildtools.modules.shadow.ShadowModule;
 import nl.gzmn.gZMNBuildtools.modules.selection.BuildSelectModule;
+import nl.gzmn.gZMNBuildtools.modules.smear.SmearModule;
 import nl.gzmn.gZMNBuildtools.modules.splines.SplinesModule;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.TerrainBrushModule;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.TerrainTextureModule;
@@ -113,7 +120,14 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new PixelArtModule(),
                 new TerrainTextureModule(),
                 new HoverPreviewModule(),
-                new PrefabScatterModule());
+                new PrefabScatterModule(),
+                new RoofModule(),
+                new LoftModule(),
+                new RevolveModule(),
+                new ResizeModule(),
+                new SmearModule(),
+                new ShadowModule(),
+                new FixConnectModule());
     }
 
     private ModuleHost host(PluginContext context) {

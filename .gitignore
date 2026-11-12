@@ -118,3 +118,5 @@ CLAUDE.md
 # IDEs and editors
 .vscode/
 *.code-workspace
+# Superpowers SDD scratch workspaces (ledgers, briefs, review packages)
+.superpowers/

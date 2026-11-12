@@ -17,7 +17,9 @@ generators, gradients and type replacement.
 
 ## Usage
 
-Not sure where to start? Run `/gz` (aliases `/gzhelp`, `/gzmn`). It opens a menu of everything GZMNBuildtools can do
+Not sure where to start? Run `/gz` (aliases `/gzhelp`, `/gzmn`). It opens a menu of everything GZMNBuildtools can do.
+The newer tools also answer to WorldEdit-style aliases: `//roof`, `//loft`, `//revolve`, `//resize`, `//shadow`,
+`//smear` and `//fc` (fix-connect) run the same commands as their `/gz*` counterparts.
 that you have permission for, grouped into brushes, terrain, shapes, builds and other tools. Click a feature to open
 it, or to get a ready-to-edit example in chat. `/gz list` shows the same as a clickable chat list, and `/gz <word>`
 searches it (for example `/gz terrain` or `/gz river`).
@@ -115,6 +117,7 @@ one brush.
 | `spike` | Places a tapering spike or stalactite | pattern, `height=12`, `sharpness=1.5`, `tilt=0`, `down=0` |
 | `tree` | Plants a tree, or a forest with `count` > 1 | log and leaves patterns, `style=oak`, `height=10`, `thickness=1`, `leaves=3`, `count=1` |
 | `rock` | Places boulders embedded in the ground | pattern, `flatness=0.35`, `roughness=0.35`, `sink=0.3`, `count=1` |
+| `snow` | Smooths snow cover by averaging layer thickness with neighbours | `strength=1`, `fill=0` |
 
 The reshaping brushes (`raise` … `roughen`) move whole columns: the top four surface layers and any plants on top
 travel with the surface, so grass stays on top and dirt stays below it.
@@ -126,6 +129,7 @@ Examples:
 - `/tb spike 2 dripstone_block height=10 down=1`
 - `/tb tree 12 birch_log birch_leaves style=birch count=6` plants a birch grove with each click
 - `/tb rock 4 #byslope[0:mossy_cobblestone][35:stone][60:andesite]`
+- `/tb snow 6 fill=1` evens out snow drifts and lays a fresh layer on bare ground next to them
 
 Tree styles are `oak`, `spruce`, `birch`, `willow`, `dead` and `palm`. Logs follow the direction of trunks and branches,
 and leaves are placed persistent so they never decay.
@@ -203,6 +207,108 @@ Particles outline what was selected.
 - `/gzselect all`: everything connected, details included
 - `/gzselect build 2`: the same, padded by 2 blocks on every side
 
+### Roof
+
+`/gzroof <pattern> [options]` (alias `/roof`) puts a roof on the walls of your current cuboid selection, or on the
+build you are looking at when you have no selection (`/gzroof paint <pattern> ...` always uses the looked-at build,
+`/gzroof preview <pattern> ...` shows it as ghost blocks first, and `-p` works anywhere too). Every roof can be
+undone with `//undo` and counts towards `generation.max-blocks`.
+
+- The roof sits on the top of the walls in each column; holes in the build get no roof, and the eaves extend
+  `overhang` blocks past them.
+- Slopes are made of the pattern's stairs (facing away from the ridge), the ridge is capped with top slabs, and
+  `stack-down=1` fills below the roof down to the walls. If the pattern's material has no stairs or slabs, the
+  closest matching material that does is used.
+
+| Style | Shape |
+|-------|-------|
+| `gable` (default) | Ridge along the longer axis, triangular ends |
+| `hip` | All four sides slope up to a shortened ridge |
+| `pyramid` | Slopes meet in a point (square buildings) |
+| `flat` | One layer of top slabs |
+
+Options (`key=value`, or positionally after the pattern):
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `style` | `gable` | `gable`, `hip`, `pyramid` or `flat` |
+| `height` | `0` | Ridge height; 0 = automatic (half the width) |
+| `overhang` | `1` | Blocks the eaves extend past the walls |
+| `axis` | `auto` | `auto`, `x` or `z`: direction of the ridge |
+| `noise` | `0` | Random height jitter on the slopes (0–4) |
+| `stack-down` | `0` | 1 = fill below the roof down to the walls |
+| `level-ends` | `0` | 1 = flat level at the gable ends |
+
+Example: `/gzroof stone_brick_stairs style=hip height=4 overhang=2 -p` previews a hip roof first.
+
+### Loft
+
+`/gzloft` (alias `/loft`) lofts a smooth organic surface through frames you place — cloth, terrain drapes, curved
+roofs. Look at a block and run `/gzloft add [w] [h]` (or `/gzloft here` for the block you stand on) to add a point
+with a frame size; `/gzloft frame <w> <h>` resizes the last point, and `remove`, `clear`, `list` and `show` manage
+the points (particles draw the curve). Then build along it:
+
+`/gzloft build <pattern> [options] [-p]`
+
+- The curve passes smoothly through every point, and each point's frame (width × height) sets the elliptical
+  cross-section there; frames blend between points with `smooth=1`.
+- `outline=1` (default) places only the surface ring; `fill=1` makes it solid. `lowpoly=1` uses fewer samples and
+  section segments, `stack-down=1` stacks every column down to the ground, `density=3` sets the curve sampling.
+- Add `-p` to preview the loft as ghost blocks first. Builds count towards `generation.max-blocks` and are undone
+  with `//undo`.
+
+Example: `/gzloft add 6 2`, look elsewhere, `/gzloft add 2 8`, then `/gzloft build white_wool fill=1 -p`.
+
+### Revolve
+
+`/gzrevolve [pattern] [options]` (alias `/revolve`) revolves your current cuboid selection around an axis through
+selection point 1 — an advanced `//rotate`. Each cell is copied at every step, with its facing and log axis turned
+to match. An optional leading pattern remaps the material (keeping shapes via `StateMapper`).
+
+- `degrees=360` (1–720): the total angle. `steps=16` (1–64): how many copies are placed around the axis.
+- `axis=y` (or `x`, `z`): the rotation axis, always through `//pos1`.
+- Add `-p` to preview first. Copies count towards `generation.max-blocks` and `//undo` reverts the whole revolve.
+
+Example: `//pos1` and `//pos2` on a pillar, then `/gzrevolve stone_bricks degrees=360 steps=8 -p`.
+
+### Resize
+
+`/gzresize <scale|sx,sy,sz> [pattern] [-p]` (alias `/resize`) scales your current cuboid selection by
+nearest-neighbour sampling, anchored at the minimum corner. `scale` is one number (0.25–4) or `sx,sy,sz` per axis;
+an optional pattern remaps the material while keeping each block's shape. The result counts towards
+`generation.max-blocks`, `-p` previews it, and `//undo` reverts it.
+
+Example: `/gzresize 2` doubles the selection; `/gzresize 2,1,0.5 stone_bricks` flattens it and repaints it.
+
+### Smear
+
+`/gzsmear [amount=2] [direction=stroke]` (alias `/smear`) binds a brush to your held item that smears blocks: the
+leading surface under the brush is dragged along the stroke direction. `amount` (1–16) sets how far it extends —
+a negative amount drags it back. `direction` is `stroke` (your facing, default) or `north`/`east`/`south`/`west`/
+`up`/`down`. The normal brush rules apply (`/size`, `//mask`, `/none`, `/gzhover` previews). The radius is capped by
+`smear.max-radius` in `config.yml` (default 16).
+
+Example: `/gzsmear amount=4 direction=east` smears the wall you brush four blocks east.
+
+### Shadow
+
+`/gzshadow <pattern> [dir=down] [dist=32] [-p]` (alias `/shadow`) casts a physical shadow of your selection or the
+build you look at: every exposed face block is projected along `dir` (`down`, `north`, `east`, `south`, `west`) onto
+the first solid surface within `dist` blocks, and that surface block is repainted with the shadow pattern. Build
+blocks are never overwritten. `-p` previews the shadow as ghost blocks first.
+
+Example: `/gzshadow black_concrete` darkens the ground under the build you look at; `/gzshadow deepslate dir=east
+dist=16` casts an eastward shadow onto a wall.
+
+### Fix connections
+
+`/gzfix [-p]` (aliases `/fix`, `/fc`) fixes the `north/east/south/west` connection properties of every fence, wall,
+glass pane and iron bars in your cuboid selection, so they connect to adjacent blocks of the same family and to solid
+blocks. All other states (including `waterlogged`) are preserved, neighbours outside the selection count too, and
+`//undo` reverts the change.
+
+Example: `/gzfix` after pasting a fence line that did not connect.
+
 ### Material swap
 
 `/gzswap <block> [options]` (alias `/swap`) binds a brush that swaps the material of the build you click, keeping its
@@ -247,6 +353,13 @@ nether and blackstone bricks); wear and vines work on any building block.
 
 Web downloads are limited for safety: they only go to public addresses (never localhost or private networks), never
 follow redirects, and are capped in size (`pixel-art.*` in `config.yml`; `allow-urls: false` turns them off).
+
+Text is built by the same module: `/gztext <block> <size> <text> [-p]` (alias `/text`) renders text with the bundled
+5x7 font onto the wall you look at (letters, digits and punctuation; lowercase is uppercased), scaled `size` times
+per font pixel (1–16). `/gzfont` (alias `/font`) shows or sets the font, `/gzfont -c` cycles it. The text size counts
+towards the `image` limit (`pixel-art.max-size`), `-p` previews it, and `//undo` reverts it.
+
+Example: `/gztext quartz_block 2 HELLO WORLD -p`.
 
 ### Terrain texturing
 
@@ -360,6 +473,7 @@ show` draws it again, and `undo`, `clear` and `list` manage the points. Then bui
 | `/gzspline build wall <pattern>` | `height=4`, `thickness=1` |
 | `/gzspline build road <pattern>` | `width=3`, `clear=3` (air above), `fill=2` (support below) |
 | `/gzspline build river <bed pattern>` | `width=7`, `depth=3`, `sink=1`, `valley=10`, `slope=1` |
+| `/gzspline build dashes <pattern>` | `dash=3`, `gap=3`, `width=1` (broken line along the curve) |
 
 The curve passes through every point without overshooting, and roads follow its height, so they climb hills, cut
 through them with `clear` and bridge dips with `fill`. Add `-p` to preview. Builds count towards
@@ -417,6 +531,13 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `terrain-texture` | `/gztexture` and `terrain-presets.yml` | |
 | `hover-preview` | `/gzhover` live brush previews | |
 | `prefab-scatter` | `/gzscatter` | |
+| `roof` | `/gzroof` | |
+| `loft` | `/gzloft` | |
+| `revolve` | `/gzrevolve` | |
+| `resize` | `/gzresize` | |
+| `smear` | `/gzsmear` | |
+| `shadow` | `/gzshadow` | |
+| `fix-connect` | `/gzfix` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -504,6 +625,13 @@ apply on top.
 - `gzmnbuildtools.texture`: Grants access to `/gztexture`.
 - `gzmnbuildtools.hover`: Grants access to `/gzhover`.
 - `gzmnbuildtools.scatter`: Grants access to `/gzscatter` and using its brush.
+- `gzmnbuildtools.roof`: Grants access to `/gzroof`.
+- `gzmnbuildtools.loft`: Grants access to `/gzloft`.
+- `gzmnbuildtools.revolve`: Grants access to `/gzrevolve`.
+- `gzmnbuildtools.resize`: Grants access to `/gzresize`.
+- `gzmnbuildtools.smear`: Grants access to `/gzsmear` and using its brush.
+- `gzmnbuildtools.shadow`: Grants access to `/gzshadow`.
+- `gzmnbuildtools.fixconnect`: Grants access to `/gzfix`.
 - `gzmnbuildtools.limits.<rank>`: Gives the limits of a rank from `limits.ranks` (see above).
 - `gzmnbuildtools.limits.unlimited`: Lifts all limits (not given to operators by default).
 - `gzmnbuildtools.*`: Grants access to all commands.

@@ -32,6 +32,7 @@ public class TerrainBrushMenu extends Menu {
             case SPIKE -> Material.POINTED_DRIPSTONE;
             case TREE -> Material.OAK_SAPLING;
             case ROCK -> Material.COBBLESTONE;
+            case SNOW -> Material.SNOW;
         };
     }
 

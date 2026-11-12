@@ -42,6 +42,7 @@ public final class TerrainBrushFactory {
                     patterns.get(1));
             case ROCK -> new RockBrush(args.get("flatness"), args.get("roughness"), args.get("sink"),
                     args.getInt("count"));
+            case SNOW -> new SnowBrush(args.get("strength"), args.get("fill") >= 0.5);
         };
     }
 

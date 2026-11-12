@@ -30,7 +30,11 @@ public enum SplineType implements ParamSpec {
             new BrushParam("depth", 3, 1, 12, "deepest point of the channel"),
             new BrushParam("sink", 1, 0, 8, "how far the water sits below your points"),
             new BrushParam("valley", 10, 0, 48, "how high ground is cut away above the water"),
-            new BrushParam("slope", 1, 0.25, 4, "bank steepness, blocks up per block out"));
+            new BrushParam("slope", 1, 0.25, 4, "bank steepness, blocks up per block out")),
+    DASHES("Dashed line along the curve: dash blocks on, gap blocks off",
+            new BrushParam("dash", 3, 1, 64, "length of each dash in blocks along the curve"),
+            new BrushParam("gap", 3, 0, 64, "length of each gap in blocks along the curve"),
+            new BrushParam("width", 1, 1, 16, "line width across the curve"));
 
     private final String description;
     private final List<BrushParam> params;
@@ -88,6 +92,8 @@ public enum SplineType implements ParamSpec {
                 return Splines.river(samples, new Splines.RiverShape(args.get("width"), args.getInt("depth"),
                         args.getInt("sink"), args.getInt("valley"), args.get("slope")), sink);
             }
+            case DASHES -> Splines.dashes(samples, args.getInt("dash"), args.getInt("gap"), args.getInt("width"),
+                    single);
         }
         return null;
     }
