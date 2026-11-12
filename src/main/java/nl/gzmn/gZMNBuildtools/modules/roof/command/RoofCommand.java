@@ -166,7 +166,7 @@ public class RoofCommand {
                 };
                 label = "the selection";
             } else {
-                BuildEditor.Scan found = editor.scan(editSession, target, TargetMode.BUILD, List.of());
+                BuildEditor.Scan found = editor.scan(editSession, target, TargetMode.STRUCTURAL, List.of());
                 if (!found.ok()) {
                     messages.error(player, "%s", found.problem());
                     return false;
