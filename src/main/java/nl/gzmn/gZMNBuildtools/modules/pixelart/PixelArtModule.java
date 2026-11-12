@@ -6,6 +6,7 @@ import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.command.PixelArtCommand;
+import nl.gzmn.gZMNBuildtools.modules.pixelart.command.TextCommand;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.image.ImageLoader;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -22,6 +23,7 @@ import static nl.gzmn.gZMNBuildtools.api.Messages.tr;
 public final class PixelArtModule implements GzmnModule {
 
     private PixelArtCommand command;
+    private TextCommand textCommand;
 
     @Override
     public String id() {
@@ -49,6 +51,8 @@ public final class PixelArtModule implements GzmnModule {
                 config.getBoolean("pixel-art.allow-private-addresses", false)));
         command = new PixelArtCommand(context.plugin(), context.core().messages(), context.core().blocks(),
                 context.core().previews(), loader, context.core().limits());
+        textCommand = new TextCommand(context.plugin(), context.core().messages(), context.core().blocks(),
+                context.core().previews(), context.core().limits());
         context.commands(this::register);
     }
 
@@ -71,5 +75,33 @@ public final class PixelArtModule implements GzmnModule {
                             return 1;
                         }))
                 .build(), "Build a picture from blocks.", List.of("pixelart"));
+        commands.register(Commands.literal("gztext")
+                .requires(source -> source.getSender() instanceof Player
+                        && source.getSender().hasPermission(TextCommand.PERMISSION))
+                .executes(ctx -> {
+                    textCommand.usage((Player) ctx.getSource().getSender());
+                    return 1;
+                })
+                .then(Commands.argument("args", StringArgumentType.greedyString())
+                        .executes(ctx -> {
+                            textCommand.text((Player) ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "args"));
+                            return 1;
+                        }))
+                .build(), "Build text from blocks on the wall you look at.", List.of("text"));
+        commands.register(Commands.literal("gzfont")
+                .requires(source -> source.getSender() instanceof Player
+                        && source.getSender().hasPermission(TextCommand.PERMISSION))
+                .executes(ctx -> {
+                    textCommand.font((Player) ctx.getSource().getSender(), "");
+                    return 1;
+                })
+                .then(Commands.argument("font", StringArgumentType.greedyString())
+                        .executes(ctx -> {
+                            textCommand.font((Player) ctx.getSource().getSender(),
+                                    StringArgumentType.getString(ctx, "font"));
+                            return 1;
+                        }))
+                .build(), "Show or set the font used by /gztext (-c cycles).", List.of("font"));
     }
 }
