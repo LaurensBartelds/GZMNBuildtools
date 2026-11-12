@@ -203,6 +203,40 @@ Particles outline what was selected.
 - `/gzselect all`: everything connected, details included
 - `/gzselect build 2`: the same, padded by 2 blocks on every side
 
+### Roof
+
+`/gzroof <pattern> [options]` (alias `/roof`) puts a roof on the walls of your current cuboid selection, or on the
+build you are looking at when you have no selection (`/gzroof paint <pattern> ...` always uses the looked-at build,
+`/gzroof preview <pattern> ...` shows it as ghost blocks first, and `-p` works anywhere too). Every roof can be
+undone with `//undo` and counts towards `generation.max-blocks`.
+
+- The roof sits on the top of the walls in each column; holes in the build get no roof, and the eaves extend
+  `overhang` blocks past them.
+- Slopes are made of the pattern's stairs (facing away from the ridge), the ridge is capped with top slabs, and
+  `stack-down=1` fills below the roof down to the walls. If the pattern's material has no stairs or slabs, the
+  closest matching material that does is used.
+
+| Style | Shape |
+|-------|-------|
+| `gable` (default) | Ridge along the longer axis, triangular ends |
+| `hip` | All four sides slope up to a shortened ridge |
+| `pyramid` | Slopes meet in a point (square buildings) |
+| `flat` | One layer of top slabs |
+
+Options (`key=value`, or positionally after the pattern):
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `style` | `gable` | `gable`, `hip`, `pyramid` or `flat` |
+| `height` | `0` | Ridge height; 0 = automatic (half the width) |
+| `overhang` | `1` | Blocks the eaves extend past the walls |
+| `axis` | `auto` | `auto`, `x` or `z`: direction of the ridge |
+| `noise` | `0` | Random height jitter on the slopes (0–4) |
+| `stack-down` | `0` | 1 = fill below the roof down to the walls |
+| `level-ends` | `0` | 1 = flat level at the gable ends |
+
+Example: `/gzroof stone_brick_stairs style=hip height=4 overhang=2 -p` previews a hip roof first.
+
 ### Material swap
 
 `/gzswap <block> [options]` (alias `/swap`) binds a brush that swaps the material of the build you click, keeping its
@@ -417,6 +451,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `terrain-texture` | `/gztexture` and `terrain-presets.yml` | |
 | `hover-preview` | `/gzhover` live brush previews | |
 | `prefab-scatter` | `/gzscatter` | |
+| `roof` | `/gzroof` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -504,6 +539,7 @@ apply on top.
 - `gzmnbuildtools.texture`: Grants access to `/gztexture`.
 - `gzmnbuildtools.hover`: Grants access to `/gzhover`.
 - `gzmnbuildtools.scatter`: Grants access to `/gzscatter` and using its brush.
+- `gzmnbuildtools.roof`: Grants access to `/gzroof`.
 - `gzmnbuildtools.limits.<rank>`: Gives the limits of a rank from `limits.ranks` (see above).
 - `gzmnbuildtools.limits.unlimited`: Lifts all limits (not given to operators by default).
 - `gzmnbuildtools.*`: Grants access to all commands.
