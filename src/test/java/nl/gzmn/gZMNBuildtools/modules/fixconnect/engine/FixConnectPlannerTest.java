@@ -97,7 +97,7 @@ class FixConnectPlannerTest {
     @Test
     void neighboursOutsideTheSelectionStillCount() {
         World world = new World();
-        world.put(5, 64, 5, "brick_wall");   // outside the selection below
+        world.put(5, 64, 3, "brick_wall");   // outside the selection, to the north
         world.put(5, 64, 4, "brick_wall");   // at the selection edge
         Plan plan = FixConnectPlanner.plan(new Bounds(5, 64, 4, 5, 64, 4), world.oracle(), FULL_CUBE, world.current());
         assertEquals(1, plan.blockCount());

@@ -42,9 +42,10 @@ class SnowSmoothTest {
         Map<Long, Integer> layers = new java.util.HashMap<>();
         layers.put(key(0, 0), 8);
         Plan plan = SnowSmooth.plan(0, 0, 1, FLAT, snow(layers), 1.0, false, -64, 320);
-        // average over the 3x3 disc is 8/9, so the centre drops to 1 layer
+        // average over the 3x3 disc is 8/9, so every cell moves to 1 layer
         assertEquals(1, plan.newLayers().get(new Cell(0, 65, 0)));
-        assertEquals(1, plan.blockCount());
+        assertEquals(9, plan.blockCount());
+        assertEquals(1, plan.newLayers().get(new Cell(1, 65, 0)));
     }
 
     @Test
@@ -97,7 +98,7 @@ class SnowSmoothTest {
     }
 
     @Test
-    void layersAreClampedToEight() {
+    void centreMovesToTheNeighbourhoodAverage() {
         Map<Long, Integer> layers = new java.util.HashMap<>();
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
@@ -106,7 +107,7 @@ class SnowSmoothTest {
         }
         layers.put(key(0, 0), 3);
         Plan plan = SnowSmooth.plan(0, 0, 1, FLAT, snow(layers), 1.0, false, -64, 320);
-        // average 69/9 = 7.67 -> 8, not above
-        assertEquals(8, plan.newLayers().get(new Cell(0, 65, 0)));
+        // average (8*8+3)/9 = 7.44 -> 7, and never above the 1..8 range
+        assertEquals(7, plan.newLayers().get(new Cell(0, 65, 0)));
     }
 }
