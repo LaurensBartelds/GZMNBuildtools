@@ -91,7 +91,7 @@ public final class LoftPlanner {
             }
             for (Map.Entry<Long, Integer> e : lowest.entrySet()) {
                 int x = (int) (e.getKey() >> 32);
-                int z = (int) e.getKey();
+                int z = (int) (long) e.getKey();
                 int g = ground.ground(x, z);
                 if (g >= 0) {
                     for (int y = g + 1; y < e.getValue(); y++) {
