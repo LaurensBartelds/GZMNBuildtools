@@ -106,7 +106,7 @@ class LoftCommandTest {
 
     @Test
     void suggestsParams() {
-        assertTrue(command.suggestions("oak_planks outline=").contains("oak_planks outline="));
+        assertTrue(command.suggestions("oak_planks outl").contains("oak_planks outline="));
         assertTrue(command.suggestions("oa").stream().anyMatch(s -> s.startsWith("oak_planks")));
     }
 }
