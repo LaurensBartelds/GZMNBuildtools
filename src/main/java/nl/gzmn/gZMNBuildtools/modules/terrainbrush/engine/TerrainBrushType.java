@@ -52,7 +52,10 @@ public enum TerrainBrushType implements ParamSpec {
             new BrushParam("flatness", 0.35, 0, 0.8, "0 = round, 0.8 = flat slab"),
             new BrushParam("roughness", 0.35, 0, 1, "how lumpy the surface is"),
             new BrushParam("sink", 0.3, 0, 0.8, "how deep it is buried"),
-            new BrushParam("count", 1, 1, 20, "rocks per click; their size varies up to the radius"));
+            new BrushParam("count", 1, 1, 20, "rocks per click; their size varies up to the radius")),
+    SNOW("Smooth snow cover by averaging layer thickness with neighbours", Slots.NONE,
+            new BrushParam("strength", 1, 0.05, 1, "how far towards the averaged thickness to move per click"),
+            new BrushParam("fill", 0, 0, 1, "1 = lay snow on bare ground and clear snow that averages out"));
 
     /** Pattern slot lists; nested so the enum constants can use them. */
     private static final class Slots {

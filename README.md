@@ -115,6 +115,7 @@ one brush.
 | `spike` | Places a tapering spike or stalactite | pattern, `height=12`, `sharpness=1.5`, `tilt=0`, `down=0` |
 | `tree` | Plants a tree, or a forest with `count` > 1 | log and leaves patterns, `style=oak`, `height=10`, `thickness=1`, `leaves=3`, `count=1` |
 | `rock` | Places boulders embedded in the ground | pattern, `flatness=0.35`, `roughness=0.35`, `sink=0.3`, `count=1` |
+| `snow` | Smooths snow cover by averaging layer thickness with neighbours | `strength=1`, `fill=0` |
 
 The reshaping brushes (`raise` … `roughen`) move whole columns: the top four surface layers and any plants on top
 travel with the surface, so grass stays on top and dirt stays below it.
@@ -126,6 +127,7 @@ Examples:
 - `/tb spike 2 dripstone_block height=10 down=1`
 - `/tb tree 12 birch_log birch_leaves style=birch count=6` plants a birch grove with each click
 - `/tb rock 4 #byslope[0:mossy_cobblestone][35:stone][60:andesite]`
+- `/tb snow 6 fill=1` evens out snow drifts and lays a fresh layer on bare ground next to them
 
 Tree styles are `oak`, `spruce`, `birch`, `willow`, `dead` and `palm`. Logs follow the direction of trunks and branches,
 and leaves are placed persistent so they never decay.
