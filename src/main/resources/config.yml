@@ -26,6 +26,7 @@ modules:
   revolve: true              # /gzrevolve
   resize: true               # /gzresize
   smear: true                # /gzsmear
+  shadow: true               # /gzshadow
 
 messages:
   # When true, extra per-operation diagnostic messages are shown to players

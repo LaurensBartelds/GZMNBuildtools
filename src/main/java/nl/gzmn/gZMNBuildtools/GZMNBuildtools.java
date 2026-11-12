@@ -21,6 +21,7 @@ import nl.gzmn.gZMNBuildtools.modules.resize.ResizeModule;
 import nl.gzmn.gZMNBuildtools.modules.revolve.RevolveModule;
 import nl.gzmn.gZMNBuildtools.modules.roof.RoofModule;
 import nl.gzmn.gZMNBuildtools.modules.scatter.PrefabScatterModule;
+import nl.gzmn.gZMNBuildtools.modules.shadow.ShadowModule;
 import nl.gzmn.gZMNBuildtools.modules.selection.BuildSelectModule;
 import nl.gzmn.gZMNBuildtools.modules.smear.SmearModule;
 import nl.gzmn.gZMNBuildtools.modules.splines.SplinesModule;
@@ -123,7 +124,8 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new LoftModule(),
                 new RevolveModule(),
                 new ResizeModule(),
-                new SmearModule());
+                new SmearModule(),
+                new ShadowModule());
     }
 
     private ModuleHost host(PluginContext context) {

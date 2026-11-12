@@ -286,6 +286,16 @@ a negative amount drags it back. `direction` is `stroke` (your facing, default) 
 
 Example: `/gzsmear amount=4 direction=east` smears the wall you brush four blocks east.
 
+### Shadow
+
+`/gzshadow <pattern> [dir=down] [dist=32] [-p]` (alias `/shadow`) casts a physical shadow of your selection or the
+build you look at: every exposed face block is projected along `dir` (`down`, `north`, `east`, `south`, `west`) onto
+the first solid surface within `dist` blocks, and that surface block is repainted with the shadow pattern. Build
+blocks are never overwritten. `-p` previews the shadow as ghost blocks first.
+
+Example: `/gzshadow black_concrete` darkens the ground under the build you look at; `/gzshadow deepslate dir=east
+dist=16` casts an eastward shadow onto a wall.
+
 ### Material swap
 
 `/gzswap <block> [options]` (alias `/swap`) binds a brush that swaps the material of the build you click, keeping its
@@ -330,6 +340,13 @@ nether and blackstone bricks); wear and vines work on any building block.
 
 Web downloads are limited for safety: they only go to public addresses (never localhost or private networks), never
 follow redirects, and are capped in size (`pixel-art.*` in `config.yml`; `allow-urls: false` turns them off).
+
+Text is built by the same module: `/gztext <block> <size> <text> [-p]` (alias `/text`) renders text with the bundled
+5x7 font onto the wall you look at (letters, digits and punctuation; lowercase is uppercased), scaled `size` times
+per font pixel (1–16). `/gzfont` (alias `/font`) shows or sets the font, `/gzfont -c` cycles it. The text size counts
+towards the `image` limit (`pixel-art.max-size`), `-p` previews it, and `//undo` reverts it.
+
+Example: `/gztext quartz_block 2 HELLO WORLD -p`.
 
 ### Terrain texturing
 
@@ -505,6 +522,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `revolve` | `/gzrevolve` | |
 | `resize` | `/gzresize` | |
 | `smear` | `/gzsmear` | |
+| `shadow` | `/gzshadow` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -597,6 +615,7 @@ apply on top.
 - `gzmnbuildtools.revolve`: Grants access to `/gzrevolve`.
 - `gzmnbuildtools.resize`: Grants access to `/gzresize`.
 - `gzmnbuildtools.smear`: Grants access to `/gzsmear` and using its brush.
+- `gzmnbuildtools.shadow`: Grants access to `/gzshadow`.
 - `gzmnbuildtools.limits.<rank>`: Gives the limits of a rank from `limits.ranks` (see above).
 - `gzmnbuildtools.limits.unlimited`: Lifts all limits (not given to operators by default).
 - `gzmnbuildtools.*`: Grants access to all commands.
