@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.enginehub.piston.CommandManager;
 import org.enginehub.piston.part.CommandArgument;
+import org.enginehub.piston.inject.Key;
 import org.enginehub.piston.part.CommandParts;
 
 import java.util.List;
@@ -44,12 +45,12 @@ public final class WeAliases {
             manager.register(name, builder -> builder
                     .description(TextComponent.of("GZMNBuildtools alias for /gz" + name))
                     .condition(params -> {
-                        Actor actor = params.injectedValue("actor", Actor.class);
+                        Actor actor = params.injectedValue(Key.of(Actor.class));
                         return actor != null && actor.hasPermission(permission);
                     })
                     .addPart(args)
                     .action(params -> {
-                        Actor actor = params.injectedValue("actor", Actor.class);
+                        Actor actor = params.injectedValue(Key.of(Actor.class));
                         if (!(actor instanceof com.sk89q.worldedit.entity.Player wePlayer)) {
                             return 0;
                         }
