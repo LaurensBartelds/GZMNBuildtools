@@ -2,8 +2,9 @@ package nl.gzmn.gZMNBuildtools.shared.worldedit;
 
 import com.sk89q.worldedit.WorldEdit;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.entity.Actor;
-import net.kyori.adventure.text.Component;
+import com.sk89q.worldedit.extension.platform.Actor;
+import com.sk89q.worldedit.util.formatting.text.TextComponent;
+import com.sk89q.worldedit.util.formatting.text.TranslatableComponent;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.enginehub.piston.CommandManager;
@@ -35,12 +36,13 @@ public final class WeAliases {
             if (manager.containsCommand(name)) {
                 return;
             }
-            CommandArgument args = CommandParts.arg(Component.translatable("args"), Component.text("arguments"))
+            CommandArgument args = CommandParts.arg(TranslatableComponent.of("args"),
+                            TextComponent.of("arguments"))
                     .variable(true)
                     .defaultsTo(List.of())
                     .build();
             manager.register(name, builder -> builder
-                    .description(Component.text("GZMNBuildtools alias for /gz" + name))
+                    .description(TextComponent.of("GZMNBuildtools alias for /gz" + name))
                     .condition(params -> {
                         Actor actor = params.injectedValue("actor", Actor.class);
                         return actor != null && actor.hasPermission(permission);
