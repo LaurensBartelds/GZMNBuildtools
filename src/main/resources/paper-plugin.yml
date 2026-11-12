@@ -39,6 +39,7 @@ permissions:
       gzmnbuildtools.loft: true
       gzmnbuildtools.revolve: true
       gzmnbuildtools.resize: true
+      gzmnbuildtools.smear: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -106,6 +107,10 @@ permissions:
 
   gzmnbuildtools.resize:
     description: Allows use of /gzresize
+    default: op
+
+  gzmnbuildtools.smear:
+    description: Allows binding and using the /gzsmear brush
     default: op
 
   gzmnbuildtools.limits.unlimited:

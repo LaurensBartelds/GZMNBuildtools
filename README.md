@@ -267,6 +267,25 @@ to match. An optional leading pattern remaps the material (keeping shapes via `S
 
 Example: `//pos1` and `//pos2` on a pillar, then `/gzrevolve stone_bricks degrees=360 steps=8 -p`.
 
+### Resize
+
+`/gzresize <scale|sx,sy,sz> [pattern] [-p]` (alias `/resize`) scales your current cuboid selection by
+nearest-neighbour sampling, anchored at the minimum corner. `scale` is one number (0.25–4) or `sx,sy,sz` per axis;
+an optional pattern remaps the material while keeping each block's shape. The result counts towards
+`generation.max-blocks`, `-p` previews it, and `//undo` reverts it.
+
+Example: `/gzresize 2` doubles the selection; `/gzresize 2,1,0.5 stone_bricks` flattens it and repaints it.
+
+### Smear
+
+`/gzsmear [amount=2] [direction=stroke]` (alias `/smear`) binds a brush to your held item that smears blocks: the
+leading surface under the brush is dragged along the stroke direction. `amount` (1–16) sets how far it extends —
+a negative amount drags it back. `direction` is `stroke` (your facing, default) or `north`/`east`/`south`/`west`/
+`up`/`down`. The normal brush rules apply (`/size`, `//mask`, `/none`, `/gzhover` previews). The radius is capped by
+`smear.max-radius` in `config.yml` (default 16).
+
+Example: `/gzsmear amount=4 direction=east` smears the wall you brush four blocks east.
+
 ### Material swap
 
 `/gzswap <block> [options]` (alias `/swap`) binds a brush that swaps the material of the build you click, keeping its
@@ -484,6 +503,8 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `roof` | `/gzroof` | |
 | `loft` | `/gzloft` | |
 | `revolve` | `/gzrevolve` | |
+| `resize` | `/gzresize` | |
+| `smear` | `/gzsmear` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -574,6 +595,8 @@ apply on top.
 - `gzmnbuildtools.roof`: Grants access to `/gzroof`.
 - `gzmnbuildtools.loft`: Grants access to `/gzloft`.
 - `gzmnbuildtools.revolve`: Grants access to `/gzrevolve`.
+- `gzmnbuildtools.resize`: Grants access to `/gzresize`.
+- `gzmnbuildtools.smear`: Grants access to `/gzsmear` and using its brush.
 - `gzmnbuildtools.limits.<rank>`: Gives the limits of a rank from `limits.ranks` (see above).
 - `gzmnbuildtools.limits.unlimited`: Lifts all limits (not given to operators by default).
 - `gzmnbuildtools.*`: Grants access to all commands.

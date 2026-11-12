@@ -25,6 +25,7 @@ modules:
   loft: true                 # /gzloft
   revolve: true              # /gzrevolve
   resize: true               # /gzresize
+  smear: true                # /gzsmear
 
 messages:
   # When true, extra per-operation diagnostic messages are shown to players
@@ -52,6 +53,10 @@ terrain-brushes:
 generation:
   # Largest number of blocks a single /gzgen shape may place.
   max-blocks: 500000
+
+smear:
+  # Largest radius the /gzsmear brush accepts.
+  max-radius: 16
 
 build-scan:
   # Largest connected build the build-aware tools (gradient brush, /gzselect,

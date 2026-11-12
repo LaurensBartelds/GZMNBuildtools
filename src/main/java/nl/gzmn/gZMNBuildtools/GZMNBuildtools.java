@@ -22,6 +22,7 @@ import nl.gzmn.gZMNBuildtools.modules.revolve.RevolveModule;
 import nl.gzmn.gZMNBuildtools.modules.roof.RoofModule;
 import nl.gzmn.gZMNBuildtools.modules.scatter.PrefabScatterModule;
 import nl.gzmn.gZMNBuildtools.modules.selection.BuildSelectModule;
+import nl.gzmn.gZMNBuildtools.modules.smear.SmearModule;
 import nl.gzmn.gZMNBuildtools.modules.splines.SplinesModule;
 import nl.gzmn.gZMNBuildtools.modules.terrainbrush.TerrainBrushModule;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.TerrainTextureModule;
@@ -121,7 +122,8 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new RoofModule(),
                 new LoftModule(),
                 new RevolveModule(),
-                new ResizeModule());
+                new ResizeModule(),
+                new SmearModule());
     }
 
     private ModuleHost host(PluginContext context) {
