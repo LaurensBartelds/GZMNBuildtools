@@ -255,6 +255,18 @@ the points (particles draw the curve). Then build along it:
 
 Example: `/gzloft add 6 2`, look elsewhere, `/gzloft add 2 8`, then `/gzloft build white_wool fill=1 -p`.
 
+### Revolve
+
+`/gzrevolve [pattern] [options]` (alias `/revolve`) revolves your current cuboid selection around an axis through
+selection point 1 — an advanced `//rotate`. Each cell is copied at every step, with its facing and log axis turned
+to match. An optional leading pattern remaps the material (keeping shapes via `StateMapper`).
+
+- `degrees=360` (1–720): the total angle. `steps=16` (1–64): how many copies are placed around the axis.
+- `axis=y` (or `x`, `z`): the rotation axis, always through `//pos1`.
+- Add `-p` to preview first. Copies count towards `generation.max-blocks` and `//undo` reverts the whole revolve.
+
+Example: `//pos1` and `//pos2` on a pillar, then `/gzrevolve stone_bricks degrees=360 steps=8 -p`.
+
 ### Material swap
 
 `/gzswap <block> [options]` (alias `/swap`) binds a brush that swaps the material of the build you click, keeping its
@@ -471,6 +483,7 @@ module, and modules that depend on it, are skipped; the rest keep working. Chang
 | `prefab-scatter` | `/gzscatter` | |
 | `roof` | `/gzroof` | |
 | `loft` | `/gzloft` | |
+| `revolve` | `/gzrevolve` | |
 
 Previews (`/gzpreview`), reloading (`/gzmnbuildtools reload`) and the presets and block families are part of the core
 and always available.
@@ -560,6 +573,7 @@ apply on top.
 - `gzmnbuildtools.scatter`: Grants access to `/gzscatter` and using its brush.
 - `gzmnbuildtools.roof`: Grants access to `/gzroof`.
 - `gzmnbuildtools.loft`: Grants access to `/gzloft`.
+- `gzmnbuildtools.revolve`: Grants access to `/gzrevolve`.
 - `gzmnbuildtools.limits.<rank>`: Gives the limits of a rank from `limits.ranks` (see above).
 - `gzmnbuildtools.limits.unlimited`: Lifts all limits (not given to operators by default).
 - `gzmnbuildtools.*`: Grants access to all commands.

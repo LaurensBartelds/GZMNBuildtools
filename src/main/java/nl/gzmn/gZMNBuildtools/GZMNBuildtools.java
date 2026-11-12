@@ -17,6 +17,7 @@ import nl.gzmn.gZMNBuildtools.modules.loft.LoftModule;
 import nl.gzmn.gZMNBuildtools.modules.materialswap.MaterialSwapModule;
 import nl.gzmn.gZMNBuildtools.modules.patterns.PatternsModule;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.PixelArtModule;
+import nl.gzmn.gZMNBuildtools.modules.revolve.RevolveModule;
 import nl.gzmn.gZMNBuildtools.modules.roof.RoofModule;
 import nl.gzmn.gZMNBuildtools.modules.scatter.PrefabScatterModule;
 import nl.gzmn.gZMNBuildtools.modules.selection.BuildSelectModule;
@@ -117,7 +118,8 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new HoverPreviewModule(),
                 new PrefabScatterModule(),
                 new RoofModule(),
-                new LoftModule());
+                new LoftModule(),
+                new RevolveModule());
     }
 
     private ModuleHost host(PluginContext context) {
