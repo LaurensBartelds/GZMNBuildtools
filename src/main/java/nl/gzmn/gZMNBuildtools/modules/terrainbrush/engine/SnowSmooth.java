@@ -65,7 +65,7 @@ public final class SnowSmooth {
                 if (fill && current == 0 && avg >= 0.5) {
                     target = Math.max(1, (int) Math.round(avg));
                 } else {
-                    target = clamp(Math.round(current + (avg - current) * strength));
+                    target = clamp((int) Math.round(current + (avg - current) * strength));
                 }
                 if (target == current) {
                     continue;
