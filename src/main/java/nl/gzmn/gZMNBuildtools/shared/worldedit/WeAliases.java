@@ -45,12 +45,12 @@ public final class WeAliases {
             manager.register(name, builder -> builder
                     .description(TextComponent.of("GZMNBuildtools alias for /gz" + name))
                     .condition(params -> {
-                        Actor actor = params.injectedValue(Key.of(Actor.class));
+                        Actor actor = params.injectedValue(Key.of(Actor.class)).orElse(null);
                         return actor != null && actor.hasPermission(permission);
                     })
                     .addPart(args)
                     .action(params -> {
-                        Actor actor = params.injectedValue(Key.of(Actor.class));
+                        Actor actor = params.injectedValue(Key.of(Actor.class)).orElse(null);
                         if (!(actor instanceof com.sk89q.worldedit.entity.Player wePlayer)) {
                             return 0;
                         }
