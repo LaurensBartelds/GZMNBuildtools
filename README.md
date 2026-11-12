@@ -17,7 +17,9 @@ generators, gradients and type replacement.
 
 ## Usage
 
-Not sure where to start? Run `/gz` (aliases `/gzhelp`, `/gzmn`). It opens a menu of everything GZMNBuildtools can do
+Not sure where to start? Run `/gz` (aliases `/gzhelp`, `/gzmn`). It opens a menu of everything GZMNBuildtools can do.
+The newer tools also answer to WorldEdit-style aliases: `//roof`, `//loft`, `//revolve`, `//resize`, `//shadow`,
+`//smear` and `//fc` (fix-connect) run the same commands as their `/gz*` counterparts.
 that you have permission for, grouped into brushes, terrain, shapes, builds and other tools. Click a feature to open
 it, or to get a ready-to-edit example in chat. `/gz list` shows the same as a clickable chat list, and `/gz <word>`
 searches it (for example `/gz terrain` or `/gz river`).

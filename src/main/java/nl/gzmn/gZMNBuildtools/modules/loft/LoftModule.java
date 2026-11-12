@@ -8,6 +8,7 @@ import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.loft.command.LoftCommand;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -39,6 +40,7 @@ public final class LoftModule implements GzmnModule {
                 .example("/gzloft build oak_planks").permission(LoftCommand.PERMISSION).runs());
         command = new LoftCommand(context.plugin(), context.core().messages(), context.core().previews(),
                 context.core().limits());
+        WeAliases.register(context.plugin(), "loft", LoftCommand.PERMISSION, command::dispatch);
         context.commands(this::register);
     }
 

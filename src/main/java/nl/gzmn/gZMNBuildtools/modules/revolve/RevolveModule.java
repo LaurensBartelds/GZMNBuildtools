@@ -6,6 +6,7 @@ import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.revolve.command.RevolveCommand;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -37,6 +38,7 @@ public final class RevolveModule implements GzmnModule {
                 .example("/gzrevolve stone_bricks degrees=180").permission(RevolveCommand.PERMISSION));
         command = new RevolveCommand(context.plugin(), context.core().messages(), context.core().previews(),
                 context.core().limits());
+        WeAliases.register(context.plugin(), "revolve", RevolveCommand.PERMISSION, command::revolve);
         context.commands(this::register);
     }
 

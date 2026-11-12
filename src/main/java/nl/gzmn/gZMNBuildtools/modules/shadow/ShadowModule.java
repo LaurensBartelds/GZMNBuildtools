@@ -8,6 +8,7 @@ import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.shadow.command.ShadowCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BuildEditor;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -39,6 +40,8 @@ public final class ShadowModule implements GzmnModule {
                 .example("/gzshadow black_concrete").permission(ShadowCommand.PERMISSION));
         command = new ShadowCommand(context.plugin(), context.core().messages(),
                 new BuildEditor(context.core().blocks()), context.core().previews(), context.core().limits());
+        WeAliases.register(context.plugin(), "shadow", ShadowCommand.PERMISSION,
+                (player, args) -> command.shadow(player, args, false));
         context.commands(this::register);
     }
 

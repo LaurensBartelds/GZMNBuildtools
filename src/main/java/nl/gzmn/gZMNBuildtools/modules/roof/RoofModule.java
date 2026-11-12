@@ -9,6 +9,7 @@ import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.roof.command.RoofCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BuildEditor;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -40,6 +41,8 @@ public final class RoofModule implements GzmnModule {
                 .example("/gzroof stone_brick_stairs").permission(RoofCommand.PERMISSION));
         command = new RoofCommand(context.plugin(), context.core().messages(),
                 new BuildEditor(context.core().blocks()), context.core().previews(), context.core().limits());
+        WeAliases.register(context.plugin(), "roof", RoofCommand.PERMISSION,
+                (player, args) -> command.roof(player, args, RoofCommand.Mode.SELECTION_OR_BUILD, false));
         context.commands(this::register);
     }
 

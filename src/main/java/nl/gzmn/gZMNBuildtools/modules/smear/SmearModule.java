@@ -6,6 +6,7 @@ import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.smear.command.SmearCommand;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -36,6 +37,7 @@ public final class SmearModule implements GzmnModule {
                         tr("Bind a brush that smears blocks along the stroke direction; negative amounts drag back."))
                 .example("/gzsmear amount=3").permission(SmearCommand.PERMISSION));
         command = new SmearCommand(context.plugin(), context.core().messages(), context.core().limits());
+        WeAliases.register(context.plugin(), "smear", SmearCommand.PERMISSION, command::bind);
         context.commands(this::register);
     }
 

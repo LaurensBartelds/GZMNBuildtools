@@ -77,6 +77,27 @@ public class LoftCommand {
         return p.list;
     }
 
+    /** Entry point for the {@code //loft} alias: dispatch on the first word, default to build. */
+    public void dispatch(Player player, String rawArgs) {
+        String trimmed = rawArgs == null ? "" : rawArgs.trim();
+        if (trimmed.isEmpty()) {
+            help(player);
+            return;
+        }
+        String first = trimmed.split("\\s+")[0].toLowerCase(Locale.ROOT);
+        String rest = trimmed.substring(first.length()).trim();
+        switch (first) {
+            case "add" -> add(player, false, rest.isEmpty() ? null : rest);
+            case "here" -> add(player, true, rest.isEmpty() ? null : rest);
+            case "frame" -> frame(player, rest);
+            case "remove" -> remove(player);
+            case "clear" -> clear(player);
+            case "list" -> list(player);
+            case "show" -> show(player, 10);
+            default -> build(player, trimmed);
+        }
+    }
+
     public void help(Player player) {
         messages.info(player, "Loft: %d point(s). Look at a block and /gzloft add [w] [h] (or /gzloft here).",
                 pointsOf(player).size());

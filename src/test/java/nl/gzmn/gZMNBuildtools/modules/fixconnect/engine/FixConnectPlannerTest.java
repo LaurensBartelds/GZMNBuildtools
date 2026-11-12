@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FixConnectPlannerTest {
 
-    private static final Predicate<String> FULL_CUBE = Set.of("stone", "oak_planks", "bricks");
+    private static final Predicate<String> FULL_CUBE = Set.of("stone", "oak_planks", "bricks")::contains;
 
     private static final class World {
         final Map<String, String> blocks = new HashMap<>();

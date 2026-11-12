@@ -6,6 +6,7 @@ import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
 import nl.gzmn.gZMNBuildtools.modules.fixconnect.command.FixConnectCommand;
+import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -37,6 +38,7 @@ public final class FixConnectModule implements GzmnModule {
                 .example("/gzfix").permission(FixConnectCommand.PERMISSION));
         command = new FixConnectCommand(context.plugin(), context.core().messages(), context.core().previews(),
                 context.core().limits(), context.core().blocks());
+        WeAliases.register(context.plugin(), "fc", FixConnectCommand.PERMISSION, command::fix);
         context.commands(this::register);
     }
 
