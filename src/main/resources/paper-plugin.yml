@@ -35,6 +35,7 @@ permissions:
       gzmnbuildtools.texture: true
       gzmnbuildtools.hover: true
       gzmnbuildtools.scatter: true
+      gzmnbuildtools.roof: true
 
   gzmnbuildtools.typereplace:
     description: Allows use of /typereplace command
@@ -86,6 +87,10 @@ permissions:
 
   gzmnbuildtools.scatter:
     description: Allows use of the /gzscatter prefab brush
+    default: op
+
+  gzmnbuildtools.roof:
+    description: Allows use of /gzroof
     default: op
 
   gzmnbuildtools.limits.unlimited:
