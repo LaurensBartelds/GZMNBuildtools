@@ -2,6 +2,7 @@ package nl.gzmn.gZMNBuildtools.modules.splines.engine;
 
 import nl.gzmn.gZMNBuildtools.shared.params.BrushArguments;
 import nl.gzmn.gZMNBuildtools.shared.params.BrushParam;
+import nl.gzmn.gZMNBuildtools.shared.params.ParamOverrides;
 import nl.gzmn.gZMNBuildtools.shared.params.ParamSpec;
 import nl.gzmn.gZMNBuildtools.shared.shapes.BlockSink;
 import nl.gzmn.gZMNBuildtools.shared.shapes.PartSink;
@@ -49,6 +50,11 @@ public enum SplineType implements ParamSpec {
         return name().toLowerCase(Locale.ROOT);
     }
 
+    @Override
+    public String configKey() {
+        return "splines." + id();
+    }
+
     public String description() {
         return description;
     }
@@ -60,7 +66,7 @@ public enum SplineType implements ParamSpec {
 
     @Override
     public List<BrushParam> params() {
-        return params;
+        return ParamOverrides.apply(configKey(), params);
     }
 
     @Override

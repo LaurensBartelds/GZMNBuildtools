@@ -33,10 +33,51 @@ messages:
   # When true, extra per-operation diagnostic messages are shown to players
   # (e.g. per-variant block counts during /typereplace).
   verbose: false
+  # Tag shown in front of every GZMN message ("[GZMN] ..." with the default).
+  prefix: "GZMN"
   # Language of GZMN messages: "auto" follows each player's game language
   # (English when there is no translation), or a code such as "nl" for
   # everyone. Translations live in lang/<code>.yml; copy lang/en.yml to add one.
   language: auto
+
+# Extra aliases for any command, forwarding to the real command (which checks
+# its own permission). Applied when the server starts:
+# command-aliases:
+#   gzroof: ["dach"]
+command-aliases: {}
+
+# Per-tool default parameter values and ranges, on top of the built-in ones.
+# Key is the tool id (roof, loft, ...) or module.shape for tools with several
+# shapes (terrain-brushes.smooth, generators.tree, splines.river, ...). Each
+# parameter may set default, min and max; a choice parameter's default may be
+# the choice name. Example:
+# params:
+#   roof:
+#     overhang: { default: 2, max: 16 }
+#   terrain-brushes:
+#     smooth:
+#       kernel: { default: 3, min: 1, max: 8 }
+params: {}
+
+# Server-wide defaults for tools whose options are not brush parameters.
+# defaults:
+#   gradient-brush:      # used for players without saved /gb settings, and by /gb reset
+#     palette: "auto"
+#     axis: "up"
+#     target: "clicked"
+#     dither: "ordered"
+#     softness: 0.6
+#     shapes: "keep"
+#     radius: 4
+defaults: {}
+
+# Which blocks the build-aware tools (/gb, /gzswap, /weathering, /gzselect)
+# never repaint, on top of the built-in rules (lights, containers, liquids,
+# translucent full cubes, ...). Glob patterns, * = anything.
+build-rules:
+  protected: []
+  # Whether non-opaque full-cube blocks (glass, panes, ...) count as protected details.
+  non-opaque-full-cubes-are-details: true
 
 web-editor:
   enabled: true
@@ -47,6 +88,12 @@ web-editor:
   public-url: ""
   # How long a personal /gb web link keeps working.
   session-minutes: 30
+  # Optional shared access code for the whole HTTP API. When set, every /api request
+  # must carry it (?code=... or an X-GZMN-Access-Code header). Empty = no code required
+  # (personal session tokens still guard brush changes).
+  access-code: ""
+  # Browser origins allowed to call the API cross-origin (CORS). Empty = same-origin only.
+  allowed-origins: []
 
 terrain-brushes:
   # Largest radius /terrainbrush accepts. FAWE's own limits (worldedit.limit) still apply.

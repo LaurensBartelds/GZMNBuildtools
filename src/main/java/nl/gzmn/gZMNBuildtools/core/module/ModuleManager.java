@@ -29,8 +29,10 @@ public final class ModuleManager {
     private final Map<String, ModuleStatus> statuses = new LinkedHashMap<>();
     private final Map<String, Map<Class<?>, Object>> services = new HashMap<>();
     private final Map<String, ModuleContext> contexts = new HashMap<>();
+    private final Map<String, List<Listener>> listenersByModule = new HashMap<>();
+    private final Map<String, List<HelpEntry>> helpByModule = new LinkedHashMap<>();
+    private final Set<String> commandsRegistered = new HashSet<>();
     private final List<Consumer<Commands>> commandRegistrars = new ArrayList<>();
-    private final List<HelpEntry> help = new ArrayList<>();
     private final List<String> enableOrder = new ArrayList<>();
 
     public ModuleManager(ModuleHost host) {
@@ -121,11 +123,77 @@ public final class ModuleManager {
         // Only a module that started cleanly contributes anything.
         services.put(module.id(), context.provided);
         context.listeners.forEach(host::registerListener);
-        commandRegistrars.addAll(context.registrars);
-        help.addAll(context.help);
+        listenersByModule.put(module.id(), List.copyOf(context.listeners));
+        if (commandsRegistered.add(module.id())) {
+            commandRegistrars.addAll(context.registrars);
+        }
+        helpByModule.put(module.id(), List.copyOf(context.help));
         contexts.put(module.id(), context);
         enableOrder.add(module.id());
         statuses.put(module.id(), status(module, ModuleState.ENABLED, null));
+        updateGate();
+    }
+
+    /**
+     * Applies the {@code modules:} switches at runtime (called on reload):
+     * modules turned on are started when their dependencies run, modules turned
+     * off are stopped together with the modules that need them. Commands of a
+     * module stay registered (Paper registers them once at startup) but are
+     * gated by {@link ModuleGate}; a module first switched on after startup
+     * gets its commands only after a restart.
+     */
+    public void applyConfigChanges() {
+        boolean changed = true;
+        int guard = modules.size() + 1;
+        while (changed && guard-- > 0) {
+            changed = false;
+            for (GzmnModule module : order()) {
+                boolean running = isEnabled(module.id());
+                if (host.enabledInConfig(module.id())) {
+                    if (!running) {
+                        enable(module);
+                        changed = true;
+                    } else if (!depsRunning(module)) {
+                        disable(module, ModuleState.MISSING_DEPENDENCY, "a dependency is no longer running");
+                        changed = true;
+                    }
+                } else if (running) {
+                    disable(module, ModuleState.DISABLED, "turned off in config.yml");
+                    changed = true;
+                }
+            }
+        }
+        updateGate();
+    }
+
+    private boolean depsRunning(GzmnModule module) {
+        for (String dependency : module.dependencies()) {
+            if (!isEnabled(dependency)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void disable(GzmnModule module, ModuleState state, String reason) {
+        if (!isEnabled(module.id())) {
+            return;
+        }
+        cleanUp(module);
+        List<Listener> listeners = listenersByModule.remove(module.id());
+        if (listeners != null) {
+            listeners.forEach(host::unregisterListener);
+        }
+        services.remove(module.id());
+        helpByModule.remove(module.id());
+        contexts.remove(module.id());
+        enableOrder.remove(module.id());
+        statuses.put(module.id(), status(module, state, reason));
+        updateGate();
+    }
+
+    private void updateGate() {
+        ModuleGate.setRunning(new HashSet<>(enableOrder));
     }
 
     private void cleanUp(GzmnModule module) {
@@ -136,9 +204,16 @@ public final class ModuleManager {
         }
     }
 
-    /** Help hub entries of the enabled modules, in the order they were added. */
+    /** Help hub entries of the running modules, in the order they were enabled. */
     public List<HelpEntry> helpEntries() {
-        return List.copyOf(help);
+        List<HelpEntry> out = new ArrayList<>();
+        for (String id : enableOrder) {
+            List<HelpEntry> entries = helpByModule.get(id);
+            if (entries != null) {
+                out.addAll(entries);
+            }
+        }
+        return List.copyOf(out);
     }
 
     /** Command registrars of the enabled modules, to run in the COMMANDS lifecycle event. */
@@ -147,7 +222,8 @@ public final class ModuleManager {
     }
 
     public void reloadAll() {
-        for (String id : enableOrder) {
+        applyConfigChanges();
+        for (String id : List.copyOf(enableOrder)) {
             try {
                 modules.get(id).reload(contexts.get(id));
             } catch (Throwable t) {
@@ -162,6 +238,11 @@ public final class ModuleManager {
             cleanUp(modules.get(enableOrder.get(i)));
         }
         enableOrder.clear();
+        listenersByModule.clear();
+        helpByModule.clear();
+        services.clear();
+        contexts.clear();
+        updateGate();
     }
 
     public List<ModuleStatus> statuses() {

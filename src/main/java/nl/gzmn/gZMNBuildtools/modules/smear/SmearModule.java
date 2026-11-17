@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.smear.command.SmearCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
@@ -37,13 +38,13 @@ public final class SmearModule implements GzmnModule {
                         tr("Bind a brush that smears blocks along the stroke direction; negative amounts drag back."))
                 .example("/gzsmear amount=3").permission(SmearCommand.PERMISSION));
         command = new SmearCommand(context.plugin(), context.core().messages(), context.core().limits());
-        WeAliases.register(context.plugin(), "smear", SmearCommand.PERMISSION, command::bind);
+        WeAliases.register(context.plugin(), "smear", "smear", SmearCommand.PERMISSION, command::bind);
         context.commands(this::register);
     }
 
     private void register(Commands commands) {
         commands.register(Commands.literal("gzsmear")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("smear") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(SmearCommand.PERMISSION))
                 .executes(ctx -> {
                     command.bind((Player) ctx.getSource().getSender(), "");

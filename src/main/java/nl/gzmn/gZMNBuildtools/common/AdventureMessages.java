@@ -17,10 +17,16 @@ import java.util.Locale;
 public final class AdventureMessages implements Messages {
 
     private volatile boolean verbose;
+    private volatile String prefix = "GZMN";
     private volatile Translations translations = Translations.NONE;
 
     public AdventureMessages(boolean verbose) {
         this.verbose = verbose;
+    }
+
+    /** The tag shown in front of every message (messages.prefix in config.yml). */
+    public void setPrefix(String prefix) {
+        this.prefix = prefix == null || prefix.isBlank() ? "GZMN" : prefix;
     }
 
     /** A messages instance with verbose output disabled (used as a default). */
@@ -31,7 +37,7 @@ public final class AdventureMessages implements Messages {
     @Override
     public Component prefixed(Component body) {
         Component label = Component.text("[").color(NamedTextColor.WHITE)
-                .append(Component.text("GZMN").color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD))
+                .append(Component.text(prefix).color(NamedTextColor.GREEN).decorate(TextDecoration.BOLD))
                 .append(Component.text("] ").color(NamedTextColor.WHITE));
         return label.append(body.color(NamedTextColor.GRAY));
     }

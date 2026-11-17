@@ -44,15 +44,19 @@ public final class WebApi {
     private final SmartGradientService service;
     private final PresetRegistry presets;
     private final WebSessions sessions;
+    private final String accessCode;
+    private final List<String> allowedOrigins;
     private volatile String blocksJson;
 
     public WebApi(JavaPlugin plugin, Messages messages, SmartGradientService service, PresetRegistry presets,
-                  WebSessions sessions) {
+                  WebSessions sessions, String accessCode, List<String> allowedOrigins) {
         this.plugin = plugin;
         this.messages = messages;
         this.service = service;
         this.presets = presets;
         this.sessions = sessions;
+        this.accessCode = accessCode;
+        this.allowedOrigins = allowedOrigins;
     }
 
     public WebSessions sessions() {
@@ -62,6 +66,26 @@ public final class WebApi {
     public void handle(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         Map<String, String> query = query(exchange.getRequestURI().getRawQuery());
+        String cors = WebAccess.corsOrigin(exchange.getRequestHeaders().getFirst("Origin"), allowedOrigins);
+        if (cors != null) {
+            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", cors);
+        }
+        if ("OPTIONS".equals(exchange.getRequestMethod())) {
+            if (cors != null) {
+                exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+                exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, X-GZMN-Access-Code");
+            }
+            exchange.sendResponseHeaders(204, -1);
+            return;
+        }
+        String code = query.get("code");
+        if (code == null) {
+            code = exchange.getRequestHeaders().getFirst("X-GZMN-Access-Code");
+        }
+        if (!WebAccess.codeAccepted(accessCode, code)) {
+            send(exchange, 403, error("An access code is required (web-editor.access-code).").toString());
+            return;
+        }
         try {
             switch (path) {
                 case "/api/blocks" -> send(exchange, 200, blocks());

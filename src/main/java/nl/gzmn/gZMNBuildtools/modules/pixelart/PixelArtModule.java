@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.command.PixelArtCommand;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.command.TextCommand;
 import nl.gzmn.gZMNBuildtools.modules.pixelart.image.ImageLoader;
@@ -58,7 +59,7 @@ public final class PixelArtModule implements GzmnModule {
 
     private void register(Commands commands) {
         commands.register(Commands.literal("gzpixelart")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("pixel-art") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(PixelArtCommand.PERMISSION))
                 .executes(ctx -> {
                     command.help((Player) ctx.getSource().getSender());
@@ -76,7 +77,7 @@ public final class PixelArtModule implements GzmnModule {
                         }))
                 .build(), "Build a picture from blocks.", List.of("pixelart"));
         commands.register(Commands.literal("gztext")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("pixel-art") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(TextCommand.PERMISSION))
                 .executes(ctx -> {
                     textCommand.usage((Player) ctx.getSource().getSender());
@@ -90,7 +91,7 @@ public final class PixelArtModule implements GzmnModule {
                         }))
                 .build(), "Build text from blocks on the wall you look at.", List.of("text"));
         commands.register(Commands.literal("gzfont")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("pixel-art") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(TextCommand.PERMISSION))
                 .executes(ctx -> {
                     textCommand.font((Player) ctx.getSource().getSender(), "");

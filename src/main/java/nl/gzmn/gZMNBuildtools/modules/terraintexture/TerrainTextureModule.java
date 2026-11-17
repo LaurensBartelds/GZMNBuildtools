@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.command.TextureCommand;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.engine.TexturePresets;
 import nl.gzmn.gZMNBuildtools.modules.terraintexture.engine.Texturer;
@@ -89,7 +90,7 @@ public final class TerrainTextureModule implements GzmnModule {
 
     private void register(Commands commands) {
         commands.register(Commands.literal("gztexture")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("terrain-texture") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(TextureCommand.PERMISSION))
                 .executes(ctx -> {
                     command.list((Player) ctx.getSource().getSender());

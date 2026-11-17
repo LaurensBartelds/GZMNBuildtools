@@ -21,6 +21,15 @@ public interface ParamSpec {
 
     List<BrushParam> params();
 
+    /**
+     * Key under {@code params:} in config.yml for this spec's overrides
+     * ({@code ParamOverrides}); the id by default. Specs with several shapes in
+     * one tool prefix it, e.g. {@code terrain-brushes.smooth}.
+     */
+    default String configKey() {
+        return id();
+    }
+
     String usage();
 
     static String format(double value) {

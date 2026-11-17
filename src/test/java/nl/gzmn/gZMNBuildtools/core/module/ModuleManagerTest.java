@@ -17,12 +17,13 @@ class ModuleManagerTest {
 
     /** Host with config switches and a record of registered listeners. */
     static final class FakeHost implements ModuleHost {
-        final Set<String> off;
+        final Set<String> off = new java.util.HashSet<>();
         final List<Listener> listeners = new ArrayList<>();
+        final List<Listener> unregistered = new ArrayList<>();
         final Logger logger = Logger.getLogger("test");
 
         FakeHost(String... off) {
-            this.off = Set.of(off);
+            this.off.addAll(List.of(off));
             logger.setLevel(java.util.logging.Level.OFF);
         }
 
@@ -44,6 +45,11 @@ class ModuleManagerTest {
 
         public void registerListener(Listener listener) {
             listeners.add(listener);
+        }
+
+        public void unregisterListener(Listener listener) {
+            unregistered.add(listener);
+            listeners.remove(listener);
         }
     }
 
@@ -172,6 +178,39 @@ class ModuleManagerTest {
         assertEquals(ModuleState.FAILED, state(manager, "c"));
         assertEquals(ModuleState.ENABLED, state(manager, "d"));
         assertThrows(IllegalArgumentException.class, () -> manager.add(new TestModule("d", log)));
+    }
+
+    @Test
+    void runtimeSwitchesStopAndRestartModulesAndGateCommands() {
+        List<String> log = new ArrayList<>();
+        Listener listener = new Listener() {
+        };
+        FakeHost host = new FakeHost();
+        ModuleManager manager = new ModuleManager(host)
+                .add(new TestModule("brush", List.of(), log, ctx -> ctx.listen(listener)))
+                .add(new TestModule("web", log, "brush"));
+        manager.enableAll();
+        assertEquals(ModuleState.ENABLED, state(manager, "web"));
+        assertTrue(ModuleGate.allows("web"));
+        assertEquals(List.of(listener), host.listeners);
+
+        host.off.add("brush");
+        manager.applyConfigChanges();
+        assertEquals(ModuleState.DISABLED, state(manager, "brush"));
+        assertEquals(ModuleState.MISSING_DEPENDENCY, state(manager, "web"));
+        assertEquals(List.of("disable brush", "disable web"), log.subList(2, 4));
+        assertTrue(host.listeners.isEmpty(), "the stopped module's listeners are unregistered");
+        assertEquals(List.of(listener), host.unregistered);
+        assertFalse(ModuleGate.allows("web"), "a stopped module's commands refuse to run");
+        assertTrue(manager.helpEntries().isEmpty());
+
+        host.off.remove("brush");
+        manager.applyConfigChanges();
+        assertEquals(ModuleState.ENABLED, state(manager, "brush"));
+        assertEquals(ModuleState.ENABLED, state(manager, "web"));
+        assertEquals(List.of("enable brush", "enable web"), log.subList(4, 6));
+        assertTrue(ModuleGate.allows("web"));
+        assertEquals(List.of(listener), host.listeners);
     }
 
     @Test

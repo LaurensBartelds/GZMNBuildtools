@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.logging.Level;
 
 public class WebEditorServer {
@@ -17,6 +18,7 @@ public class WebEditorServer {
     private final WebApi api;
     private HttpServer server;
     private java.util.concurrent.ExecutorService executor;
+    private List<String> allowedOrigins = List.of();
 
     public WebEditorServer(JavaPlugin plugin, WebApi api) {
         this.plugin = plugin;
@@ -46,6 +48,7 @@ public class WebEditorServer {
 
         int port = plugin.getConfig().getInt("web-editor.port", 8080);
         String host = plugin.getConfig().getString("web-editor.host", "0.0.0.0");
+        allowedOrigins = plugin.getConfig().getStringList("web-editor.allowed-origins");
 
         try {
             server = HttpServer.create(new InetSocketAddress(host, port), 0);
@@ -81,6 +84,18 @@ public class WebEditorServer {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             String path = exchange.getRequestURI().getPath();
+            String cors = WebAccess.corsOrigin(exchange.getRequestHeaders().getFirst("Origin"), allowedOrigins);
+            if (cors != null) {
+                exchange.getResponseHeaders().set("Access-Control-Allow-Origin", cors);
+            }
+            if ("OPTIONS".equals(exchange.getRequestMethod())) {
+                if (cors != null) {
+                    exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, OPTIONS");
+                    exchange.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, X-GZMN-Access-Code");
+                }
+                exchange.sendResponseHeaders(204, -1);
+                return;
+            }
             if (path.equals("/")) {
                 path = "/index.html";
             }

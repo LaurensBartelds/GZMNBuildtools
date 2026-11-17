@@ -19,4 +19,7 @@ public interface ModuleHost {
     boolean enabledInConfig(String moduleId);
 
     void registerListener(Listener listener);
+
+    /** Removes a listener again (a module switched off at runtime). */
+    void unregisterListener(Listener listener);
 }

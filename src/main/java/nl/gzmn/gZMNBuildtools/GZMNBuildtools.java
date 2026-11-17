@@ -82,6 +82,7 @@ public final class GZMNBuildtools extends JavaPlugin {
             coreCommands.register(event.registrar());
             help.register(event.registrar());
             modules.commandRegistrars().forEach(registrar -> registrar.accept(event.registrar()));
+            registerConfigAliases(event.registrar());
         });
 
         // Expose the public extension API so other plugins can register presets / families.
@@ -130,6 +131,41 @@ public final class GZMNBuildtools extends JavaPlugin {
                 new FixConnectModule());
     }
 
+    /**
+     * Extra command aliases from {@code command-aliases.<command>} in config.yml,
+     * each forwarding to the real command (which checks its own permission).
+     */
+    private void registerConfigAliases(io.papermc.paper.command.brigadier.Commands commands) {
+        org.bukkit.configuration.ConfigurationSection section = getConfig().getConfigurationSection("command-aliases");
+        if (section == null) {
+            return;
+        }
+        for (String command : section.getKeys(false)) {
+            for (String alias : section.getStringList(command)) {
+                if (alias == null || alias.isBlank()) {
+                    continue;
+                }
+                try {
+                    commands.register(io.papermc.paper.command.brigadier.Commands.literal(alias)
+                            .executes(ctx -> {
+                                Bukkit.dispatchCommand(ctx.getSource().getSender(), command);
+                                return 1;
+                            })
+                            .then(io.papermc.paper.command.brigadier.Commands
+                                    .argument("args", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
+                                    .executes(ctx -> {
+                                        Bukkit.dispatchCommand(ctx.getSource().getSender(), command + " "
+                                                + com.mojang.brigadier.arguments.StringArgumentType.getString(ctx, "args"));
+                                        return 1;
+                                    }))
+                            .build(), "Alias for /" + command, List.of());
+                } catch (RuntimeException e) {
+                    getLogger().warning("Could not register alias /" + alias + " for /" + command + ": " + e.getMessage());
+                }
+            }
+        }
+    }
+
     private ModuleHost host(PluginContext context) {
         JavaPlugin plugin = this;
         return new ModuleHost() {
@@ -156,6 +192,11 @@ public final class GZMNBuildtools extends JavaPlugin {
             @Override
             public void registerListener(Listener listener) {
                 getServer().getPluginManager().registerEvents(listener, plugin);
+            }
+
+            @Override
+            public void unregisterListener(Listener listener) {
+                org.bukkit.event.HandlerList.unregisterAll(listener);
             }
         };
     }

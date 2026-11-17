@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.splines.command.SplineCommand;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -42,7 +43,7 @@ public final class SplinesModule implements GzmnModule {
 
     private void registerSpline(Commands commands) {
         commands.register(Commands.literal("gzspline")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("splines") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(SplineCommand.PERMISSION))
                 .executes(ctx -> {
                     splineCommand.help((Player) ctx.getSource().getSender());

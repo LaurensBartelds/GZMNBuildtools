@@ -37,6 +37,8 @@ public final class BlockKnowledge {
     private volatile PaletteGenerator generator;
     private volatile int maxScanBlocks = 200_000;
     private volatile int maxScanRadius = 128;
+    private volatile Predicate<String> extraProtected = id -> false;
+    private volatile boolean nonOpaqueFullCubesAreDetails = true;
 
     public BlockKnowledge() {
         this.colors = BlockColors.bundled();
@@ -57,6 +59,9 @@ public final class BlockKnowledge {
         List<String> excludes = config.isList("palettes.exclude")
                 ? config.getStringList("palettes.exclude") : BlockFilters.DEFAULT_PALETTE_EXCLUDES;
         generator = new PaletteGenerator(colors, eligible(excludes));
+        List<String> protectedGlobs = config.getStringList("build-rules.protected");
+        extraProtected = protectedGlobs.isEmpty() ? id -> false : BlockFilters.anyGlob(protectedGlobs);
+        nonOpaqueFullCubesAreDetails = config.getBoolean("build-rules.non-opaque-full-cubes-are-details", true);
     }
 
     /** The WorldEdit block type for an id without namespace, or null. */
@@ -70,6 +75,9 @@ public final class BlockKnowledge {
 
     /** Full-cube blocks that are details rather than building material. */
     private boolean isDetail(String id) {
+        if (extraProtected.test(id)) {
+            return true;
+        }
         Optional<BlockMaterial> m = material(id);
         if (m.isEmpty()) {
             return true;
@@ -78,7 +86,7 @@ public final class BlockKnowledge {
         if (mat.getLightValue() > 0 || mat.isTile() || mat.hasContainer() || mat.isLiquid()) {
             return true;
         }
-        return catalog.classify(id).kind() == ShapeKind.FULL && !mat.isOpaque();
+        return nonOpaqueFullCubesAreDetails && catalog.classify(id).kind() == ShapeKind.FULL && !mat.isOpaque();
     }
 
     private Predicate<String> eligible(List<String> excludes) {

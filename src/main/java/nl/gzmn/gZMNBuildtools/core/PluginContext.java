@@ -7,6 +7,7 @@ import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.common.AdventureMessages;
 import nl.gzmn.gZMNBuildtools.common.Translations;
 import nl.gzmn.gZMNBuildtools.gradient.registry.YamlPresetRegistry;
+import nl.gzmn.gZMNBuildtools.shared.params.ParamOverrides;
 import nl.gzmn.gZMNBuildtools.shared.preview.PreviewService;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BlockKnowledge;
 import nl.gzmn.gZMNBuildtools.typereplace.registry.YamlBlockFamilyRegistry;
@@ -33,6 +34,7 @@ public final class PluginContext implements GzmnBuildtoolsApi {
 
     public PluginContext(JavaPlugin plugin) {
         this.messages = new AdventureMessages(plugin.getConfig().getBoolean("messages.verbose", false));
+        this.messages.setPrefix(plugin.getConfig().getString("messages.prefix", "GZMN"));
         this.presetRegistry = new YamlPresetRegistry(plugin);
         this.blockFamilies = new YamlBlockFamilyRegistry(plugin);
         this.previews = new PreviewService(plugin, messages);
@@ -44,6 +46,7 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     /** Load all externalized content. */
     public void load() {
         messages.setTranslations(Translations.load(plugin, plugin.getConfig().getString("messages.language", "auto")));
+        ParamOverrides.load(plugin.getConfig()).forEach(p -> plugin.getLogger().warning("config.yml " + p));
         presetRegistry.reload();
         blockFamilies.reload();
         limits.reload(plugin.getConfig()).forEach(p -> plugin.getLogger().warning("config.yml " + p));
@@ -52,6 +55,7 @@ public final class PluginContext implements GzmnBuildtoolsApi {
     /** Re-reads configuration and content after /gzmnbuildtools reload. */
     public void reload(FileConfiguration config) {
         messages.setVerbose(config.getBoolean("messages.verbose", false));
+        messages.setPrefix(config.getString("messages.prefix", "GZMN"));
         load();
         if (blocks != null) {
             blocks.reload(config);

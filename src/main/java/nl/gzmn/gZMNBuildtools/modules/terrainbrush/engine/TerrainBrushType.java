@@ -1,6 +1,7 @@
 package nl.gzmn.gZMNBuildtools.modules.terrainbrush.engine;
 
 import nl.gzmn.gZMNBuildtools.shared.params.BrushParam;
+import nl.gzmn.gZMNBuildtools.shared.params.ParamOverrides;
 import nl.gzmn.gZMNBuildtools.shared.params.ParamSpec;
 
 import java.util.Arrays;
@@ -78,6 +79,11 @@ public enum TerrainBrushType implements ParamSpec {
         return name().toLowerCase(Locale.ROOT);
     }
 
+    @Override
+    public String configKey() {
+        return "terrain-brushes." + id();
+    }
+
     public String description() {
         return description;
     }
@@ -89,7 +95,7 @@ public enum TerrainBrushType implements ParamSpec {
 
     @Override
     public List<BrushParam> params() {
-        return params;
+        return ParamOverrides.apply(configKey(), params);
     }
 
     @Override

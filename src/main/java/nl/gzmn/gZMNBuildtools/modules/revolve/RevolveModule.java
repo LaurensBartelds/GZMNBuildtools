@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.revolve.command.RevolveCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
@@ -38,13 +39,13 @@ public final class RevolveModule implements GzmnModule {
                 .example("/gzrevolve stone_bricks degrees=180").permission(RevolveCommand.PERMISSION));
         command = new RevolveCommand(context.plugin(), context.core().messages(), context.core().previews(),
                 context.core().limits());
-        WeAliases.register(context.plugin(), "revolve", RevolveCommand.PERMISSION, command::revolve);
+        WeAliases.register(context.plugin(), "revolve", "revolve", RevolveCommand.PERMISSION, command::revolve);
         context.commands(this::register);
     }
 
     private void register(Commands commands) {
         commands.register(Commands.literal("gzrevolve")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("revolve") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(RevolveCommand.PERMISSION))
                 .executes(ctx -> {
                     command.usage((Player) ctx.getSource().getSender());

@@ -105,7 +105,8 @@ public final class CoreCommands {
         context.reload(plugin.getConfig());
         modules.reloadAll();
         sender.sendMessage(Component.text("GZMNBuildtools reloaded: " + context.presets().count()
-                + " preset(s). Turning modules on or off needs a restart.", NamedTextColor.GREEN));
+                + " preset(s). Module switches in config.yml apply now; commands of a module first switched on "
+                + "after startup appear after a restart.", NamedTextColor.GREEN));
         plugin.getLogger().info("Configuration reloaded by " + sender.getName());
     }
 

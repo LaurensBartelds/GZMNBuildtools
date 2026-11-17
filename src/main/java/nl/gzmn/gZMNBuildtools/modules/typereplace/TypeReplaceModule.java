@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.typereplace.command.TypeReplaceCommand;
 import nl.gzmn.gZMNBuildtools.modules.typereplace.menu.TypeReplaceUIManager;
 import org.bukkit.Material;
@@ -51,7 +52,7 @@ public final class TypeReplaceModule implements GzmnModule {
     private void registerTypeReplace(Commands commands) {
         commands.register(
                 Commands.literal("typereplace")
-                        .requires(source -> source.getSender() instanceof Player &&
+                        .requires(source -> ModuleGate.allows("type-replace") && source.getSender() instanceof Player &&
                                 source.getSender().hasPermission(
                                         "gzmnbuildtools.typereplace"))
                         .executes(ctx -> {
