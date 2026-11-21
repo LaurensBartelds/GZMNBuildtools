@@ -1,6 +1,7 @@
 package nl.gzmn.gZMNBuildtools.shared.worldedit;
 
 import com.sk89q.worldedit.WorldEdit;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.extension.platform.Actor;
 import com.sk89q.worldedit.util.formatting.text.TextComponent;
@@ -26,11 +27,13 @@ public final class WeAliases {
     }
 
     /**
+     * @param moduleId  the module this alias belongs to; the alias stops working when the module is off
      * @param name      the WorldEdit command name, without slashes ({@code roof} makes {@code //roof} work)
      * @param permission the Bukkit permission the sender needs
      * @param handler   receives the player and the joined arguments
      */
-    public static void register(JavaPlugin plugin, String name, String permission, BiConsumer<Player, String> handler) {
+    public static void register(JavaPlugin plugin, String moduleId, String name, String permission,
+                                BiConsumer<Player, String> handler) {
         try {
             CommandManager manager = WorldEdit.getInstance().getPlatformManager().getPlatformCommandManager()
                     .getCommandManager();
@@ -46,7 +49,7 @@ public final class WeAliases {
                     .description(TextComponent.of("GZMNBuildtools alias for /gz" + name))
                     .condition(params -> {
                         Actor actor = params.injectedValue(Key.of(Actor.class)).orElse(null);
-                        return actor != null && actor.hasPermission(permission);
+                        return actor != null && ModuleGate.allows(moduleId) && actor.hasPermission(permission);
                     })
                     .addPart(args)
                     .action(params -> {

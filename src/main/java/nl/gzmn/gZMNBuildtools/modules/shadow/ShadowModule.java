@@ -6,6 +6,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.shadow.command.ShadowCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BuildEditor;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
@@ -40,14 +41,14 @@ public final class ShadowModule implements GzmnModule {
                 .example("/gzshadow black_concrete").permission(ShadowCommand.PERMISSION));
         command = new ShadowCommand(context.plugin(), context.core().messages(),
                 new BuildEditor(context.core().blocks()), context.core().previews(), context.core().limits());
-        WeAliases.register(context.plugin(), "shadow", ShadowCommand.PERMISSION,
+        WeAliases.register(context.plugin(), "shadow", "shadow", ShadowCommand.PERMISSION,
                 (player, args) -> command.shadow(player, args, false));
         context.commands(this::register);
     }
 
     private void register(Commands commands) {
         commands.register(Commands.literal("gzshadow")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("shadow") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(ShadowCommand.PERMISSION))
                 .executes(ctx -> {
                     command.usage((Player) ctx.getSource().getSender());

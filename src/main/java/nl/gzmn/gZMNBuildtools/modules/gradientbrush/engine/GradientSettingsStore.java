@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 /**
@@ -34,18 +35,24 @@ public final class GradientSettingsStore {
 
     private final Map<UUID, GradientSettings> settings = new ConcurrentHashMap<>();
     private final Persistence persistence;
+    private final Supplier<GradientSettings> defaults;
 
     public GradientSettingsStore() {
         this(Persistence.NONE);
     }
 
     public GradientSettingsStore(Persistence persistence) {
+        this(persistence, GradientSettings::defaults);
+    }
+
+    /** @param defaults settings for players without saved ones (e.g. from defaults.gradient-brush in config.yml) */
+    public GradientSettingsStore(Persistence persistence, Supplier<GradientSettings> defaults) {
         this.persistence = persistence;
+        this.defaults = defaults;
     }
 
     public GradientSettings get(UUID player) {
-        return settings.computeIfAbsent(player,
-                id -> persistence.load(id).orElseGet(GradientSettings::defaults));
+        return settings.computeIfAbsent(player, id -> persistence.load(id).orElseGet(defaults));
     }
 
     public GradientSettings update(UUID player, UnaryOperator<GradientSettings> change) {
@@ -60,7 +67,7 @@ public final class GradientSettingsStore {
     }
 
     public void reset(UUID player) {
-        settings.put(player, GradientSettings.defaults());
+        settings.put(player, defaults.get());
         persistence.save(player, null);
     }
 }

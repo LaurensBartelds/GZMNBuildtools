@@ -53,7 +53,8 @@ public final class WebEditorModule implements GzmnModule {
         WebSessions sessions = new WebSessions(
                 Math.max(1, context.plugin().getConfig().getInt("web-editor.session-minutes", 30)) * 60_000L);
         WebApi api = new WebApi(context.plugin(), context.core().messages(), brushes, context.core().presets(),
-                sessions);
+                sessions, context.plugin().getConfig().getString("web-editor.access-code", ""),
+                context.plugin().getConfig().getStringList("web-editor.allowed-origins"));
         server = new WebEditorServer(context.plugin(), api);
         server.start();
         if (!server.isRunning()) {

@@ -113,6 +113,7 @@ public final class SmartGradientService {
 
     private volatile long cacheMillis = 10 * 60_000L;
     private volatile int maxRadius = 32;
+    private volatile GradientSettings defaultSettings = GradientSettings.defaults();
 
     /** Saved data section (in players/<uuid>.yml). */
     private static final String DATA = "gradient-brush";
@@ -134,7 +135,7 @@ public final class SmartGradientService {
             public void save(UUID player, GradientSettings value) {
                 playerData.set(player, DATA, "current", value == null ? null : value.describe());
             }
-        });
+        }, this::defaultSettings);
         this.colors = blocks.colors();
         this.catalog = blocks.catalog();
         this.rules = blocks.rules();
@@ -144,7 +145,44 @@ public final class SmartGradientService {
     public void reload(FileConfiguration config) {
         cacheMillis = Math.max(1, config.getInt("smart-gradient.cache-minutes", 10)) * 60_000L;
         maxRadius = Math.max(1, config.getInt("smart-gradient.max-radius", 32));
+        defaultSettings = loadDefaults(config);
         memory.clear();
+    }
+
+    /** The configured server-wide brush defaults (for players without saved settings). */
+    private GradientSettings defaultSettings() {
+        return defaultSettings;
+    }
+
+    /**
+     * The brush defaults from {@code defaults.gradient-brush} in config.yml,
+     * falling back to the built-in defaults for anything absent or invalid.
+     */
+    private GradientSettings loadDefaults(FileConfiguration config) {
+        GradientSettings s = GradientSettings.defaults();
+        org.bukkit.configuration.ConfigurationSection section = config.getConfigurationSection("defaults.gradient-brush");
+        if (section == null) {
+            return s;
+        }
+        String palette = section.getString("palette");
+        if (palette != null && !palette.isBlank() && isValidPalette(palette)) {
+            s = s.withPalette(palette);
+        }
+        for (String key : section.getKeys(false)) {
+            if (key.equals("palette")) {
+                continue;
+            }
+            String value = section.getString(key);
+            if (value == null) {
+                continue;
+            }
+            try {
+                s = s.with(key, value, maxRadius);
+            } catch (IllegalArgumentException ignored) {
+                // An invalid option in the config keeps the built-in default.
+            }
+        }
+        return s;
     }
 
     private Optional<GradientSettings> readSettings(UUID player, String path) {

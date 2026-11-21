@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.loft.command.LoftCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
@@ -40,13 +41,13 @@ public final class LoftModule implements GzmnModule {
                 .example("/gzloft build oak_planks").permission(LoftCommand.PERMISSION).runs());
         command = new LoftCommand(context.plugin(), context.core().messages(), context.core().previews(),
                 context.core().limits());
-        WeAliases.register(context.plugin(), "loft", LoftCommand.PERMISSION, command::dispatch);
+        WeAliases.register(context.plugin(), "loft", "loft", LoftCommand.PERMISSION, command::dispatch);
         context.commands(this::register);
     }
 
     private void register(Commands commands) {
         commands.register(Commands.literal("gzloft")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("loft") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(LoftCommand.PERMISSION))
                 .executes(ctx -> {
                     command.help((Player) ctx.getSource().getSender());

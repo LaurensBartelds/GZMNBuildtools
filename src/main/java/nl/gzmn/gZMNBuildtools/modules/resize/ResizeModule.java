@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.resize.command.ResizeCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.WeAliases;
 import org.bukkit.Material;
@@ -38,13 +39,13 @@ public final class ResizeModule implements GzmnModule {
                 .example("/gzresize 2").permission(ResizeCommand.PERMISSION));
         command = new ResizeCommand(context.plugin(), context.core().messages(), context.core().previews(),
                 context.core().limits());
-        WeAliases.register(context.plugin(), "resize", ResizeCommand.PERMISSION, command::resize);
+        WeAliases.register(context.plugin(), "resize", "resize", ResizeCommand.PERMISSION, command::resize);
         context.commands(this::register);
     }
 
     private void register(Commands commands) {
         commands.register(Commands.literal("gzresize")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("resize") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(ResizeCommand.PERMISSION))
                 .executes(ctx -> {
                     command.usage((Player) ctx.getSource().getSender());

@@ -1,6 +1,7 @@
 package nl.gzmn.gZMNBuildtools.modules.roof.engine;
 
 import nl.gzmn.gZMNBuildtools.shared.params.BrushParam;
+import nl.gzmn.gZMNBuildtools.shared.params.ParamOverrides;
 import nl.gzmn.gZMNBuildtools.shared.params.ParamSpec;
 
 import java.util.List;
@@ -35,7 +36,7 @@ public final class RoofSpec implements ParamSpec {
 
     @Override
     public List<BrushParam> params() {
-        return PARAMS;
+        return ParamOverrides.apply(configKey(), PARAMS);
     }
 
     @Override

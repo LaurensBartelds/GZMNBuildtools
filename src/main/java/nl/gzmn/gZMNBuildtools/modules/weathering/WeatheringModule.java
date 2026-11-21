@@ -7,6 +7,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.weathering.command.WeatheringCommand;
 import nl.gzmn.gZMNBuildtools.shared.worldedit.BuildEditor;
 import org.bukkit.Material;
@@ -46,7 +47,7 @@ public final class WeatheringModule implements GzmnModule {
 
     private void register(Commands commands) {
         commands.register(Commands.literal("weathering")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("weathering") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(WeatheringCommand.PERMISSION))
                 .executes(ctx -> {
                     command.bind((Player) ctx.getSource().getSender(), "");

@@ -511,8 +511,11 @@ and `range` how far you can look (default 64). Strokes changing more than `max-b
 
 Every feature is a module that can be switched off under `modules:` in `config.yml`. A switched-off module doesn't
 register its commands, listeners or (for the web editor) its network port. If a module fails to start, only that
-module, and modules that depend on it, are skipped; the rest keep working. Changes need a restart.
-`/gzmnbuildtools modules` shows what is running and why anything isn't.
+module, and modules that depend on it, are skipped; the rest keep working. `/gzmnbuildtools reload` applies the
+switches at runtime: a module switched off stops working immediately (its commands refuse to run, its listeners are
+removed and its port closes), and one switched on starts again — except that the commands of a module that was off
+at startup only appear after a restart, because Paper registers commands once. `/gzmnbuildtools modules` shows what
+is running and why anything isn't.
 
 | Module | Adds | Needs |
 |--------|------|-------|
@@ -546,16 +549,45 @@ and always available.
 
 On first run the plugin writes editable files to `plugins/GZMNBuildtools/`:
 
-- `config.yml`: General settings (e.g. `messages.verbose`).
+- `config.yml`: General settings (e.g. `messages.verbose`), plus the tunables below.
 - `presets.yml`: The built-in gradient presets. Add or edit entries here to create your own presets without
   recompiling.
 - `block-families.yml`: The block families used by `/typereplace` (which stairs/slabs/walls/etc. each material has)
   and the material tabs shown in the Type Replace GUI (`categories:`).
-- `messages.yml`: Message template defaults.
 - `terrain-presets.yml`: The terrain looks used by `/gztexture`.
 - `lang/en.yml`, `lang/nl.yml`: Message texts per language (see below).
 
-After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to apply changes without restarting.
+After editing these, run `/gzmnbuildtools reload` (alias `/gzmnbt reload`) to apply changes without restarting
+(except `command-aliases:`, which is read when the server starts).
+
+### Extra tunables in config.yml
+
+- `messages.prefix`: the tag shown in front of every GZMN message (`"GZMN"` by default).
+- `command-aliases:`: extra aliases for any command, e.g. `gzroof: ["dach"]`. They forward to the real command,
+  which checks its own permission. Read at server start.
+- `params:`: per-tool default parameter values and ranges, on top of the built-in ones. Key is the tool id
+  (`roof`, `loft`, `revolve`, `shadow`, ...) or `module.shape` for tools with several shapes (`terrain-brushes.smooth`,
+  `generators.tree`, `splines.river`, ...). Each parameter may set `default`, `min` and `max`; a choice parameter's
+  `default` may be the choice name:
+
+  ```yaml
+  params:
+    roof:
+      overhang: { default: 2, max: 16 }
+    terrain-brushes:
+      smooth:
+        kernel: { default: 3, min: 1, max: 8 }
+  ```
+
+- `defaults:`: server-wide defaults for tools whose options are not brush parameters. Currently
+  `defaults.gradient-brush` (the `/gb` options `palette`, `steps`, `axis`, `target`, `dither`, `softness`,
+  `shapes`, `range`, `radius`), used for players without saved settings and by `/gb reset`.
+- `build-rules.protected`: extra glob patterns of blocks the build-aware tools (`/gb`, `/gzswap`, `/weathering`,
+  `/gzselect`) never repaint, on top of the built-in protected details (lights, containers, liquids, translucent
+  full cubes). `build-rules.non-opaque-full-cubes-are-details: false` turns that last built-in rule off.
+- `web-editor.access-code`: when set, every web editor HTTP request must carry this code (`?code=...` or an
+  `X-GZMN-Access-Code` header). `web-editor.allowed-origins`: browser origins allowed to call the API
+  cross-origin.
 
 ### Languages
 

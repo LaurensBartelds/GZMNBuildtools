@@ -8,6 +8,7 @@ import nl.gzmn.gZMNBuildtools.api.Messages;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.hover.live.HoverService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -70,7 +71,7 @@ public final class HoverPreviewModule implements GzmnModule {
 
     private void register(Commands commands) {
         commands.register(Commands.literal("gzhover")
-                .requires(source -> source.getSender() instanceof Player
+                .requires(source -> ModuleGate.allows("hover-preview") && source.getSender() instanceof Player
                         && source.getSender().hasPermission(PERMISSION))
                 .executes(ctx -> {
                     Player player = (Player) ctx.getSource().getSender();

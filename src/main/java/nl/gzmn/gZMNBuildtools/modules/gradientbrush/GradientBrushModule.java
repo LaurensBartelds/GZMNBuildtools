@@ -6,6 +6,7 @@ import nl.gzmn.gZMNBuildtools.api.PresetRegistry;
 import nl.gzmn.gZMNBuildtools.core.help.HelpEntry;
 import nl.gzmn.gZMNBuildtools.core.module.GzmnModule;
 import nl.gzmn.gZMNBuildtools.core.module.ModuleContext;
+import nl.gzmn.gZMNBuildtools.core.module.ModuleGate;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.command.GradientBrushCommand;
 import nl.gzmn.gZMNBuildtools.modules.gradientbrush.menu.GradientBrushMenu;
 import org.bukkit.Material;
@@ -57,7 +58,7 @@ public final class GradientBrushModule implements GzmnModule {
 
     private void registerBrush(Commands commands) {
         commands.register(Commands.literal("gradientbrush")
-                .requires(source -> source.getSender().hasPermission(GradientBrushCommand.PERMISSION)
+                .requires(source -> ModuleGate.allows("gradient-brush") && source.getSender().hasPermission(GradientBrushCommand.PERMISSION)
                         && source.getSender() instanceof Player)
                 .executes(ctx -> {
                     Player player = (Player) ctx.getSource().getSender();

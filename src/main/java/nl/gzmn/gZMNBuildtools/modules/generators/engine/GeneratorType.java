@@ -1,6 +1,7 @@
 package nl.gzmn.gZMNBuildtools.modules.generators.engine;
 
 import nl.gzmn.gZMNBuildtools.shared.params.BrushParam;
+import nl.gzmn.gZMNBuildtools.shared.params.ParamOverrides;
 import nl.gzmn.gZMNBuildtools.shared.params.ParamSpec;
 import nl.gzmn.gZMNBuildtools.shared.shapes.TreeStyle;
 
@@ -66,6 +67,11 @@ public enum GeneratorType implements ParamSpec {
         return name().toLowerCase(Locale.ROOT);
     }
 
+    @Override
+    public String configKey() {
+        return "generators." + id();
+    }
+
     public String description() {
         return description;
     }
@@ -82,7 +88,7 @@ public enum GeneratorType implements ParamSpec {
 
     @Override
     public List<BrushParam> params() {
-        return params;
+        return ParamOverrides.apply(configKey(), params);
     }
 
     @Override
